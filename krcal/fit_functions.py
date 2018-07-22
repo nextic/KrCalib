@@ -136,6 +136,21 @@ def fit_slices_1d_gauss(xdata, ydata, xbins, ybins, min_entries=1e2):
     return Measurement(mean, meanu), Measurement(sigma, sigmau), chi2, valid
 
 
+def chi2(f : FitFunction,
+         x : np.array,
+         y : np.array,
+         sy: np.array)->float:
+
+    assert len(x) == len(y) == len(sy)
+    fitx = f.fn(x)
+    n = len(f.values)
+    
+    chi2 =np.sum(np.array([abs(yi - fi)/syi for yi, fi, syi in zip(y, fitx, sy)]))
+
+    return chi2/(len(x)-n)
+
+
+
 def fit_slices_2d_gauss(xdata, ydata, zdata, xbins, ybins, zbins, min_entries=1e2):
     """
     Slice the data in x and y, histogram each slice, fit it to a gaussian
