@@ -122,6 +122,12 @@ class MapXYFitC(MapXY):
     fc    : List[List[FitCollection]]
 
 
+@dataclass
+class PlotLabels:
+    x     : str
+    y     : str
+    title : str
+    
 #------
 
 @dataclass
