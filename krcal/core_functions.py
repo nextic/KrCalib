@@ -10,6 +10,17 @@ Number = TypeVar('Number', int, float)
 from   invisible_cities.core.core_functions import loc_elem_1d
 
 
+def meam_and_std(x : np.array, range : Tuple[Number])->Tuple[Number]:
+    """Computes mean and std for an array within a range"""
+    x1 = loc_elem_1d(x, find_nearest(x,range[0]))
+    x2 = loc_elem_1d(x, find_nearest(x,range[1]))
+    xmin = min(x1, x2)
+    xmax = max(x1, x2)
+
+    mu, std = weighted_mean_and_std(x[xmin:xmax], np.ones(len(x[xmin:xmax])))
+    return mu, std
+
+
 def find_nearest(array : np.array, value : Number)->Number:
     """Return the array element nearest to value"""
     idx = (np.abs(array-value)).argmin()
