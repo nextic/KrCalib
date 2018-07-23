@@ -95,9 +95,17 @@ class HistoPar2D:
 
 
 @dataclass
+class GaussPar:
+    mu    : float
+    std   : float
+    amp   : float
+
+
+@dataclass
 class FitCollection:
-    fp : FitPar
-    hp : HistoPar
+    fp   : FitPar
+    hp   : HistoPar
+    seed : GaussPar
 
 
 @dataclass
@@ -110,7 +118,7 @@ class MapXY:
 
 
 @dataclass
-class MapXYFitC:(MapXY):
+class MapXYFitC(MapXY):
     fc    : List[List[FitCollection]]
 
 
@@ -147,11 +155,6 @@ class KrLTLimits:
     LTu : minmax
 
 
-@dataclass
-class GaussPar:
-    mu    : float
-    sigma : float
-    A     : float
 
 
 @dataclass
