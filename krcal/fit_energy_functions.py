@@ -2,17 +2,22 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from typing      import List, Tuple
+import warnings
 
 #import matplotlib.dates  as md
 from   invisible_cities.core.core_functions import in_range
 import invisible_cities.core.fit_functions as fitf
 
-from icaro.core.fit_functions import gauss_seed
+from   invisible_cities.core.core_functions import weighted_mean_and_std
+from   invisible_cities.core.core_functions import loc_elem_1d
+
+from . fit_functions import gauss_seed
+from . fit_functions import chi2
 #from icaro.core.fit_functions import conditional_labels
 
 from invisible_cities.core .stat_functions import poisson_sigma
 from invisible_cities.icaro. hst_functions import shift_to_bin_centers
-
+from invisible_cities.types.ic_types       import NN
 # from . kr_types import KrEvent, DstEvent
 # from . kr_types import KrRanges
 # from . kr_types import ExyzNBins, KrNBins
@@ -20,6 +25,7 @@ from invisible_cities.icaro. hst_functions import shift_to_bin_centers
 # from . kr_types import KrRanges, ExyzRanges
 # from . kr_types import XYRanges
 # from . kr_types import Ranges
+from . kr_types import GaussPar
 from . kr_types import FitPar
 from . kr_types import HistoPar
 from . kr_types import FitCollection
@@ -27,34 +33,57 @@ from . kr_types import FitCollection
 
 from . fit_functions import chi2
 
-
-
 #labels = conditional_labels(True)
+
+def find_nearest(array,value):
+    idx = (np.abs(array-value)).argmin()
+    return array[idx]
+
+
+def mu_and_std(x, range):
+    x1 = loc_elem_1d(x, find_nearest(x,range[0]))
+    x2 = loc_elem_1d(x, find_nearest(x,range[1]))
+    xmin = min(x1, x2)
+    xmax = max(x1, x2)
+
+    mu, std = weighted_mean_and_std(x[xmin:xmax], np.ones(len(x[xmin:xmax])))
+    return mu, std
 
 
 def gaussian_fit(x       : np.array,
                  y       : np.array,
-                 n_sigma : float = 2.5):
+                 seed    : GaussPar,
+                 n_sigma : int):
     """Gaussian fit to x,y variables, with fit range defined by n_sigma"""
 
-    seed      = gauss_seed(x, y)
-    fit_range = seed[1] - n_sigma * seed[2], seed[1] + n_sigma * seed[2]
+    #seed      = gauss_seed(x, y)
+    #fit_range = seed[1] - n_sigma * seed[2], seed[1] + n_sigma * seed[2]
+
+    fit_range = seed.mu - n_sigma * seed.std, seed.mu + n_sigma * seed.std
 
     x, y      = x[in_range(x, *fit_range)], y[in_range(x, *fit_range)]
     yu        = poisson_sigma(y)
-    f         = fitf.fit(fitf.gauss, x, y, seed, sigma=yu)
-
+    fseed     =(seed.amp, seed.mu, seed.std)
+    try:
+        f     = fitf.fit(fitf.gauss, x, y, fseed, sigma=yu)
+        c2    = chi2(f, x, y, yu)
+        valid = True
+    except RuntimeError:
+        warnings.warn(f' fit failed for seed  = {seed} ', UserWarning)
+        valid = False
+        c2 = NN
     return FitPar(x  = x,
                   y  = y,
                   yu = yu,
-                  f  = f
-                  chi2 = chi2(f, x, y, sy))
+                  f  = f,
+                  chi2 = c2,
+                  valid = valid)
 
 
 def energy_fit(e : np.array,
-               enbins : int,
-               erange : Tuple[float],
-               n_sigma: float = 2.5)->FitCollection:
+               nbins   : int,
+               range   : Tuple[float],
+               n_sigma : float = 2.5)->FitCollection:
     """
     Takes an "energy vector" (e.g, 1d array), with number of bins enbins and range erange, then:
         1. Computes the histogram of e with enbins in erange. This returns an array of bin
@@ -67,45 +96,57 @@ def energy_fit(e : np.array,
     needed for printing and plotting the fit result.
        """
 
-    y, b = np.histogram(e, bins= enbins, range=erange)
+    y, b = np.histogram(e, bins= nbins, range=range)
     x = shift_to_bin_centers(b)
 
-    fp = gaussian_fit(x, y, n_sigma = n_sigma)
+    mu, std = mu_and_std(e, range)
+    amp     = mu * (2 * np.pi)**0.5 * std * np.diff(x)[0]
+    seed = GaussPar(mu = mu, std = std, amp = amp)
 
+    fp = gaussian_fit(x, y, seed, n_sigma)
 
     hp = HistoPar(var      = e,
-                  nbins = enbins,
-                  range = erange)
+                  nbins    = nbins,
+                  range    = range)
 
-    return FitCollection(fp = fp, hp = hp)
+    return FitCollection(fp = fp, hp = hp, seed = seed)
 
 
-# def plot_energy_fit(fc : FitCollection):
-#     """Takes a KrEvent and a FitPar object and plots fit"""
-#
-#     _, _, _   = plt.hist(fc.hp.X,
-#                          bins = fc.hp.Xnbins,
-#                          range=fc.hp.Xrange,
-#                          histtype='step',
-#                          edgecolor='black',
-#                          linewidth=1.5,
-#                          label=r'$\mu={:7.2f},\ \sigma={:7.2f}$'.format(fc.kf.par[1], fc.kf.par[2]))
-#
-#     plt.plot(fc.fd.x, fc.fd.f.fn(fc.fd.x), "r-", lw=4)
-#
-#
-# def print_energy_fit(fc : FitCollection):
-#
-#     krf = fc.kf
-#     r = 2.35 * 100 *  krf.par[2] / krf.par[1]
-#     f = np.sqrt(41 / 2458) * r
-#
-#     print(f' Emu       = {krf.par[1]} +-{krf.err[1]} ')
-#     print(f' E sigma   = {krf.par[2]} +-{krf.err[2]} ')
-#     print(f' chi2    = {krf.chi2} ')
-#
-#     print(f' sigma E/E (FWHM)     (%) ={r}')
-#     print(f' sigma E/E (FWHM) Qbb (%) ={f} ')
+def plot_energy_fit(fc : FitCollection):
+    """Takes a KrEvent and a FitPar object and plots fit"""
+
+
+    par  = np.array(fc.fp.f.values)
+    err  = np.array(fc.fp.f.errors)
+    _, _, _   = plt.hist(fc.hp.var,
+                         bins = fc.hp.nbins,
+                         range=fc.hp.range,
+                         histtype='step',
+                         edgecolor='black',
+                         linewidth=1.5,
+                         label=r'$\mu={:7.2f} +- {:7.3f},\ \sigma={:7.2f} +- {:7.3f}$'.format(
+                               par[1], err[1], par[2], err[2]))
+
+    plt.plot(fc.fp.x, fc.fp.f.fn(fc.fp.x), "r-", lw=4)
+
+
+def print_energy_fit(fc : FitCollection):
+
+    par  = np.array(fc.fp.f.values)
+    err  = np.array(fc.fp.f.errors)
+    try:
+        r  = 2.35 * 100 *  par[2] / par[1]
+        fe = np.sqrt(41 / 2458) * r
+
+        print(f' Emu       = {par[1]} +-{err[1]} ')
+        print(f' E sigma   = {par[2]} +-{err[2]} ')
+        print(f' chi2    = {fc.fp.chi2} ')
+
+        print(f' sigma E/E (FWHM)     (%) ={r}')
+        print(f' sigma E/E (FWHM) Qbb (%) ={fe} ')
+    except ZeroDivisionError:
+        warnings.warn(f' mu  = {par[1]} ', UserWarning)
+
 #
 #
 # def plot_energy_chi2(fc : FitCollection):
