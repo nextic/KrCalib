@@ -8,10 +8,7 @@ import warnings
 from   invisible_cities.core.core_functions import in_range
 import invisible_cities.core.fit_functions as fitf
 
-from   invisible_cities.core.core_functions import weighted_mean_and_std
-from   invisible_cities.core.core_functions import loc_elem_1d
-
-from . fit_functions import gauss_seed
+#from . fit_functions import gauss_seed
 from . fit_functions import chi2
 
 from invisible_cities.core .stat_functions import poisson_sigma
@@ -22,11 +19,10 @@ from . kr_types import GaussPar
 from . kr_types import FitPar
 from . kr_types import HistoPar
 from . kr_types import FitCollection
+from krcal.kr_types import PlotLabels
 
-from . fit_functions import chi2
 from . core_functions import mean_and_std
-
-#labels = conditional_labels(True)
+from . core_functions import labels
 
 def gaussian_fit(x       : np.array,
                  y       : np.array,
@@ -108,6 +104,13 @@ def plot_energy_fit(fc : FitCollection):
     plt.plot(fc.fp.x, fc.fp.f.fn(fc.fp.x), "r-", lw=4)
 
 
+def display_energy_fit(fc : FitCollection, figsize : Tuple[int] =(6,6), legend_loc='best'):
+    fig = plt.figure(figsize=figsize)
+    ax = fig.add_subplot(1, 1, 1)
+    plot_energy_fit(fc)
+    ax.legend(fontsize= 10, loc=legend_loc)
+
+
 def print_energy_fit(fc : FitCollection):
 
     par  = np.array(fc.fp.f.values)
@@ -125,21 +128,38 @@ def print_energy_fit(fc : FitCollection):
     except ZeroDivisionError:
         warnings.warn(f' mu  = {par[1]} ', UserWarning)
 
-#
-#
-# def plot_energy_chi2(fc : FitCollection):
-#     """Takes a KrEvent and a FitPar object and plots fit"""
-#
-#     x  = fc.fd.x
-#     f  = fc.fd.f
-#     y  = fc.fd.y
-#     yu = fc.fd.yu
-#     plt.errorbar(x, (f.fn(x) - y) / yu, 1, np.diff(x)[0] / 2, fmt="p", c="k")
-#     lims = plt.xlim()
-#     plt.plot(lims, (0, 0), "g--")
-#     plt.xlim(*lims)
-#     plt.ylim(-5, +5)
-#
+
+def plot_energy_fit_chi2(fc : FitCollection):
+    """Takes a KrEvent and a FitPar object and plots fit"""
+
+    x  = fc.fp.x
+    f  = fc.fp.f
+    y  = fc.fp.y
+    yu = fc.fp.yu
+    plt.errorbar(x, (f.fn(x) - y) / yu, 1, np.diff(x)[0] / 2, fmt="p", c="k")
+    lims = plt.xlim()
+    plt.plot(lims, (0, 0), "g--")
+    plt.xlim(*lims)
+    plt.ylim(-5, +5)
+
+
+def display_energy_fit_and_chi2(fc : FitCollection, pl : PlotLabels, figsize : Tuple[int] =(6,6),
+                                legend_loc : str = 'best'):
+    fig = plt.figure(figsize=figsize)
+    #ax = fig.add_subplot(1, 1, 1)
+    #ax.legend(fontsize= 10, loc=legend_loc)
+    frame_data = plt.gcf().add_axes((.1, .3,.8, .6))
+    plot_energy_fit(fc)
+    labels(pl)
+    frame_res = plt.gcf().add_axes((.1, .1,
+                                 .8, .2))
+    frame_data.set_xticklabels([])
+
+    plot_energy_fit_chi2(fc)
+
+
+
+
 #
 #
 # def energy_fit_in_XYRange(kre    : KrEvent,
