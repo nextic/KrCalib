@@ -13,42 +13,20 @@ from   invisible_cities.core.core_functions import loc_elem_1d
 
 from . fit_functions import gauss_seed
 from . fit_functions import chi2
-#from icaro.core.fit_functions import conditional_labels
 
 from invisible_cities.core .stat_functions import poisson_sigma
 from invisible_cities.icaro. hst_functions import shift_to_bin_centers
 from invisible_cities.types.ic_types       import NN
-# from . kr_types import KrEvent, DstEvent
-# from . kr_types import KrRanges
-# from . kr_types import ExyzNBins, KrNBins
-# from . kr_types import KrBins
-# from . kr_types import KrRanges, ExyzRanges
-# from . kr_types import XYRanges
-# from . kr_types import Ranges
+
 from . kr_types import GaussPar
 from . kr_types import FitPar
 from . kr_types import HistoPar
 from . kr_types import FitCollection
-#from . kr_types import GaussPar
 
 from . fit_functions import chi2
+from . core_functions import mean_and_std
 
 #labels = conditional_labels(True)
-
-def find_nearest(array,value):
-    idx = (np.abs(array-value)).argmin()
-    return array[idx]
-
-
-def mu_and_std(x, range):
-    x1 = loc_elem_1d(x, find_nearest(x,range[0]))
-    x2 = loc_elem_1d(x, find_nearest(x,range[1]))
-    xmin = min(x1, x2)
-    xmax = max(x1, x2)
-
-    mu, std = weighted_mean_and_std(x[xmin:xmax], np.ones(len(x[xmin:xmax])))
-    return mu, std
-
 
 def gaussian_fit(x       : np.array,
                  y       : np.array,
@@ -99,7 +77,7 @@ def energy_fit(e : np.array,
     y, b = np.histogram(e, bins= nbins, range=range)
     x = shift_to_bin_centers(b)
 
-    mu, std = mu_and_std(e, range)
+    mu, std = mean_and_std(e, range)
     amp     = mu * (2 * np.pi)**0.5 * std * np.diff(x)[0]
     seed = GaussPar(mu = mu, std = std, amp = amp)
 
