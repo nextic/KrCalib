@@ -5,6 +5,7 @@ from   invisible_cities.core .core_functions import in_range
 from   invisible_cities.evm  .ic_containers  import Measurement
 from   invisible_cities.icaro.hst_functions  import shift_to_bin_centers
 from   invisible_cities.icaro.hst_functions  import labels
+from   invisible_cities.evm.ic_containers import FitFunction
 
 
 
@@ -144,11 +145,10 @@ def chi2(f : FitFunction,
     assert len(x) == len(y) == len(sy)
     fitx = f.fn(x)
     n = len(f.values)
-    
-    chi2 =np.sum(np.array([abs(yi - fi)/syi for yi, fi, syi in zip(y, fitx, sy)]))
 
-    return chi2/(len(x)-n)
+    chi2_ =np.sum(np.array([abs(yi - fi)/syi for yi, fi, syi in zip(y, fitx, sy)]))
 
+    return chi2_/(len(x)-n)
 
 
 def fit_slices_2d_gauss(xdata, ydata, zdata, xbins, ybins, zbins, min_entries=1e2):
