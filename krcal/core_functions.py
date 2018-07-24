@@ -33,15 +33,6 @@ def find_nearest(array : np.array, value : Number)->Number:
     return array[idx]
 
 
-def bin_ratio(array : np.array, bins : np.array, xbin : int)-> Number:
-    """Return the ratio between the element array[xbin] and the array sum"""
-    return array[loc_elem_1d(bins, xbin)] / np.sum(array)
-
-
-def bin_to_last_ratio(array : np.array, bins : np.array, xbin : int)-> Number:
-    return np.sum(array[loc_elem_1d(bins, xbin): -1]) / np.sum(array)
-
-
 def divide_np_arrays(num : np.array, denom : np.array) -> np.array:
     """Safe division of two arrays"""
     assert len(num) == len(denom)
