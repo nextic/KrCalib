@@ -3,6 +3,17 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from . core_functions  import mean_and_std
+from . kr_types        import PlotLabels
+
+
+def labels(pl : PlotLabels):
+    """
+    Set x and y labels.
+    """
+    plt.xlabel(pl.x)
+    plt.ylabel(pl.y)
+    plt.title (pl.title)
+
 
 def h1d(x, bins=None, range=None, weights=None, log=False, normed=False,
         pltLabels='None', edgecolor='black',

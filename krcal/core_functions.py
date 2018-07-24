@@ -13,7 +13,6 @@ from   invisible_cities.icaro.hst_functions  import labels
 
 from   invisible_cities.core.core_functions import loc_elem_1d
 from   invisible_cities.core.core_functions import weighted_mean_and_std
-from   krcal.kr_types import PlotLabels
 
 
 def mean_and_std(x : np.array, range : Tuple[Number])->Tuple[Number]:
@@ -40,12 +39,3 @@ def divide_np_arrays(num : np.array, denom : np.array) -> np.array:
     ratio = np.zeros(len(denom))
     np.divide(num, denom, out=ratio, where=ok)
     return ratio
-
-
-def labels(pl : PlotLabels):
-    """
-    Set x and y labels.
-    """
-    plt.xlabel(pl.x)
-    plt.ylabel(pl.y)
-    plt.title (pl.title)
