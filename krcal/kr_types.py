@@ -103,9 +103,9 @@ class GaussPar:
 class FitCollection:
     fp   : FitPar
     hp   : HistoPar
-    seed : GaussPar
+    fr   : FitResult
 
-
+    
 @dataclass
 class FitResult:
     par  : np.array
