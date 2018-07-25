@@ -77,8 +77,6 @@ class FitPar:
     x     : np.array
     y     : np.array
     yu    : np.array
-    chi2  : float
-    valid : bool
 
 
 @dataclass
@@ -109,6 +107,14 @@ class FitCollection:
 
 
 @dataclass
+class FitResult:
+    par  : np.array
+    err  : np.array
+    chi2 : float
+    valid : bool
+
+
+@dataclass
 class MapXY:
     xs    : np.array
     ys    : np.array
@@ -127,7 +133,7 @@ class PlotLabels:
     x     : str
     y     : str
     title : str
-    
+
 #------
 
 @dataclass
