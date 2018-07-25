@@ -24,6 +24,8 @@ from . kr_types import PlotLabels
 from . core_functions  import gaussian_parameters
 from . histo_functions import labels
 
+from scipy.optimize import OptimizeWarning
+
 def gaussian_fit(x       : np.array,
                  y       : np.array,
                  seed    : GaussPar,
@@ -38,14 +40,22 @@ def gaussian_fit(x       : np.array,
     x, y      = x[in_range(x, *fit_range)], y[in_range(x, *fit_range)]
     yu        = poisson_sigma(y)
     fseed     =(seed.amp, seed.mu, seed.std)
-    try:
-        f     = fitf.fit(fitf.gauss, x, y, fseed, sigma=yu)
-        c2    = chi2(f, x, y, yu)
-        valid = True
-    except RuntimeError:
-        warnings.warn(f' fit failed for seed  = {seed} ', UserWarning)
-        valid = False
-        c2 = NN
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings('error')
+        try:
+            f     = fitf.fit(fitf.gauss, x, y, fseed, sigma=yu)
+            c2    = chi2(f, x, y, yu)
+            valid = True
+        except RuntimeError:
+            warnings.warn(f' fit failed for seed  = {seed} ', UserWarning)
+            valid = False
+            c2 = NN
+        except OptimizeWarning:
+            warnings.warn(f' OptimizeWarning was raised for seed  = {seed} ', UserWarning)
+            valid = False
+            c2 = NN
+
     return FitPar(x  = x,
                   y  = y,
                   yu = yu,
@@ -74,7 +84,7 @@ def energy_fit(e : np.array,
     x = shift_to_bin_centers(b)
 
     seed = gaussian_parameters(e, range)
-    
+
     fp = gaussian_fit(x, y, seed, n_sigma)
 
     hp = HistoPar(var      = e,
