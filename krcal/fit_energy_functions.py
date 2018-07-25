@@ -19,10 +19,10 @@ from . kr_types import GaussPar
 from . kr_types import FitPar
 from . kr_types import HistoPar
 from . kr_types import FitCollection
-from krcal.kr_types import PlotLabels
+from . kr_types import PlotLabels
 
-from . core_functions import mean_and_std
-from . core_functions import labels
+from . core_functions  import gaussian_parameters
+from . histo_functions import labels
 
 def gaussian_fit(x       : np.array,
                  y       : np.array,
@@ -73,10 +73,8 @@ def energy_fit(e : np.array,
     y, b = np.histogram(e, bins= nbins, range=range)
     x = shift_to_bin_centers(b)
 
-    mu, std = mean_and_std(e, range)
-    amp     = mu * (2 * np.pi)**0.5 * std * np.diff(x)[0]
-    seed = GaussPar(mu = mu, std = std, amp = amp)
-
+    seed = gaussian_parameters(e, range)
+    
     fp = gaussian_fit(x, y, seed, n_sigma)
 
     hp = HistoPar(var      = e,
