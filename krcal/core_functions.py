@@ -29,7 +29,7 @@ def mean_and_std(x : np.array, range : Tuple[Number])->Tuple[Number]:
 
 def gaussian_parameters(x : np.array, range : Tuple[Number])->GaussPar:
     mu, std = mean_and_std(x, range)
-    amp     = mu * (2 * np.pi)**0.5 * std * np.diff(x)[0]
+    amp     = (2 * np.pi)**0.5 * std 
     return GaussPar(mu = mu, std = std, amp = amp)
 
 
