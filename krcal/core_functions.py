@@ -13,6 +13,7 @@ from   invisible_cities.icaro.hst_functions  import labels
 
 from   invisible_cities.core.core_functions import loc_elem_1d
 from   invisible_cities.core.core_functions import weighted_mean_and_std
+from .  kr_types import GaussPar
 
 
 def mean_and_std(x : np.array, range : Tuple[Number])->Tuple[Number]:
@@ -24,6 +25,12 @@ def mean_and_std(x : np.array, range : Tuple[Number])->Tuple[Number]:
 
     mu, std = weighted_mean_and_std(x[xmin:xmax], np.ones(len(x[xmin:xmax])))
     return mu, std
+
+
+def gaussian_parameters(x : np.array, range : Tuple[Number])->GaussPar:
+    mu, std = mean_and_std(x, range)
+    amp     = mu * (2 * np.pi)**0.5 * std * np.diff(x)[0]
+    return GaussPar(mu = mu, std = std, amp = amp)
 
 
 def find_nearest(array : np.array, value : Number)->Number:
