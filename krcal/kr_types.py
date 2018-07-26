@@ -94,18 +94,11 @@ class HistoPar2D:
 
 @dataclass
 class GaussPar:
-    mu    : float
-    std   : float
-    amp   : float
+    mu    : Measurement
+    std   : Measurement
+    amp   : Measurement
 
 
-@dataclass
-class FitCollection:
-    fp   : FitPar
-    hp   : HistoPar
-    fr   : FitResult
-
-    
 @dataclass
 class FitResult:
     par  : np.array
@@ -113,6 +106,12 @@ class FitResult:
     chi2 : float
     valid : bool
 
+
+@dataclass
+class FitCollection:
+    fp   : FitPar
+    hp   : HistoPar
+    fr   : FitResult
 
 @dataclass
 class MapXY:
