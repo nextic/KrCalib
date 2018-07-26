@@ -25,7 +25,10 @@ from . core_functions       import divide_np_arrays
 
 
 def nearest(a, v):
-    """Alternative (not optimized) imp of find_nearest"""
+    """Alternative (not optimized) implementation of find_nearest
+    Used for testing purpose only
+
+    """
     nr =a[0]
     diff = 1e+9
     for x in a:
