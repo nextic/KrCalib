@@ -6,7 +6,8 @@ import warnings
 
 #import matplotlib.dates  as md
 from   invisible_cities.core.core_functions import in_range
-import invisible_cities.core.fit_functions as fitf
+#import invisible_cities.core.fit_functions as fitf
+from . import fit_functions_ic as fitf
 
 from   invisible_cities.evm  .ic_containers  import Measurement
 from . fit_functions import chi2
@@ -26,10 +27,10 @@ from . kr_types import PlotLabels
 
 from . histo_functions import labels
 from scipy.optimize import OptimizeWarning
-from numpy import sqrt
+from numpy import sqrt, pi
 
 
-def gaussian_parameters(x : np.array, range : Tuple[Number])->GaussPar:
+def gaussian_parameters(x : np.array, range : Tuple[Number], bin_size : float)->GaussPar:
     """
     Return the parameters defining a Gaussian
     g = N * exp(x - mu)**2 / (2 * std**2)
@@ -38,7 +39,8 @@ def gaussian_parameters(x : np.array, range : Tuple[Number])->GaussPar:
     and the amplitude (inverse of N).
     """
     mu, std = mean_and_std(x, range)
-    amp     = sqrt(2 * np.pi) * std
+    ff     = sqrt(2 * pi) * std
+    amp     = len(x) * bin_size / ff
 
     sel  = in_range(x, *range)
     N = len(x[sel])              # number of samples in range
@@ -57,8 +59,6 @@ def gaussian_fit(x       : np.array,
                  n_sigma : int):
     """Gaussian fit to x,y variables, with fit range defined by n_sigma"""
 
-    #seed      = gauss_seed(x, y)
-    #fit_range = seed[1] - n_sigma * seed[2], seed[1] + n_sigma * seed[2]
     mu  = seed.mu.value
     std = seed.std.value
     amp = seed.amp.value
@@ -67,33 +67,67 @@ def gaussian_fit(x       : np.array,
 
     x, y      = x[in_range(x, *fit_range)], y[in_range(x, *fit_range)]
     yu        = poisson_sigma(y)
-    fseed     =(amp, mu, std)
+    fseed     = (amp, mu, std)
 
+    fp = None
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
         try:
+            # print(x)
+            # print(y)
+            # print(yu)
+            # print(fseed)
             f     = fitf.fit(fitf.gauss, x, y, fseed, sigma=yu)
             c2    = chi2(f, x, y, yu)
             par  = np.array(f.values)
             err  = np.array(f.errors)
             valid = True
 
+            fp = FitPar(x  = x,
+                        y  = y,
+                        yu = yu,
+                        f  = f)
+
+
         except RuntimeError:
-            warnings.warn(f' fit failed for seed  = {seed} ', UserWarning)
+            #warnings.warn(f' fit failed for seed  = {seed} ', UserWarning)
+            print(f' fit failed for seed  = {seed}  due to RunTimeError')
             valid = False
             c2 = NN
             par, err = par_and_err_from_seed(seed)
+
+        except RuntimeWarning:
+            #warnings.warn(f' fit failed for seed  = {seed} ', UserWarning)
+            print(f' fit failed for seed  = {seed}, due to RunTimeWarning, retry fit ')
+
+            fseed = (10*fseed[0], fseed[1], fseed[2] )
+
+            try:
+
+                f     = fitf.fit(fitf.gauss, x, y, fseed, sigma=yu)
+                c2    = chi2(f, x, y, yu)
+                par  = np.array(f.values)
+                err  = np.array(f.errors)
+                valid = True
+
+                fp = FitPar(x  = x,
+                            y  = y,
+                            yu = yu,
+                            f  = f)
+
+            except RuntimeWarning:
+                print(f' fit failed for seed  = {seed}, due to RunTimeWarning, give up ')
+                valid = False
+                c2 = NN
+                par, err = par_and_err_from_seed(seed)
 
         except OptimizeWarning:
-            warnings.warn(f' OptimizeWarning was raised for seed  = {seed} ', UserWarning)
+            #warnings.warn(f' OptimizeWarning was raised for seed  = {seed} ', UserWarning)
+            print(f' OptimizeWarning was raised for seed  = {seed} due to OptimizeWarning')
             valid = False
             c2 = NN
             par, err = par_and_err_from_seed(seed)
 
-    fp = FitPar(x  = x,
-                y  = y,
-                yu = yu,
-                f  = f)
 
     fr = FitResult(par = par,
                    err = err,
@@ -106,7 +140,7 @@ def gaussian_fit(x       : np.array,
 def energy_fit(e : np.array,
                nbins   : int,
                range   : Tuple[float],
-               n_sigma : float = 2.5)->FitCollection:
+               n_sigma : float = 3.0)->FitCollection:
     """
     Takes an "energy vector" (e.g, 1d array), with number of bins enbins and range erange, then:
         1. Computes the histogram of e with enbins in erange. This returns an array of bin
@@ -121,8 +155,8 @@ def energy_fit(e : np.array,
 
     y, b = np.histogram(e, bins= nbins, range=range)
     x = shift_to_bin_centers(b)
-
-    seed = gaussian_parameters(e, range)
+    bin_size = (range[1] - range[0]) / nbins
+    seed = gaussian_parameters(e, range, bin_size)
 
     fp, fr = gaussian_fit(x, y, seed, n_sigma)
 
@@ -159,7 +193,8 @@ def display_energy_fit(fc : FitCollection, figsize : Tuple[int] =(6,6), legend_l
         ax = fig.add_subplot(1, 1, 1)
         plot_energy_fit(fc)
         ax.legend(fontsize= 10, loc=legend_loc)
-    warnings.warn(f' fit did not succeed, cannot display ', UserWarning)
+    else:
+        warnings.warn(f' fit did not succeed, cannot display ', UserWarning)
 
 
 def print_energy_fit(fc : FitCollection):
@@ -172,7 +207,7 @@ def print_energy_fit(fc : FitCollection):
         print(f'  Fit was valid = {fc.fr.valid}')
         print(f' Emu       = {par[1]} +-{err[1]} ')
         print(f' E sigma   = {par[2]} +-{err[2]} ')
-        print(f' chi2    = {fc.fp.chi2} ')
+        print(f' chi2    = {fc.fr.chi2} ')
 
         print(f' sigma E/E (FWHM)     (%) ={r}')
         print(f' sigma E/E (FWHM) Qbb (%) ={fe} ')
@@ -216,14 +251,14 @@ def display_energy_fit_and_chi2(fc : FitCollection, pl : PlotLabels, figsize : T
 
 
 def par_and_err_from_seed(seed : GaussPar) ->Tuple[np.array]:
-    par = np.array(3)
-    err = np.array(3)
+    par = np.zeros(3)
+    err = np.zeros(3)
     par[0] = seed.amp.value
     par[1] = seed.mu.value
     par[2] = seed.std.value
     err[0] = seed.amp.uncertainty
-    err[1] = seed.mu_u.uncertainty
-    err[2] = seed.std_u.uncertainty
+    err[1] = seed.mu.uncertainty
+    err[2] = seed.std.uncertainty
     return par, err
 
 
