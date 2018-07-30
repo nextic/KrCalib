@@ -1,2 +1,2 @@
 #!/usr/bin/bash
-export PYTHONPATH=$PWD:$PYTHONPATH
+export PYTHONPATH=$KRCALIB:$PYTHONPATH
