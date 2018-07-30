@@ -9,22 +9,14 @@ Number = TypeVar('Number', int, float)
 
 from typing import List, Tuple
 
-from   invisible_cities.icaro.hst_functions  import labels
+from invisible_cities.core.core_functions import in_range
 
-from   invisible_cities.core.core_functions import loc_elem_1d
-from   invisible_cities.core.core_functions import weighted_mean_and_std
-
-
-def mean_and_std(x : np.array, range : Tuple[Number])->Tuple[Number]:
+def mean_and_std(x : np.array, range_ : Tuple[Number])->Tuple[Number]:
     """Computes mean and std for an array within a range"""
-    x1 = loc_elem_1d(x, find_nearest(x,range[0]))
-    x2 = loc_elem_1d(x, find_nearest(x,range[1]))
-    xmin = min(x1, x2)
-    xmax = max(x1, x2)
 
-    mu, std = weighted_mean_and_std(x[xmin:xmax], np.ones(len(x[xmin:xmax])))
+    mu = np.mean(x[in_range(x, *range_)])
+    std = np.std(x[in_range(x, *range_)])
     return mu, std
-
 
 
 def find_nearest(array : np.array, value : Number)->Number:
