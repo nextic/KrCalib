@@ -51,15 +51,15 @@ def test_simple_mean_and_std():
               max_value = +1000),
        floats(min_value = + 1,
               max_value = + 20))
-@settings(max_examples=10)
+@settings(max_examples=50)
 
 def test_mean_and_std_positive(mean, sigma):
-    Nevt  = int(1e6)
+    Nevt  = int(1e5)
     e = np.random.normal(mean, sigma, Nevt)
 
-    mu, std = mean_and_std(e, (mean- 3 * sigma,mean + 3 * sigma))
-    assert mu   == approx(mean  , rel=1e-1)
-    assert std  == approx(sigma,  rel=1e-1)
+    mu, std = mean_and_std(e, (mean- 5 * sigma,mean + 5 * sigma))
+    assert mu   == approx(mean  , rel=1e-2)
+    assert std  == approx(sigma,  rel=1e-2)
 
 
 
@@ -70,10 +70,10 @@ def test_mean_and_std_positive(mean, sigma):
 @settings(max_examples=10)
 
 def test_mean_and_std_zero(mean, sigma):
-    Nevt  = int(1e6)
+    Nevt  = int(1e5)
     e = np.random.normal(mean, sigma, Nevt)
 
-    mu, std = mean_and_std(e, (mean- 3 * sigma,mean + 3 * sigma))
+    mu, std = mean_and_std(e, (mean- 5 * sigma,mean + 5 * sigma))
     assert mu   == approx(mean  , abs=1e-1)
     assert std  == approx(sigma,  abs=1e-1)
 
