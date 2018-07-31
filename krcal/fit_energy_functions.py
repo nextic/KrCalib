@@ -250,6 +250,20 @@ def display_energy_fit_and_chi2(fc : FitCollection, pl : PlotLabels, figsize : T
         warnings.warn(f' fit did not succeed, cannot display ', UserWarning)
 
 
+def energy_fitin_XYRange(kre    : KrEvent,
+                        nbins   : int,
+                        range   : Tuple[float],
+                        xr      : Tuple[float],
+                        yr      : Tuple[float],
+                        n_sigma : float = 3.0)->FitCollection:
+
+
+    sel  = in_range(kre.X, *xr) & in_range(kre.Y, *yr)
+    e    = kre.E[sel]
+
+    return energy_fit(e, nbins,erange, n_sigma)
+
+
 def par_and_err_from_seed(seed : GaussPar) ->Tuple[np.array]:
     par = np.zeros(3)
     err = np.zeros(3)
@@ -260,72 +274,3 @@ def par_and_err_from_seed(seed : GaussPar) ->Tuple[np.array]:
     err[1] = seed.mu.uncertainty
     err[2] = seed.std.uncertainty
     return par, err
-
-
-#
-#
-# def energy_fit_in_XYRange(kre    : KrEvent,
-#                           enbins : int,
-#                           erange : Tuple[float],
-#                           xr     : Tuple[float],
-#                           yr     : Tuple[float])->FitCollection:
-#
-#     sel  = in_range(kre.X, *xr) & in_range(kre.Y, *yr)
-#     e    = kre.E[sel]
-#
-#     return energy_fit(e, enbins, erange)
-#
-#
-# def plot_energy_fit_in_XYRange(fc : FitCollection):
-#
-#     frame_data = plt.gcf().add_axes((.1, .3,.8, .6))
-#     plot_energy_fit(fc)
-#
-#     frame_data.set_xticklabels([])
-#     labels("", "Entries", "Energy fit ")
-#     frame_res = plt.gcf().add_axes((.1, .1,
-#                                 .8, .2))
-#     plot_energy_chi2(fc)
-#
-#
-# def energy_fits_in_fiducial_regions(kdst   : DstEvent,
-#                                     enbins : int,
-#                                     erange : Tuple[float]):
-#     """Energy fits in fiducial regions"""
-#
-#     fc_full  = energy_fit(kdst.full.E, enbins=enbins, erange=erange)
-#     fc_fid   = energy_fit(kdst.fid.E, enbins=enbins, erange=erange)
-#     fc_core  = energy_fit(kdst.core.E, enbins=enbins, erange=erange)
-#     fc_hcore = energy_fit(kdst.hcore.E, enbins=enbins, erange=erange)
-#
-#     return FitCollections(full  = fc_full,
-#                           fid   = fc_fid,
-#                           core  = fc_core,
-#                           hcore = fc_hcore)
-#
-#
-# def plot_energy_fits_in_fiducial_regions(fc : FitCollections):
-#     """Plot energy fits in fiducial regions"""
-#
-#     fig = plt.figure(figsize=(10,10))
-#     ax = fig.add_subplot(2, 2, 1)
-#     plot_energy_fit(fc.full)
-#     l = ax.legend(fontsize= 10, loc='upper right')
-#     ax = fig.add_subplot(2, 2, 2)
-#     plot_energy_fit(fc.fid)
-#     l = ax.legend(fontsize= 10, loc='upper right')
-#     ax = fig.add_subplot(2, 2, 3)
-#     plot_energy_fit(fc.core)
-#     l = ax.legend(fontsize= 10, loc='upper right')
-#     ax = fig.add_subplot(2, 2, 4)
-#     l = plot_energy_fit(fc.hcore)
-#     ax.legend(fontsize= 10, loc='upper right')
-#
-#
-# def print_energy_fits_in_fiducial_regions(fc : FitCollections):
-#     """Plot energy fits in fiducial regions"""
-#
-#     print_energy_fit(fc.full)
-#     print_energy_fit(fc.fid)
-#     print_energy_fit(fc.core)
-#     print_energy_fit(fc.hcore)
