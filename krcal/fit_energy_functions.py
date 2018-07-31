@@ -250,7 +250,7 @@ def display_energy_fit_and_chi2(fc : FitCollection, pl : PlotLabels, figsize : T
         warnings.warn(f' fit did not succeed, cannot display ', UserWarning)
 
 
-def energy_fitin_XYRange(kre    : KrEvent,
+def energy_fiting_XYRange(kre    : KrEvent,
                         nbins   : int,
                         range   : Tuple[float],
                         xr      : Tuple[float],
