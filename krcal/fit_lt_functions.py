@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates  as md
-from typing      import List, Tuple
 import warnings
+
+from typing  import List, Tuple, Any, Union
 
 from   invisible_cities.core.core_functions import in_range
 from   invisible_cities.evm  .ic_containers  import Measurement
@@ -37,21 +38,61 @@ from . kr_types import FitResult
 from . kr_types import HistoPar
 from . kr_types import FitCollection
 from . kr_types import PlotLabels
+from . kr_types import FitType
+from . kr_types import Number, Range
 
 from . histo_functions import labels
 from numpy import sqrt, pi
 
 
-def fit_lifetime(z : np.array,
-                 e : np.array,
-                 nbins_z : int,
-                 nbins_e : int,
-                 range_z : Tuple[float],
-                 range_e : Tuple[float])->FitCollection:
+def fit_lifetime(z       : np.array,
+                 e       : np.array,
+                 fit     : FitType      = FitType.unbined,
+                 nbins_z : int          = 12,
+                 nbins_e : int          = 50,
+                 range_z : Range        = None,
+                 range_e : Range        = None)->FitCollection:
+    """
+    Fits the lifetime using a profile (FitType.profile) or an unbined
+    fit (FitType.unbined).
+    """
+
+    if range_z == None or range_e == None:
+        hp = None
+    else:
+        hp = HistoPar2(var = z,
+                       nbins = nbins_z,
+                       range = range_z,
+                       var2 = e,
+                       nbins2 = nbins_e,
+                       range2 = range_e)
+
+    if fit == FitType.profile:
+        fp, fr = fit_lifetime_profile(z, e, nbins_z, nbins_e, range_z, range_e)
+    else:  # default is unbined
+        fp, fr = fit_lifetime_unbined(z, e, nbins_z)
+
+    return FitCollection(fp = fp, hp = hp, fr = fr)
+
+
+def fit_lifetime_profile(z : np.array,
+                         e : np.array,
+                         nbins_z : int,
+                         nbins_e : int,
+                         range_z : Tuple[float],
+                         range_e : Tuple[float])->Tuple[FitPar, FitResult]:
     """
     Make a profile of the input data and fit it to an exponential
-    function with the parameters automatically estimated.
+    function.
     """
+
+
+    fp    = None
+    valid = True
+    c2    = NN
+    par   = NN  * np.ones(2)
+    err   = NN  * np.ones(2)
+
     x, y, yu     = fitf.profileX(z, e, nbins_z)
     valid_points = yu > 0
 
@@ -61,31 +102,118 @@ def fit_lifetime(z : np.array,
 
     seed = expo_seed(x, y)
 
-    f    = fitf.fit(fitf.expo, x, y, seed, sigma=yu)
+    try:
+        f = fitf.fit(fitf.expo, x, y, seed, sigma=yu)
+        c2    = chi2(f, x, y, yu)
+        par  = np.array(f.values)
+        par[1] = - par[1]
+        err  = np.array(f.errors)
 
-    c2    = chi2(f, x, y, yu)
-    par  = np.array(f.values)
-    err  = np.array(f.errors)
-    valid = True
-
-    fp = FitPar(x  = x,
-                y  = y,
-                yu = yu,
-                f  = f)
+        fp = FitPar(x  = x,
+                    y  = y,
+                    yu = yu,
+                    f  = f.fn)
+    except:
+        print(f' fit failed for seed  = {seed}')
+        valid = False
+        raise
 
     fr = FitResult(par = par,
                    err = err,
                    chi2 = c2,
                    valid = valid)
 
-    hp = HistoPar2(var = z,
-                  nbins = nbins_z,
-                  range = range_z,
-                  var2 = e,
-                  nbins2 = nbins_e,
-                  range2 = range_e)
 
-    return FitCollection(fp = fp, hp = hp, fr = fr)
+    return fp, fr
+
+
+
+def fit_lifetime_unbined(z : np.array,
+                        e : np.array,
+                        nbins_z : int,
+                        weights : bool = True,
+                        chi2    : bool = True):
+    """
+    Based on
+
+    numpy.polyfit(x, y, deg, rcond=None, full=False, w=None, cov=False)
+    Fit a polynomial p(x) = p[0] * x**deg + ... + p[deg] of degree deg to points (x, y).
+    Returns a vector of coefficients p that minimises the squared error.
+
+    E = E0 exp(-z/lt)
+    y = -log(E) = (z/lt) - log(E)
+
+    Weights:
+    sigma(E) = sqrt(E)
+    sigma^2 y = (dy/dE)^2 * sigma^2(E) = (1/E)^2 * E = 1/E
+    sigma(y) = 1/sqrt(E)
+    w = 1 / sigma(y) = sqrt(E)
+    """
+
+    fp    = None
+    valid = True
+    c2    = NN
+    par   = NN  * np.ones(2)
+    err   = NN  * np.ones(2)
+
+    if weights:
+        w = np.sqrt(e)
+    else:
+        w = None
+
+    y = - np.log(e)
+    cc, cov = np.polyfit(z, y, deg=1, full = False, w = w, cov = True )
+
+    a, b = cc[0], cc[1]
+
+    try:
+        lt   = 1/a
+        par[1] = lt
+        err[1] = lt**2 * np.sqrt(cov[0, 0])
+        e0     = np.exp(-b)
+        par[0] = e0
+        err[0] = e0    * np.sqrt(cov[1, 1])
+    except:
+        valid = False
+        print(f'lifetime : {lt} +- {ult}')
+        print('e0        : {e0} +- {ue0}')
+        raise
+
+
+
+    if chi2 and valid:
+        #xs, ys, uys = fitf.profileX(z, y, nbins_z)
+        #cok = ~np.isnan(uys)
+        try:
+            #res   = (a * xs[cok] + b - ys[cok]) /uys[cok]
+            #dof   = len(xs)-1
+            #c2    = np.sum(res**2) /dof
+
+            x, y, yu     = fitf.profileX(z, e, nbins_z)
+            valid_points = yu > 0
+            dof   = len(x)-1
+            x    = x [valid_points]
+            y    = y [valid_points]
+            yu   = yu[valid_points]
+
+            res  = (e0 * np.exp(-x/lt) - y) / yu
+            c2    = np.sum(res**2) /dof
+
+            fp = FitPar(x  = x,
+                        y  = y,
+                        yu = yu,
+                        f  = lambda z: e0 * np.exp(-z/lt))
+        except:
+            valid = False
+            raise
+
+
+    fr = FitResult(par = par,
+                   err = err,
+                   chi2 = c2,
+                   valid = valid)
+
+    return fp, fr
 
 
 def plot_fit_lifetime(fc : FitCollection):
@@ -93,45 +221,61 @@ def plot_fit_lifetime(fc : FitCollection):
     if fc.fr.valid:
         par  = fc.fr.par
         err  = fc.fr.err
-        plt.hist2d(fc.hp.var,
-                   fc.hp.var2,
-                   bins = (fc.hp.nbins,fc.hp.nbins2),
-                   range= (fc.hp.range,fc.hp.range2))
 
-        plt.errorbar(fc.fp.x, fc.fp.y, fc.fp.yu, np.diff(fc.fp.x)[0]/2, fmt="kp", ms=7, lw=3)
-        plt.plot(fc.fp.x, fc.fp.f.fn(fc.fp.x), "r-", lw=4)
+        if fc.hp:
+            plt.hist2d(fc.hp.var,
+                        fc.hp.var2,
+                        bins = (fc.hp.nbins,fc.hp.nbins2),
+                        range= (fc.hp.range,fc.hp.range2))
+        x = fc.fp.x
+        y = fc.fp.y
+        yu = fc.fp.yu
+        f = fc.fp.f
+
+        plt.errorbar(x, y, yu, np.diff(x)[0]/2, fmt="kp", ms=7, lw=3)
+        plt.plot(x, f(x), "r-", lw=4)
         plt.xlabel('Z')
         plt.ylabel('E')
         plt.title(f'Ez0 ={par[0]:7.2f}+-{err[0]:7.3f},   LT={par[1]:7.2f}+-{err[1]:7.3f}')
     else:
         warnings.warn(f' fit did not succeed, cannot plot ', UserWarning)
 
-def display_fit_lifetime(fc : FitCollection, figsize : Tuple[int] =(6,6)):
-        fig = plt.figure(figsize=figsize)
-        ax = fig.add_subplot(1, 1, 1)
-        plot_fit_lifetime(fc)
 
 
-def display_fit_lifetime_and_chi2(fc : FitCollection, figsize : Tuple[int] =(6,6)):
-        fig = plt.figure(figsize=figsize)
-        ax = fig.add_subplot(1, 1, 1)
+def plot_fit_lifetime_chi2(fc : FitCollection):
 
-        # create a figure and plot 2D histogram and profile
-        frame_data = plt.gcf().add_axes((.1, .3, .8, .6))
-        plot_fit_lifetime(fc)
+    if fc.fr.valid:
+        par  = fc.fr.par
+        err  = fc.fr.err
+        x = fc.fp.x
+        y = fc.fp.y
+        yu = fc.fp.yu
+        f = fc.fp.f
 
-        #    add a second frame
-        #
-        lims = plt.xlim()
-        frame_res = plt.gcf().add_axes((.1, .1, .8, .2))
-        # Plot (y - f(x)) / sigma(y) as a function of x
-        plt.errorbar(fc.fp.x, (fc.fp.f.fn(fc.fp.x) - fc.fp.y) / fc.fp.yu, 1, np.diff(fc.fp.x)[0] / 2,
-                         fmt="p", c="k")
+        lims = (x[0] - np.diff(x)[0] / 2, x[-1] + np.diff(x)[0] / 2)
+
+        plt.errorbar(x, (f(x) - y) / yu, 1, np.diff(x)[0] / 2, fmt="p", c="k")
         plt.plot(lims, (0, 0), "g--")
         plt.xlim(*lims)
         plt.ylim(-5, +5)
         plt.xlabel("Z")
 
+        plt.title(f'chi2')
+    else:
+        warnings.warn(f' fit did not succeed, cannot plot ', UserWarning)
+
+
+
+def print_fit_lifetime(fc : FitCollection):
+
+    if fc.fr.valid:
+        par  = fc.fr.par
+        err  = fc.fr.err
+        print(f' Ez0     = {par[0]} +-{err[0]} ')
+        print(f' LT      = {par[1]} +-{err[1]} ')
+        print(f' chi2    = {fc.fr.chi2} ')
+    else:
+        warnings.warn(f' fit did not succeed, cannot print ', UserWarning)
 
 
 
