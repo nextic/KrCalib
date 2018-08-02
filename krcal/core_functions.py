@@ -4,10 +4,9 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 
-from typing import TypeVar
-Number = TypeVar('Number', int, float)
-
 from typing import List, Tuple
+from . kr_types import Number
+
 
 from invisible_cities.core.core_functions import in_range
 
