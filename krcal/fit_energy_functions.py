@@ -30,7 +30,7 @@ from scipy.optimize import OptimizeWarning
 from numpy import sqrt, pi
 
 
-def gaussian_parameters(x : np.array, range : Tuple[Number], bin_size : float)->GaussPar:
+def gaussian_parameters(x : np.array, range : Tuple[Number], bin_size : float = 1)->GaussPar:
     """
     Return the parameters defining a Gaussian
     g = N * exp(x - mu)**2 / (2 * std**2)
@@ -40,6 +40,7 @@ def gaussian_parameters(x : np.array, range : Tuple[Number], bin_size : float)->
     """
     mu, std = mean_and_std(x, range)
     ff     = sqrt(2 * pi) * std
+
     amp     = len(x) * bin_size / ff
 
     sel  = in_range(x, *range)
