@@ -3,12 +3,23 @@ import numpy as np
 from typing      import Tuple
 from typing      import Dict
 from typing      import List
+from typing      import TypeVar
+
+from enum        import Enum
 
 from dataclasses import dataclass
 
 from   invisible_cities.types.ic_types import minmax
 from   invisible_cities.evm  .ic_containers  import Measurement
 from   invisible_cities.evm.ic_containers import FitFunction
+
+Number = TypeVar('Number', int, float)
+Range = TypeVar('Range', None, Tuple[float])
+
+
+class FitType(Enum):
+    profile = 1
+    unbined = 2
 
 
 @dataclass
