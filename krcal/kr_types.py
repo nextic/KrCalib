@@ -53,7 +53,7 @@ class KrRaw(Point):
     S2e  : np.array
     S1e  : np.array
     S2q  : np.array
-    T    : np.array
+    T    : np.array # time
 
 
 @dataclass
@@ -61,6 +61,7 @@ class KrEvent(KrRaw):
     """Adss corrected energies"""
     Elt  : np.array
     E    : np.array
+    Qlt  : np.array
     Q    : np.array
 
 
@@ -87,9 +88,10 @@ class HistoPar:
 
 
 @dataclass
-class HistoPar2D:
-    varx    : HistoPar
-    vary    : HistoPar
+class HistoPar2(HistoPar):
+    var2    : np.array
+    nbins2 : int
+    range2 : Tuple[float]
 
 
 @dataclass

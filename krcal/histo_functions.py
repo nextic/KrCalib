@@ -68,7 +68,7 @@ def display_h1d(x      : np.array,
 
     fig = plt.figure(figsize=figsize)
     ax      = fig.add_subplot(1, 1, 1)
-    n, b, p = h1d(x, bins=50, range = range)
+    n, b, p = h1d(x, bins=bins, range = range)
     plot_histo(pltLabels, ax)
 
 def gaussian_histo_example(mean: float, nevt: float = 1e5):
