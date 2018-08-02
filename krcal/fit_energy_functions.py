@@ -250,18 +250,18 @@ def display_energy_fit_and_chi2(fc : FitCollection, pl : PlotLabels, figsize : T
         warnings.warn(f' fit did not succeed, cannot display ', UserWarning)
 
 
-def energy_fiting_XYRange(kre    : KrEvent,
-                        nbins   : int,
-                        range   : Tuple[float],
-                        xr      : Tuple[float],
-                        yr      : Tuple[float],
-                        n_sigma : float = 3.0)->FitCollection:
-
-
-    sel  = in_range(kre.X, *xr) & in_range(kre.Y, *yr)
-    e    = kre.E[sel]
-
-    return energy_fit(e, nbins,erange, n_sigma)
+# def energy_fit_XYRange(kre    : KrEvent,
+#                        nbins   : int,
+#                        range   : Tuple[float],
+#                        xr      : Tuple[float],
+#                        yr      : Tuple[float],
+#                        n_sigma : float = 3.0)->FitCollection:
+#
+#
+#     sel  = in_range(kre.X, *xr) & in_range(kre.Y, *yr)
+#     e    = kre.E[sel]
+#
+#     return energy_fit(e, nbins,erange, n_sigma)
 
 
 def par_and_err_from_seed(seed : GaussPar) ->Tuple[np.array]:
