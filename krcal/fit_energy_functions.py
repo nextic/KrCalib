@@ -86,7 +86,7 @@ def gaussian_fit(x       : np.array,
             fp = FitPar(x  = x,
                         y  = y,
                         yu = yu,
-                        f  = f)
+                        f  = f.fn)
 
 
         except RuntimeError:
@@ -182,7 +182,7 @@ def plot_energy_fit(fc : FitCollection):
                              label=r'$\mu={:7.2f} +- {:7.3f},\ \sigma={:7.2f} +- {:7.3f}$'.format(
                                par[1], err[1], par[2], err[2]))
 
-        plt.plot(fc.fp.x, fc.fp.f.fn(fc.fp.x), "r-", lw=4)
+        plt.plot(fc.fp.x, fc.fp.f(fc.fp.x), "r-", lw=4)
     else:
         warnings.warn(f' fit did not succeed, cannot plot ', UserWarning)
 
@@ -223,7 +223,7 @@ def plot_energy_fit_chi2(fc : FitCollection):
         f  = fc.fp.f
         y  = fc.fp.y
         yu = fc.fp.yu
-        plt.errorbar(x, (f.fn(x) - y) / yu, 1, np.diff(x)[0] / 2, fmt="p", c="k")
+        plt.errorbar(x, (f(x) - y) / yu, 1, np.diff(x)[0] / 2, fmt="p", c="k")
         lims = plt.xlim()
         plt.plot(lims, (0, 0), "g--")
         plt.xlim(*lims)
