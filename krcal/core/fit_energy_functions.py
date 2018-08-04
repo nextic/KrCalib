@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from typing      import List, Tuple
+from typing      import List, Tuple, Sequence, Iterable
 import warnings
 
 #import matplotlib.dates  as md
@@ -11,7 +11,7 @@ from . import fit_functions_ic as fitf
 
 from   invisible_cities.evm  .ic_containers  import Measurement
 from . fit_functions import chi2
-from . core_functions import mean_and_std
+from . stat_functions import mean_and_std
 from . core_functions import Number
 
 from invisible_cities.core .stat_functions import poisson_sigma
@@ -138,7 +138,7 @@ def gaussian_fit(x       : np.array,
     return fp, fr
 
 
-def energy_fit(e : np.array,
+def fit_energy(e : np.array,
                nbins   : int,
                range   : Tuple[float],
                n_sigma : float = 3.0)->FitCollection:
@@ -168,7 +168,7 @@ def energy_fit(e : np.array,
     return FitCollection(fp = fp, hp = hp, fr = fr)
 
 
-def plot_energy_fit(fc : FitCollection):
+def plot_fit_energy(fc : FitCollection):
     """Takes a KrEvent and a FitPar object and plots fit"""
 
     if fc.fr.valid:
@@ -188,17 +188,7 @@ def plot_energy_fit(fc : FitCollection):
         warnings.warn(f' fit did not succeed, cannot plot ', UserWarning)
 
 
-def display_energy_fit(fc : FitCollection, figsize : Tuple[int] =(6,6), legend_loc='best'):
-    if fc.fr.valid:
-        fig = plt.figure(figsize=figsize)
-        ax = fig.add_subplot(1, 1, 1)
-        plot_energy_fit(fc)
-        ax.legend(fontsize= 10, loc=legend_loc)
-    else:
-        warnings.warn(f' fit did not succeed, cannot display ', UserWarning)
-
-
-def print_energy_fit(fc : FitCollection):
+def print_fit_energy(fc : FitCollection):
 
     par  = fc.fr.par
     err  = fc.fr.err
@@ -216,7 +206,7 @@ def print_energy_fit(fc : FitCollection):
         warnings.warn(f' mu  = {par[1]} ', UserWarning)
 
 
-def plot_energy_fit_chi2(fc : FitCollection):
+def plot_fit_energy_chi2(fc : FitCollection):
     """Takes a KrEvent and a FitPar object and plots fit"""
 
     if fc.fr.valid:
@@ -264,8 +254,23 @@ def display_energy_fit_and_chi2(fc : FitCollection, pl : PlotLabels, figsize : T
 #
 #     return energy_fit(e, nbins,erange, n_sigma)
 
+def fit_gaussian_experiments(exps    : np.array,
+                             nbins   : int       = 50,
+                             range   : Range     = (9e+3, 11e+3),
+                             n_sigma : int       =3)->List[FitCollection]:
+    return [fit_energy(e, nbins, range, n_sigma) for e in exps]
 
-def par_and_err_from_seed(seed : GaussPar) ->Tuple[np.array]:
+
+def gaussian_params_from_fcs(fcs : FitCollection) ->Iterable[float]:
+    mus   = np.array([fc.fr.par[1] for fc in fcs])
+    umus  = np.array([fc.fr.err[1] for fc in fcs])
+    stds  = np.array([fc.fr.par[2] for fc in fcs])
+    ustds = np.array([fc.fr.err[2] for fc in fcs])
+    chi2s = np.array([fc.fr.chi2   for fc in fcs])
+    return mus, umus, stds, ustds, chi2s
+
+
+def par_and_err_from_seed(seed : GaussPar) ->Tuple[np.array, np.array]:
     par = np.zeros(3)
     err = np.zeros(3)
     par[0] = seed.amp.value

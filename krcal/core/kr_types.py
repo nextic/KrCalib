@@ -14,7 +14,8 @@ from   invisible_cities.evm  .ic_containers  import Measurement
 from   invisible_cities.evm.ic_containers import FitFunction
 
 Number = TypeVar('Number', int, float)
-Range = TypeVar('Range', None, Tuple[float])
+Range = TypeVar('Range', None, Tuple[float, float])
+Array = TypeVar('Array', None, np.array)
 
 
 class FitType(Enum):
