@@ -25,10 +25,10 @@ import invisible_cities.core.fit_functions as fitf
 from invisible_cities.core .core_functions import in_range
 from invisible_cities.icaro.hst_functions  import shift_to_bin_centers
 
-from icaro.core.fit_functions import fit_slices_2d_expo
-from icaro.core.fit_functions import fit_slices_1d_gauss
-from icaro.core.fit_functions import expo_seed
-from icaro.core.fit_functions import to_relative
+from krcal.core.fit_functions import fit_slices_2d_expo
+from krcal.core.fit_functions import fit_slices_1d_gauss
+from krcal.core.fit_functions import expo_seed
+from krcal.core.fit_functions import to_relative
 from invisible_cities.icaro.hst_functions import labels
 
 

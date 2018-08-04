@@ -8,10 +8,10 @@ Plots functions for Kr,
 @author: G. Martinez, J.A.hernando
 """
 
-import numpy                as np
-import matplotlib.pyplot    as plt
-import krcal.utils.hst_functions   as hst
-import krcal.dev.akr_functions     as akr
+import numpy                              as np
+import matplotlib.pyplot                  as plt
+import krcal.utils.hst_extend_functions   as hst
+import krcal.dev.akr_functions            as akr
 
 import invisible_cities.core.fit_functions as fitf
 from invisible_cities.icaro.hst_functions import labels
