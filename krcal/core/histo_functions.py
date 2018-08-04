@@ -1,10 +1,12 @@
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from typing import List, Tuple, Any
+import random
 
-from . core_functions  import mean_and_std
-from . core_functions  import Number
+import matplotlib.pyplot as plt
+
+from typing import Tuple
+
+from . stat_functions  import mean_and_std
+from . kr_types import Number, Array
 from . kr_types        import PlotLabels
 
 
@@ -16,10 +18,10 @@ def labels(pl : PlotLabels):
     plt.ylabel(pl.y)
     plt.title (pl.title)
 
-def h1d(x      : np.array,
+def h1(x      : np.array,
        bins    : int,
        range   : Tuple[float],
-       weights : Any   = None,
+       weights : Array = None,
        log     : bool  = False,
        normed  : bool  = False,
        color   : str   = 'black',
@@ -54,52 +56,19 @@ def plot_histo(pltLabels: PlotLabels, ax, legendsize=10, legendloc='best', label
         plt.title(pltLabels.title)
 
 
-def display_h1d(x      : np.array,
-                bins    : int,
-                range   : Tuple[float],
-                weights : Any   = None,
-                log     : bool  = False,
-                normed  : bool  = False,
-                color   : str   = 'black',
-                width   : float = 1.5,
-                style   : str   ='solid',
-                pltLabels=PlotLabels(x='x', y='y', title=None),
-                figsize=(6,6)):
+def h1d(x       : np.array,
+        bins    : int,
+        range   : Tuple[float],
+        weights : Array = None,
+        log     : bool  = False,
+        normed  : bool  = False,
+        color   : str   = 'black',
+        width   : float = 1.5,
+        style   : str   ='solid',
+        pltLabels=PlotLabels(x='x', y='y', title=None),
+        figsize=(6,6)):
 
     fig = plt.figure(figsize=figsize)
     ax      = fig.add_subplot(1, 1, 1)
-    n, b, p = h1d(x, bins=bins, range = range)
+    n, b, p = h1(x, bins=bins, range = range)
     plot_histo(pltLabels, ax)
-
-def gaussian_histo_example(mean: float, nevt: float = 1e5):
-    Nevt  = int(nevt)
-    sigmas = np.random.uniform(low=1.0, high=10., size=4)
-
-    fig = plt.figure(figsize=(10,10))
-    pltLabels =PlotLabels(x='Energy', y='Events', title='Gaussian')
-
-    e = np.random.normal(100, sigmas[0], Nevt)
-    ax      = fig.add_subplot(2, 2, 1)
-    n, b, p = h1d(e, bins=100, range=(mean - 5 * sigmas[0],mean + 5 * sigmas[0]))
-    plot_histo(pltLabels, ax)
-
-    e = np.random.normal(100, sigmas[1], Nevt)
-    ax      = fig.add_subplot(2, 2, 2)
-    n, b, p = h1d(e, bins=100, range=(mean - 5 * sigmas[1],mean + 5 * sigmas[1]), log=True)
-    pltLabels.title = 'Gaussian log scale'
-    plot_histo(pltLabels, ax, legendloc='upper left')
-
-    e = np.random.normal(100, sigmas[2], Nevt)
-    ax      = fig.add_subplot(2, 2, 3)
-    n, b, p = h1d(e, bins=100, range=(mean - 5 * sigmas[2],mean + 5 * sigmas[2]), normed=True)
-    pltLabels.title = 'Gaussian normalized'
-    plot_histo(pltLabels, ax, legendloc='upper right')
-
-    e = np.random.normal(100, sigmas[3], Nevt)
-    ax      = fig.add_subplot(2, 2, 4)
-    n, b, p = h1d(e, bins=100, range=(mean - 5 * sigmas[3],mean + 5 * sigmas[3]),
-                  color='red', width=2.0, style='dashed')
-    pltLabels.title = 'Gaussian change histo pars'
-    plot_histo(pltLabels, ax, legendsize=14)
-
-    plt.tight_layout()

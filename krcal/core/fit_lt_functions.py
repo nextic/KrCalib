@@ -4,14 +4,16 @@ import matplotlib.pyplot as plt
 import matplotlib.dates  as md
 import warnings
 
-from typing  import List, Tuple, Any, Union
+
+from typing  import List, Tuple, Sequence, Iterable
+
 
 from   invisible_cities.core.core_functions import in_range
 from   invisible_cities.evm  .ic_containers  import Measurement
 
 from . import fit_functions_ic as fitf
 from . fit_functions import chi2
-from . core_functions import mean_and_std
+from . stat_functions import mean_and_std
 from . core_functions import Number
 
 from invisible_cities.core .stat_functions import poisson_sigma
@@ -79,13 +81,12 @@ def fit_lifetime_profile(z : np.array,
                          e : np.array,
                          nbins_z : int,
                          nbins_e : int,
-                         range_z : Tuple[float],
-                         range_e : Tuple[float])->Tuple[FitPar, FitResult]:
+                         range_z : Range,
+                         range_e : Range)->Tuple[FitPar, FitResult]:
     """
     Make a profile of the input data and fit it to an exponential
     function.
     """
-
 
     fp    = None
     valid = True
@@ -129,8 +130,8 @@ def fit_lifetime_profile(z : np.array,
 
 
 
-def fit_lifetime_unbined(z : np.array,
-                         e : np.array,
+def fit_lifetime_unbined(z       : np.array,
+                         e       : np.array,
                          nbins_z : int,
                          weights : bool = True,
                          chi2    : bool = True):
@@ -177,11 +178,6 @@ def fit_lifetime_unbined(z : np.array,
         err[0] = e0    * np.sqrt(cov[1, 1])
     except:
         valid = False
-        print(f'lifetime : {lt} +- {ult}')
-        print('e0        : {e0} +- {ue0}')
-        raise
-
-
 
     if chi2 and valid:
         #xs, ys, uys = fitf.profileX(z, y, nbins_z)
@@ -246,7 +242,6 @@ def plot_fit_lifetime(fc : FitCollection):
         warnings.warn(f' fit did not succeed, cannot plot ', UserWarning)
 
 
-
 def plot_fit_lifetime_chi2(fc : FitCollection):
 
     if fc.fr.valid:
@@ -270,7 +265,6 @@ def plot_fit_lifetime_chi2(fc : FitCollection):
         warnings.warn(f' fit did not succeed, cannot plot ', UserWarning)
 
 
-
 def print_fit_lifetime(fc : FitCollection):
 
     if fc.fr.valid:
@@ -282,6 +276,25 @@ def print_fit_lifetime(fc : FitCollection):
     else:
         warnings.warn(f' fit did not succeed, cannot print ', UserWarning)
 
+
+def fit_lifetime_experiments(zs      : np.array,
+                             es      : np.array,
+                             fit     : FitType  = FitType.unbined,
+                             nbins_z : int      = 20,
+                             nbins_e : int      = 50,
+                             range_z : Range    = (0, 500),
+                             range_e : Range    = (9000, 11000)):
+
+    return [fit_lifetime(z, e, fit, nbins_z, nbins_e, range_z, range_e) for z,e in zip(zs,es)]
+
+
+def lt_params_from_fcs(fcs : FitCollection)->Iterable[float]:
+    e0s   = np.array([fc.fr.par[0] for fc in fcs])
+    ue0s  = np.array([fc.fr.err[0] for fc in fcs])
+    lts   = np.array([fc.fr.par[1] for fc in fcs])
+    ults  = np.array([fc.fr.err[1] for fc in fcs])
+    chi2s = np.array([fc.fr.chi2   for fc in fcs])
+    return e0s, ue0s, lts, ults, chi2s
 
 
 # def fit_lifetime_slices(kre : KrEvent,

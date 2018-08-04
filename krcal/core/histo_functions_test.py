@@ -20,7 +20,7 @@ from invisible_cities.core.testing_utils       import FLOAT_ARRAY
 from invisible_cities.core.testing_utils       import random_length_float_arrays
 
 import matplotlib.pyplot as plt
-from . histo_functions              import h1d
+from . histo_functions              import h1
 from invisible_cities.icaro. hst_functions import shift_to_bin_centers
 
 def test_matplotlib_histo_equals_numpy_histo():
@@ -40,14 +40,14 @@ def test_matplotlib_histo_equals_numpy_histo():
     assert_allclose(bins, bins2)
 
 
-def test_h1d():
+def test_h1():
     Nevt  = int(1e5)
     mean = 200
     sigma = 10
     nbins =50
     x = np.random.normal(mean, sigma, Nevt)
     r = mean - 5 * sigma, mean + 5 * sigma
-    n, b, p = h1d(x, bins=nbins, range=r)
+    n, b, p = h1(x, bins=nbins, range=r)
     imax = np.argmax(n)
     assert len(n)   == exactly(nbins)
     assert b[imax - 2] < mean <  b[imax + 2]
