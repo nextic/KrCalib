@@ -156,6 +156,26 @@ def str_range(Vname, Vrange, form = '3.0f'):
     s = s.format(*Vrange)
     return s
 
+#--- plot lifetime in regions of R, phi, etc.
+
+
+def plt_lt_vs_t_vs_v(fs, Vbins, Tcenters, Vname):
+    """ plot the lt vs t and a different variable V (i.e Radius)
+    It takes fs that are the restuls of the fit in Time bins
+    """
+    c = hst.Canvas(1, 2)
+    for i, fi in enumerate(fs):
+        label = Vname + ' [' + str(Vbins[i]) + ', ' + str(Vbins[i+1]) + ']'
+        lts  = [fij[1].value       for fij in fi]
+        ults = [fij[1].uncertainty for fij in fi]
+        e0s, ue0s = [fij[1].value for fij in fi], [fij[0].uncertainty for fij in fi]
+        hst.errorbar(Tcenters, lts, ults, canvas = c(1), label = label, xylabels = ('time (h)', 'lt ($\mu$s)'))
+        plt.gca().legend()
+        hst.errorbar(Tcenters, e0s, ue0s, canvas = c(2), label = label, xylabels = ('time (h)', 'e0 (pes)'))
+        plt.gca().legend()
+    plt.tight_layout()
+    return
+
 #---- Plotting the Energy resolution
 
 def plt_energy(V, Vbins, label = ''):

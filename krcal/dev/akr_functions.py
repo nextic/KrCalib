@@ -263,6 +263,17 @@ def ltmap_vs_t_lsqfit(X, Y, Z, E, T, XYbins, Tbins, min_entries = 20):
         fs.append(fi)
     return fs
 
+#--- fit the lifetime in regions of a variable an time
+
+def lt_vs_t_vs_v_lsqfit(Z, E, T, V, Tbins, Vbins, nbins = 12):
+    """ it retuns the result of the lifetime fit in bins of time and in bins of a V variable (i.e Radius)
+    """
+    fs = []
+    for i in range(len(Vbins)-1):
+        sel = in_range(V, Vbins[i], Vbins[i+1])
+        fi = lt_vs_t_lsqfit(Z[sel], E[sel], T[sel], Tbins, nbins = nbins)
+        fs.append(fi)
+    return fs
 
 #---- Functions related with e0maps
 
