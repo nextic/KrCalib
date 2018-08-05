@@ -28,7 +28,7 @@ from . fit_energy_functions       import gaussian_parameters
 from . fit_energy_functions       import fit_energy
 from . fit_functions              import chi2
 from . stat_functions             import mean_and_std
-from . stat_functions             import run_gaussian_experiments
+from . stat_functions             import gaussian_experiments
 from . fit_energy_functions       import fit_gaussian_experiments
 from . fit_energy_functions       import gaussian_params_from_fcs
 
@@ -61,20 +61,20 @@ def test_fits_yield_good_pulls_fixed_mean_and_std():
     mean = 1e+4
     std  = 0.02
     sigma = mean * std
-    exps = run_gaussian_experiments(mexperiments = 1000, nsample =1000, mean=mean, std = sigma)
+    exps = gaussian_experiments(mexperiments = 1000, nsample =1000, mean=mean, std = sigma)
     fcs = fit_gaussian_experiments(exps, nbins = 50, range =(9e+3, 11e+3), n_sigma =3)
-    mus, umus, stds, ustds = gaussian_params_from_fcs(fcs)
+    mus, umus, stds, ustds, chi2s = gaussian_params_from_fcs(fcs)
 
 
     p_mu, p_std = mean_and_std((mus-mean) / umus, range_ =(-5,5))
     print(f'mean: mu, std: -> {p_mu}, {p_std}')
-    assert p_mu   == approx(0,  rel=0.2)
-    assert p_std   == approx(1,  rel=0.2)
+    assert p_mu   == approx(0,  abs=0.1)
+    assert p_std   == approx(1,  abs=0.2)
 
     p_mu, p_std = mean_and_std((stds-sigma) / ustds, range_ =(-5,5))
     print(f'mean: mu, std: -> {p_mu}, {p_std}')
     assert p_mu   <1 # std is biased
-    assert p_std   == approx(1,  rel=0.2)
+    assert p_std   == approx(1,  abs=0.2)
 
 
 
