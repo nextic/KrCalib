@@ -90,7 +90,7 @@ def get_xymap(correction_filename, xymap_name):
     return XYMap(x, y, values, errors, None)
 
 
-def write_lifetime_correction(run_number, Trange, XYbins,
+def write_lifetime_correction(correction_filename, run_number, Trange, XYbins,
                               Escale, ELT,  Eok, Qscale, QLT, Qok, nevt,
                               filename_prefix = 'akr_corrections_run'):
 
@@ -99,7 +99,6 @@ def write_lifetime_correction(run_number, Trange, XYbins,
     XYpitch   = np.diff(XYbins)[0]
     XYcenters = 0.5*(XYbins[:-1]+XYbins[1:])
 
-    correction_filename = filename_prefix+str(run_number)+'.h5'
     print('writing corrections :', correction_filename)
     t_min, t_max = Trange
     with tb.open_file(correction_filename, "w") as correction_file:
