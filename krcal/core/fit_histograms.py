@@ -3,6 +3,7 @@ import random
 
 import matplotlib.pyplot as plt
 from . histo_functions import h1
+from . histo_functions import plot_histo
 from . kr_types        import PlotLabels
 
 
@@ -43,14 +44,14 @@ def gaussian_histo_example(mean, nevt, figsize=(10,10)):
 
 
 def histo_gaussian_experiment_sample(exps, mexperiments, samples=9, canvas=(3,3),
-                                     bins = 50, range = (9e+3,11e+3),
+                                     bins = 50, range_e = (9e+3,11e+3),
                                      figsize=(10,10)):
     """Takes an array of gaussian experiments and samples it"""
     fig = plt.figure(figsize=figsize)
     ks  = random.sample(range(mexperiments), samples)
     for i,k in enumerate(ks):
         ax  = fig.add_subplot(canvas[0], canvas[1], i+1)
-        (_) = h1(exps[k], bins=bins, range = range)
+        (_) = h1(exps[k], bins=bins, range = range_e)
 
     plt.tight_layout()
 

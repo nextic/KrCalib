@@ -12,7 +12,7 @@ from . import fit_functions_ic as fitf
 from   invisible_cities.evm  .ic_containers  import Measurement
 from . fit_functions import chi2
 from . stat_functions import mean_and_std
-from . core_functions import Number
+from . kr_types import Number, Range
 
 from invisible_cities.core .stat_functions import poisson_sigma
 from invisible_cities.icaro. hst_functions import shift_to_bin_centers

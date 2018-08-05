@@ -23,6 +23,12 @@ class FitType(Enum):
     unbined = 2
 
 
+# @dataclass
+# class Range:
+#     lo  : Number
+#     up  : Number
+
+
 @dataclass
 class S1D:
     """S1 description"""
