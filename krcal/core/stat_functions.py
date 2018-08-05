@@ -38,7 +38,8 @@ def gaussian_experiments_variable_mean_and_std(mexperiments : Number   = 1000,
     sample = int(nsample)
     stds   = np.random.uniform(low=std_range[0], high=std_range[1], size=sample)
     means  = np.random.uniform(low=mean_range[0], high=mean_range[1], size=sample)
-    return [gaussian_experiment(Nevt, mean, std) for mean in means for std in stds]
+    exps   = [gaussian_experiment(Nevt, mean, std) for mean in means for std in stds]
+    return means, stds, exps
 
 
 def energy_lt(z : np.array, e0: float, lt: float)->np.array:
