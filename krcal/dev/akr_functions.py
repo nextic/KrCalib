@@ -36,7 +36,7 @@ default_cmap = 'jet'
 
 
 XYMap = namedtuple('XYMap',
-                   ('x', 'y', 'value', 'error', 'valid'))
+                   ('x', 'y', 'value', 'uncertainty', 'valid'))
 
 
 def selection_in_band(E, Z, Erange, Zrange, Zfitrange, nsigma = 3.5,
@@ -323,6 +323,30 @@ def xymap_compare(xymap1, xymap0, mask1, mask0, type = 'difference', default = 0
 
     dmap = Measurement(d, err)
     return dmap, ok
+
+
+def xymap_add(xymap0, xymap1):
+
+    x, y         = xymap0.x    , xymap0.y
+    v0, uv0, ok0 = xymap0.value, xymap0.uncertainty, xymap0.valid
+    v1, uv1, ok1 = xymap1.value, xymap1.uncertainty, xymap1.valid
+
+    ok  = np.logical_and(ok0, ok1)
+    nbins, nbins = v0.shape
+
+    err = np.zeros(nbins*nbins).reshape(nbins, nbins)
+    err[ok] = 1./np.sqrt(1./(uv0[ok]*uv0[ok])+1./(uv1[ok]*uv1[ok]))
+    err_m = np.mean(err[ok].flatten())
+
+    val = np.zeros(nbins*nbins).reshape(nbins, nbins)
+    val[ok] = (v0[ok]/(uv0[ok]*uv0[ok]) + v1[ok]/(uv1[ok]*uv1[ok]))*err[ok]*err[ok]
+    val_m = np.mean(val[ok].flatten())
+
+    val[~ok] = val_m
+    err[~ok] = -1.*err_m
+
+    amap = XYMap(x, y, val, err, ok)
+    return amap
 
 
 #---- Functions related with gauss fit and energy resolution
