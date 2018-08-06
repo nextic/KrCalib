@@ -16,6 +16,7 @@ from   invisible_cities.evm.ic_containers import FitFunction
 Number = TypeVar('Number', int, float)
 Range = TypeVar('Range', None, Tuple[float, float])
 Array = TypeVar('Array', None, np.array)
+Int = TypeVar('Int', None, int)
 
 
 class FitType(Enum):
@@ -66,7 +67,7 @@ class Point(CPoint):
 
 
 @dataclass
-class KrRaw(Point):
+class KrEvent(Point):
     """Adds raw energy/time"""
     S2e  : np.array
     S1e  : np.array
@@ -75,7 +76,7 @@ class KrRaw(Point):
 
 
 @dataclass
-class KrEvent(KrRaw):
+class KrCEvent(KrEvent):
     """Adss corrected energies"""
     Elt  : np.array
     E    : np.array
@@ -89,6 +90,40 @@ class  KrTimes:
     timeStamps : List[float]
     TL         : List[Tuple[float]]
 
+
+@dataclass
+class KrBins:
+    S2e  : Array
+    S1e  : Array
+    S2q : Array
+    X    : Array
+    Y    : Array
+    Z    : Array
+    Xc   : Array
+    Yc   : Array
+    T    : Array
+    Xp   : Number
+    Yp   : Number
+
+@dataclass
+class KrNBins:
+    S2e  : Int
+    S1e  : Int
+    S2q : Int
+    X    : Int
+    Y    : Int
+    Z    : Int
+    T    : Int
+
+@dataclass
+class KrRanges:
+    S2e  : Range
+    S1e  : Range
+    S2q : Range
+    X    : Range
+    Y    : Range
+    Z    : Range
+    T    : Range
 
 @dataclass
 class FitPar:
