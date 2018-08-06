@@ -302,6 +302,19 @@ def lt_params_from_fcs(fcs : FitCollection)->Iterable[float]:
     return e0s, ue0s, lts, ults, chi2s
 
 
+def plot_fit_lifetime_and_chi2(fc : FitCollection, figsize=(10,10)):
+    fig = plt.figure(figsize=figsize)
+    ax      = fig.add_subplot(1, 2, 1)
+    plot_fit_lifetime(fc)
+
+    ax      = fig.add_subplot(1, 2, 2)
+    plot_fit_lifetime_chi2(fc)
+
+    plt.tight_layout()
+
+
+
+
 # def fit_lifetime_slices(kre : KrEvent,
 #                         krnb: KrNBins,
 #                         krb : KrBins,
