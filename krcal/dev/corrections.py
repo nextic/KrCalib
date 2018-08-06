@@ -123,8 +123,7 @@ def get_xymap(correction_filename, xymap_name):
 
 
 def write_lifetime_correction(correction_filename, run_number, Trange, XYbins,
-                              Escale, ELT,  Eok, Qscale, QLT, Qok, nevt,
-                              filename_prefix = 'akr_corrections_run'):
+                              Escale, ELT,  Eok, Qscale, QLT, Qok, nevt):
 
     XYnbins   = len(XYbins)-1
     XYrange   = XYbins.min(), XYbins.max()
@@ -198,3 +197,59 @@ def write_lifetime_correction(correction_filename, run_number, Trange, XYbins,
                                         description = "XY-dependent lifetime values",
                                         compression = "ZLIB4")
         write_qlifetime(XYcenters, XYcenters, QLT_safe, QLTu_safe, nevt)
+
+
+def write_geometry_correction(correction_filename, run_number, Trange, XYbins,
+                              Escale, Eok, Qscale, Qok, nevt, overwrite = True):
+
+    XYnbins   = len(XYbins)-1
+    XYrange   = XYbins.min(), XYbins.max()
+    XYpitch   = np.diff(XYbins)[0]
+    XYcenters = 0.5*(XYbins[:-1]+XYbins[1:])
+
+    with tb.open_file(correction_filename, "a") as correction_file:
+        map_table = correction_file.create_table(correction_file.root,
+                                                 "GEOMapInfo", MapInfo,
+                                                 "Map metadata")
+
+        row = map_table.row
+        row["x_nbins"] = XYnbins
+        row["y_nbins"] = XYnbins
+        row["x_pitch"] = XYpitch
+        row["y_pitch"] = XYpitch
+        row["x_min"  ] = XYrange[0]
+        row["x_max"  ] = XYrange[1]
+        row["y_min"  ] = XYrange[0]
+        row["y_max"  ] = XYrange[1]
+        row.append()
+
+
+    e0, e0u = np.mean(Escale.value[Eok]), np.mean(Escale.uncertainty[Eok])
+    Escale_safe  = np.where(Eok, Escale.value      , e0)/e0
+    Escaleu_safe = np.where(Eok, Escale.uncertainty, -1.*e0u)/e0
+
+    q0, q0u = np.mean(Qscale.value[Qok]), np.mean(Qscale.uncertainty[Qok])
+    Qscale_safe  = np.where(Qok, Qscale.value      , q0)/q0
+    Qscaleu_safe = np.where(Qok, Qscale.uncertainty, -1.*q0u)/q0
+
+    with tb.open_file(correction_filename, "r+") as output_file:
+        group      = "XYcorrections"
+        table_name = "Egeometry"
+        if (overwrite                                      and
+            group      in output_file.root                 and
+            table_name in getattr(output_file.root, group)):
+            output_file.remove_node(getattr(output_file.root, group), table_name)
+        write = kdstio.xy_correction_writer(output_file,
+                                            group      = group,
+                                            table_name = table_name)
+        write(XYcenters, XYcenters, Escale_safe, Escaleu_safe, nevt)
+
+        table_name = "Qgeometry"
+        if (overwrite                                      and
+            group      in output_file.root                 and
+            table_name in getattr(output_file.root, group)):
+            output_file.remove_node(getattr(output_file.root, group), table_name)
+        write = kdstio.xy_correction_writer(output_file,
+                                        group      = group,
+                                        table_name = table_name)
+        write(XYcenters, XYcenters, Qscale_safe, Qscaleu_safe, nevt)
