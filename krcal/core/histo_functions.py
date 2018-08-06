@@ -45,7 +45,7 @@ def h1(x      : np.array,
                        linestyle = style,
                        label     = r'$\mu={:7.2f},\ \sigma={:7.2f}$'.format(mu, std))
 
-    return n, b, p
+    return n, b
 
 
 def plot_histo(pltLabels: PlotLabels, ax, legendsize=10, legendloc='best', labelsize=11):
@@ -70,5 +70,6 @@ def h1d(x       : np.array,
 
     fig = plt.figure(figsize=figsize)
     ax      = fig.add_subplot(1, 1, 1)
-    n, b, p = h1(x, bins=bins, range = range)
+    n, b    = h1(x, bins=bins, range = range)
     plot_histo(pltLabels, ax)
+    return n, b

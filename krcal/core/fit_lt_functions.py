@@ -50,6 +50,8 @@ from numpy import sqrt, pi
 def fit_lifetime(z       : np.array,
                  e       : np.array,
                  fit     : FitType      = FitType.unbined,
+                 uerrors : bool         = True,
+                 uchi2   : bool         = True,
                  nbins_z : int          = 12,
                  nbins_e : int          = 50,
                  range_z : Range        = None,
@@ -72,7 +74,7 @@ def fit_lifetime(z       : np.array,
     if fit == FitType.profile:
         fp, fr = fit_lifetime_profile(z, e, nbins_z, nbins_e, range_z, range_e)
     else:  # default is unbined
-        fp, fr = fit_lifetime_unbined(z, e, nbins_z)
+        fp, fr = fit_lifetime_unbined(z, e, nbins_z, uerrors, uchi2)
 
     return FitCollection(fp = fp, hp = hp, fr = fr)
 
@@ -280,12 +282,15 @@ def print_fit_lifetime(fc : FitCollection):
 def fit_lifetime_experiments(zs      : np.array,
                              es      : np.array,
                              fit     : FitType  = FitType.unbined,
+                             uerrors : bool     = True,
+                             uchi2   : bool     = True,
                              nbins_z : int      = 20,
                              nbins_e : int      = 50,
                              range_z : Range    = (0, 500),
                              range_e : Range    = (9000, 11000)):
 
-    return [fit_lifetime(z, e, fit, nbins_z, nbins_e, range_z, range_e) for z,e in zip(zs,es)]
+    return [fit_lifetime(z, e, fit, uerrors, uchi2,
+                         nbins_z, nbins_e, range_z, range_e) for z,e in zip(zs,es)]
 
 
 def lt_params_from_fcs(fcs : FitCollection)->Iterable[float]:
@@ -295,6 +300,19 @@ def lt_params_from_fcs(fcs : FitCollection)->Iterable[float]:
     ults  = np.array([fc.fr.err[1] for fc in fcs])
     chi2s = np.array([fc.fr.chi2   for fc in fcs])
     return e0s, ue0s, lts, ults, chi2s
+
+
+def plot_fit_lifetime_and_chi2(fc : FitCollection, figsize=(10,10)):
+    fig = plt.figure(figsize=figsize)
+    ax      = fig.add_subplot(1, 2, 1)
+    plot_fit_lifetime(fc)
+
+    ax      = fig.add_subplot(1, 2, 2)
+    plot_fit_lifetime_chi2(fc)
+
+    plt.tight_layout()
+
+
 
 
 # def fit_lifetime_slices(kre : KrEvent,

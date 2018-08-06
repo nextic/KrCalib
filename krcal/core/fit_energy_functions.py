@@ -12,7 +12,7 @@ from . import fit_functions_ic as fitf
 from   invisible_cities.evm  .ic_containers  import Measurement
 from . fit_functions import chi2
 from . stat_functions import mean_and_std
-from . core_functions import Number
+from . kr_types import Number, Range
 
 from invisible_cities.core .stat_functions import poisson_sigma
 from invisible_cities.icaro. hst_functions import shift_to_bin_centers
@@ -93,6 +93,13 @@ def gaussian_fit(x       : np.array,
         except RuntimeError:
             #warnings.warn(f' fit failed for seed  = {seed} ', UserWarning)
             print(f' fit failed for seed  = {seed}  due to RunTimeError')
+            valid = False
+            c2 = NN
+            par, err = par_and_err_from_seed(seed)
+
+        except TypeError:
+            #warnings.warn(f' fit failed for seed  = {seed} ', UserWarning)
+            print(f' fit failed for seed  = {seed}  due to TypeError')
             valid = False
             c2 = NN
             par, err = par_and_err_from_seed(seed)
@@ -259,6 +266,36 @@ def fit_gaussian_experiments(exps    : np.array,
                              range   : Range     = (9e+3, 11e+3),
                              n_sigma : int       =3)->List[FitCollection]:
     return [fit_energy(e, nbins, range, n_sigma) for e in exps]
+
+
+def fit_gaussian_experiments_variable_mean_and_std(means   : np.array,
+                                                   stds    : np.array,
+                                                   exps    : np.array,
+                                                   bins    : int = 50,
+                                                   n_sigma : int =3)->Iterable[List[float]]:
+    l = len(stds)
+    SEED = []
+    MU = []
+    STD = []
+    AVG = []
+    RMS = []
+    CHI2 = []
+    for i,mean in enumerate(means):
+        for j, std in enumerate(stds):
+            k = i*l + j
+            e = exps[k]
+            r = mean - n_sigma * std, mean + n_sigma * std
+            bin_size = (r[1] - r[0]) / bins
+            gp = gaussian_parameters(e, range = r, bin_size=bin_size)
+            fc = fit_energy(e, nbins=bins, range=r, n_sigma = n_sigma)
+            SEED.append(Measurement(mean, std))
+            MU.append(Measurement(fc.fr.par[1], fc.fr.err[1]))
+            STD.append(Measurement(fc.fr.par[2], fc.fr.err[2] ))
+            AVG.append(gp.mu)
+            RMS.append(gp.std)
+            CHI2.append(fc.fr.chi2)
+
+    return SEED, MU, STD, AVG, RMS, CHI2
 
 
 def gaussian_params_from_fcs(fcs : FitCollection) ->Iterable[float]:
