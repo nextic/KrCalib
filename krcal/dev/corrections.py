@@ -37,11 +37,21 @@ class Calibration:
         print('calibration file :', correction_filename)
         print('node             :', node)
 
+        E0, _ = self._scale(correction_filename, 'E'+node)
+        Q0, _ = self._scale(correction_filename, 'Q'+node)
+        LT, _ = self._scale(correction_filename, 'Elifetime')
+        print('Energy   scale : {0:4.1f} (pes)'.format(E0))
+        print('Lifetime scale : {0:4.1f} (us) '.format(LT))
+        print('Charge   scale : {0:4.1f} (pes)'.format(Q0))
+        self.E0 = E0
+        self.LT = LT
+        self.Q0 = Q0
+
         self.E0_correction = dstf.load_xy_corrections(correction_filename,
                                     group = "XYcorrections",
                                     node  = "E"+node,
-                                    norm_strategy =  "index",
-                                    norm_opts     = {"index": (40, 40)})
+                                    norm_strategy =  "const",
+                                    norm_opts     = {"value": E0})
 
         self.ELT_correction  = dstf.load_lifetime_xy_corrections(correction_filename,
                                     group = "XYcorrections",
@@ -50,8 +60,8 @@ class Calibration:
         self.Q0_correction   = dstf.load_xy_corrections(correction_filename,
                                     group = "XYcorrections",
                                     node  = "Q"+node,
-                                    norm_strategy =  "index",
-                                    norm_opts     = {"index": (40, 40)})
+                                    norm_strategy =  "const",
+                                    norm_opts     = {"value": Q0})
 
         self.QLT_correction  =  dstf.load_lifetime_xy_corrections(correction_filename,
                                     group = "XYcorrections",
@@ -84,6 +94,15 @@ class Calibration:
 
         return E, Q
 
+    def _scale(self, correction_filename, name):
+        xymap = get_xymap(correction_filename, name)
+        return xymap_scale(xymap)
+
+def xymap_scale(xymap):
+    values, ok = xymap.values, xymap.valid
+    m, s = np.mean(values[ok].flatten()), np.std(values[ok].flatten())
+    return m, s
+
 
 def get_xymap(correction_filename, xymap_name):
     # xymap_name = 'Escale', 'Elifetime', 'Qscale', 'Qlifetime', 'Egeometry', 'Qgeometry'
@@ -96,11 +115,11 @@ def get_xymap(correction_filename, xymap_name):
     values = xymap.factor     .values.reshape(x.size, y.size)
     errors = xymap.uncertainty.values.reshape(x.size, y.size)
 
-    sel = values > 0
-    errors[sel]  = errors[sel]*100/values[sel]
-    errors[~sel] = 0.
+    sel = errors > 0
+    # errors[sel]  = errors[sel]*100/values[sel]
+    errors[~sel] = abs(errors[~sel])
 
-    return XYMap(x, y, values, errors, None)
+    return XYMap(x, y, values, errors, sel)
 
 
 def write_lifetime_correction(correction_filename, run_number, Trange, XYbins,
@@ -137,19 +156,19 @@ def write_lifetime_correction(correction_filename, run_number, Trange, XYbins,
 
     e0, e0u = np.mean(Escale.value[Eok]), np.mean(Escale.uncertainty[Eok])
     Escale_safe  = np.where(Eok, Escale.value      , e0)
-    Escaleu_safe = np.where(Eok, Escale.uncertainty, e0u)
+    Escaleu_safe = np.where(Eok, Escale.uncertainty, -1.*e0u)
 
     lt, ltu = np.mean(ELT.value[Eok]), np.mean(ELT.uncertainty[Eok])
     ELT_safe     = np.where(Eok, ELT.value      ,  lt)
-    ELTu_safe    = np.where(Eok, ELT.uncertainty,  ltu)
+    ELTu_safe    = np.where(Eok, ELT.uncertainty,  -1.*ltu)
 
     q0, q0u = np.mean(Qscale.value[Qok]), np.mean(Qscale.uncertainty[Qok])
     Qscale_safe  = np.where(Qok, Qscale.value      , q0)
-    Qscaleu_safe = np.where(Qok, Qscale.uncertainty, q0u)
+    Qscaleu_safe = np.where(Qok, Qscale.uncertainty, -1.*q0u)
 
     qlt, qltu = np.mean(QLT.value[Qok]), np.mean(QLT.uncertainty[Qok])
     QLT_safe     = np.where(Qok, QLT.value      ,  qlt)
-    QLTu_safe    = np.where(Qok, QLT.uncertainty,  qltu)
+    QLTu_safe    = np.where(Qok, QLT.uncertainty,  -1.*qltu)
 
     with tb.open_file(correction_filename, "a") as correction_file:
         write_escale = kdstio.xy_writer(correction_file,
