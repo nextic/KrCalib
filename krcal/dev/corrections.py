@@ -58,16 +58,29 @@ class Calibration:
                                     node  = "Qlifetime")
 
     def __call__(self, X, Y, Z, T, S2e, S2q):
+        """ apply lifetime and geometry calibrations
+            X, Y, Z, T: np.arrays with the x, y, z, t values
+            S2e, S2q  : np.arrays with the S2 PMT (S2e) and SiPM (S2q) signals
+        returns:
+            E, Q      : np.arrays with the energy (PMTs) and charge (SiPM) corrected signals
+        options:
+            Z  : None, then only geometrical corrections are applied
+            S2q: None, then only E corrected, Q will be None
+        """
 
         E  = S2e * self.E0_correction(X, Y).value
+        Q  = None
 
-        Q  = S2q * self.Q0_correction(X, Y).value
+        if (S2q is not None):
+            Q  = S2q * self.Q0_correction(X, Y).value
 
-        if (Z is None): return E, Q
+        if (Z is None):
+            return E, Q
 
         E = E * self.ELT_correction(Z, X, Y).value
 
-        Q = Q * self.QLT_correction(Z, X, Y).value
+        if (S2q is not None):
+            Q = Q * self.QLT_correction(Z, X, Y).value
 
         return E, Q
 
