@@ -47,7 +47,7 @@ def test_h1():
     nbins =50
     x = np.random.normal(mean, sigma, Nevt)
     r = mean - 5 * sigma, mean + 5 * sigma
-    n, b, p = h1(x, bins=nbins, range=r)
+    n, b = h1(x, bins=nbins, range=r)
     imax = np.argmax(n)
     assert len(n)   == exactly(nbins)
     assert b[imax - 2] < mean <  b[imax + 2]
