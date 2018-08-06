@@ -22,7 +22,7 @@ default_calibration_filename = f"$IC_DATA/maps/akr_corrections_run6206.h5"
 default_calibration_filename = os.path.expandvars(default_calibration_filename)
 
 XYMap = namedtuple('XYMap',
-                   ('x', 'y', 'values', 'errors', 'valid'))
+                   ('x', 'y', 'value', 'uncertainty', 'valid'))
 
 
 class Calibration:
@@ -99,7 +99,7 @@ class Calibration:
         return xymap_scale(xymap)
 
 def xymap_scale(xymap):
-    values, ok = xymap.values, xymap.valid
+    values, ok = xymap.value, xymap.valid
     m, s = np.mean(values[ok].flatten()), np.std(values[ok].flatten())
     return m, s
 
