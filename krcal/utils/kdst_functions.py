@@ -24,7 +24,7 @@ import warnings
 
 #---------- load dsts
 
-def load_dst(filename, group, node):
+def load_dst(filename, group, node):     # should use the version in IC
     try:
         with tb.open_file(filename) as h5in:
             try:
@@ -67,7 +67,7 @@ def kdst_write(dst, filename):
 
 #----- for reading up multiple kdsts
 
-def _numbers_from_file_range(file_range):
+def _numbers_from_file_range(file_range):   #should use version in core
     numbers = range(*file_range)
     N=[]
     for number in numbers:
@@ -82,7 +82,7 @@ def _numbers_from_file_range(file_range):
 
     return N
 
-def kdst_filenames_in_file_range(path, run_number, tag, file_range, filter_exits=True):
+def kdst_filenames_in_file_range(path, run_number, tag, file_range, filter_exits=True):  #goes to io
     """ return the full filename of a run an tag in a file_rage (tuple with 2 entries)
     If filter_exits, returns only the files that are in the path directory
     """
@@ -114,7 +114,7 @@ def kdst_filenames_in_file_range(path, run_number, tag, file_range, filter_exits
 
 #----  seleccion useful functions
 
-def selection_info(sel, comment=''):
+def selection_info(sel, comment=''):  #goes to analysis
     nsel   = np.sum(sel)
     effsel = 100.*nsel/(1.*len(sel))
     s = f"Total number of selected candidates {comment}: {nsel} ({effsel:.1f} %)"
