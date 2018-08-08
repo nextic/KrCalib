@@ -50,12 +50,12 @@ from numpy import sqrt, pi
 def fit_lifetime(z       : np.array,
                  e       : np.array,
                  fit     : FitType      = FitType.unbined,
-                 uerrors : bool         = True,
-                 uchi2   : bool         = True,
                  nbins_z : int          = 12,
                  nbins_e : int          = 50,
                  range_z : Range        = None,
-                 range_e : Range        = None)->FitCollection:
+                 range_e : Range        = None,
+                 uerrors : bool         = True,
+                 uchi2   : bool         = True)->FitCollection:
     """
     Fits the lifetime using a profile (FitType.profile) or an unbined
     fit (FitType.unbined).
@@ -134,9 +134,9 @@ def fit_lifetime_profile(z : np.array,
 
 def fit_lifetime_unbined(z       : np.array,
                          e       : np.array,
-                         nbins_z : int,
+                         nbins_z : int  = 12,
                          weights : bool = True,
-                         chi2    : bool = True):
+                         chi2    : bool = True)->Tuple[FitPar, FitResult]:
     """
     Based on
 
@@ -289,8 +289,8 @@ def fit_lifetime_experiments(zs      : np.array,
                              range_z : Range    = (0, 500),
                              range_e : Range    = (9000, 11000)):
 
-    return [fit_lifetime(z, e, fit, uerrors, uchi2,
-                         nbins_z, nbins_e, range_z, range_e) for z,e in zip(zs,es)]
+    return [fit_lifetime(z, e, fit, nbins_z, nbins_e, range_z, range_e,
+                         uerrors, uchi2) for z,e in zip(zs,es)]
 
 
 def lt_params_from_fcs(fcs : FitCollection)->Iterable[float]:
