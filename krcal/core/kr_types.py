@@ -13,9 +13,12 @@ from   invisible_cities.types.ic_types import minmax
 from   invisible_cities.evm  .ic_containers  import Measurement
 from   invisible_cities.evm.ic_containers import FitFunction
 
-Number = TypeVar('Number', int, float)
+Number = TypeVar('Number', None, int, float)
+Str   = TypeVar('Str', None, str)
 Range = TypeVar('Range', None, Tuple[float, float])
 Array = TypeVar('Array', None, np.array)
+Sel   = TypeVar('Sel',   None, np.array)  # where np.array is array of bool
+
 Int = TypeVar('Int', None, int)
 
 
@@ -76,12 +79,10 @@ class KrEvent(Point):
 
 
 @dataclass
-class KrCEvent(KrEvent):
-    """Adss corrected energies"""
-    Elt  : np.array
-    E    : np.array
-    Qlt  : np.array
-    Q    : np.array
+class KrGEvent(KrEvent):
+    """Add geometry corrected energies"""
+    Eg    : np.array
+    Qg    : np.array
 
 
 @dataclass
@@ -136,8 +137,8 @@ class FitPar:
 @dataclass
 class HistoPar:
     var    : np.array
-    nbins : int
-    range : Tuple[float]
+    nbins  : int
+    range  : Tuple[float]
 
 
 @dataclass
@@ -145,6 +146,14 @@ class HistoPar2(HistoPar):
     var2    : np.array
     nbins2 : int
     range2 : Tuple[float]
+
+
+@dataclass
+class ProfilePar:
+    x  : np.array
+    y  : np.array
+    xu : np.array
+    yu : np.array
 
 
 @dataclass
@@ -167,6 +176,7 @@ class FitCollection:
     fp   : FitPar
     hp   : HistoPar
     fr   : FitResult
+
 
 @dataclass
 class MapXY:
