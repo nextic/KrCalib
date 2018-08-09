@@ -1,6 +1,7 @@
 import os
 import glob
 import numpy as np
+import tables as tb
 
 from   typing         import Tuple, List, Iterable
 from . kr_types       import Number
@@ -87,3 +88,18 @@ def write_monitor_vars(mdf : Series, log_filename : str):
               key     = "LOG"  , mode         = "w",
               format  = "table", data_columns = True,
               complib = "zlib" , complevel    = 4)
+
+
+
+def kdst_write(dst, filename):
+    # Unfortunately, this method can't set a specific name to the table or its title.
+    # It also includes an extra column ("index") which I can't manage to remove.
+    dst.to_hdf(filename,
+              key     = "DST"  , mode         = "w",
+              format  = "table", data_columns = True,
+              complib = "zlib" , complevel    = 4)
+
+    # Workaround to re-establish the name of the table and its title
+    with tb.open_file(filename, "r+") as f:
+        f.rename_node(f.root.DST.table, "Events")
+        f.root.DST.Events.title = "Events"

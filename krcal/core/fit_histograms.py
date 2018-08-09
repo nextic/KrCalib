@@ -104,21 +104,21 @@ def histo_lt_params_and_pulls(e0, lt, e0s, ue0s, lts, ults,
 
     ax      = fig.add_subplot(2, 2, 1)
     pltLabels =PlotLabels(x='E0', y='Events', title='E0')
-    n, b, p = h1(e0s, bins=bin_e0s, range=range_e0s)
+    (_)     = h1(e0s, bins=bin_e0s, range=range_e0s)
     plot_histo(pltLabels, ax)
 
     ax      = fig.add_subplot(2, 2, 2)
-    n, b, p = h1((e0s-e0) / ue0s, bins=bin_pull, range=range_pull)
+    (_)     = h1((e0s-e0) / ue0s, bins=bin_pull, range=range_pull)
     pltLabels =PlotLabels(x='Pull(E0)', y='Events', title='Pull (E0)')
     plot_histo(pltLabels, ax, legendloc='upper left')
 
     ax      = fig.add_subplot(2, 2, 3)
     pltLabels =PlotLabels(x='LT ', y='Events', title='LT')
-    n, b, p = h1(lts, bins=bin_lts, range=range_lts)
+    (_)     = h1(lts, bins=bin_lts, range=range_lts)
     plot_histo(pltLabels, ax)
 
     ax      = fig.add_subplot(2, 2, 4)
-    n, b, p = h1((lts-lt) / ults, bins=bin_pull, range=range_pull)
+    (_)     = h1((lts-lt) / ults, bins=bin_pull, range=range_pull)
     pltLabels =PlotLabels(x='pull (LT) ', y='Events', title='Pull (LT)')
     plot_histo(pltLabels, ax, legendloc='upper left')
 

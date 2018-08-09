@@ -65,6 +65,24 @@ def energy_lt_experiment(nevt : Number   = 1e+3,
     return z, es
 
 
+def energy_lt_experiment_double_exp(nevt  : Number   = 1e+3,
+                                    e0    : float = 1e+4,
+                                    e1    : float = 5e+4,
+                                    lt0   : float = 2e+3,
+                                    lt1   : float = 1e+3,
+                                    std0  : float = 200,
+                                    std1  : float = 100,
+                                    zmin : float =    1,
+                                    zmax : float =  500)->Tuple[np.array, np.array]:
+
+    print(e0,e1,lt0,lt1,std0,std1,zmin,zmax)
+    z1, e1 = energy_lt_experiment(nevt, e0, lt0, std0, zmin, zmax)
+    z2, e2 = energy_lt_experiment(nevt, e1, lt1, std1, zmin, zmax)
+    z  = np.concatenate((z1, z2))
+    es = np.concatenate((e1, e2))
+    return z, es
+
+
 def energy_lt_experiments(mexperiments : Number   = 1000,
                           nsample      : Number   = 1000,
                           e0           : float = 1e+4,
