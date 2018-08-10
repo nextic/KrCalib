@@ -126,13 +126,6 @@ class KrRanges:
     Z    : Range
     T    : Range
 
-@dataclass
-class FitPar:
-    f     : FitFunction
-    x     : np.array
-    y     : np.array
-    yu    : np.array
-
 
 @dataclass
 class HistoPar:
@@ -157,6 +150,10 @@ class ProfilePar:
 
 
 @dataclass
+class FitPar(ProfilePar):
+    f     : FitFunction
+
+@dataclass
 class GaussPar:
     mu    : Measurement
     std   : Measurement
@@ -177,6 +174,11 @@ class FitCollection:
     hp   : HistoPar
     fr   : FitResult
 
+
+@dataclass
+class FitCollection2(FitCollection):
+    fp2   : FitPar
+    
 
 @dataclass
 class MapXY:
