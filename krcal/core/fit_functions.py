@@ -1,5 +1,7 @@
 import numpy as np
 
+from typing      import List, Tuple, Sequence, Iterable, Callable
+
 import invisible_cities.core .fit_functions  as     fitf
 from   invisible_cities.core .core_functions import in_range
 from   invisible_cities.evm  .ic_containers  import Measurement
@@ -7,6 +9,62 @@ from   invisible_cities.icaro.hst_functions  import shift_to_bin_centers
 from   invisible_cities.icaro.hst_functions  import labels
 from   invisible_cities.evm.ic_containers import FitFunction
 
+
+def profile1d(z : np.array,
+              e : np.array,
+              nbins_z : int,
+              range_z : np.array)->Tuple[float, float, float]:
+    """Adds an extra layer to profileX, returning only valid points"""
+    x, y, yu     = fitf.profileX(z, e, nbins_z, range_z)
+    valid_points = ~np.isnan(yu)
+    x    = x [valid_points]
+    y    = y [valid_points]
+    yu   = yu[valid_points]
+    return x, y, yu
+
+
+def chi2f(f   : Callable,
+          nfp : int,        # number of function parameters
+          x   : np.array,
+          y   : np.array,
+          yu  : np.array)->float:
+    """
+    Computes the chi2 of a function f applied over array x and compared
+    with array y with error yu
+
+    """
+
+    assert len(x) == len(y) == len(yu)
+    fitx = f(x)
+    n    = nfp
+    c2 = [abs(yi - fi)/syi for yi, fi, syi in zip(y, fitx, yu)]
+    chi2_ =np.sum(np.array(c2))
+
+    return chi2_/(len(x)-n)
+
+
+def chi2(f : FitFunction,
+         x : np.array,
+         y : np.array,
+         sy: np.array)->float:
+    """
+    Computes the chi2 of a function f applied over array x and compared
+    with array y with error yu. The object f is of type FitFunction.
+
+    """
+    return chi2f(f.fn, len(f.values), x, y, sy)
+    #           nfp : int,        # number of function parameters
+    #           x   : np.array,
+    #           y   : np.array,
+    #           yu  : np.array)
+    #
+    # assert len(x) == len(y) == len(sy)
+    # fitx = f.fn(x)
+    # n = len(f.values)
+    #
+    # chi2_ =np.sum(np.array([abs(yi - fi)/syi for yi, fi, syi in zip(y, fitx, sy)]))
+    #
+    # return chi2_/(len(x)-n)
 
 
 def gauss_seed(x, y, sigma_rel=0.05):
@@ -135,20 +193,6 @@ def fit_slices_1d_gauss(xdata, ydata, xbins, ybins, min_entries=1e2):
         except:
             pass
     return Measurement(mean, meanu), Measurement(sigma, sigmau), chi2, valid
-
-
-def chi2(f : FitFunction,
-         x : np.array,
-         y : np.array,
-         sy: np.array)->float:
-
-    assert len(x) == len(y) == len(sy)
-    fitx = f.fn(x)
-    n = len(f.values)
-
-    chi2_ =np.sum(np.array([abs(yi - fi)/syi for yi, fi, syi in zip(y, fitx, sy)]))
-
-    return chi2_/(len(x)-n)
 
 
 def fit_slices_2d_gauss(xdata, ydata, zdata, xbins, ybins, zbins, min_entries=1e2):
