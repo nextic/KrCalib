@@ -30,6 +30,25 @@ from scipy.optimize import OptimizeWarning
 from numpy import sqrt, pi
 
 
+def gfit(x     : np.array,
+         y     : np.array,
+         yu    : np.array,
+         fseed : Tuple[float, float, float]) ->Tuple[FitPar, FitResult]:
+
+    f     = fitf.fit(fitf.gauss, x, y, fseed, sigma=yu)
+    c2    = chi2(f, x, y, yu)
+    par  = np.array(f.values)
+    err  = np.array(f.errors)
+    xu   = np.diff(x) * 0.5
+
+    fr = FitResult(par = par,
+                   err = err,
+                   chi2 = c2,
+                   valid = True)
+    fp = FitPar(x  = x, y  = y, xu = xu, yu = yu, f  = f.fn)
+
+    return fp, fr
+
 def gaussian_parameters(x : np.array, range : Tuple[Number], bin_size : float = 1)->GaussPar:
     """
     Return the parameters defining a Gaussian
@@ -57,90 +76,43 @@ def gaussian_parameters(x : np.array, range : Tuple[Number], bin_size : float = 
 def gaussian_fit(x       : np.array,
                  y       : np.array,
                  seed    : GaussPar,
-                 n_sigma : int):
+                 n_sigma : int)  ->Tuple[FitPar, FitResult]:
     """Gaussian fit to x,y variables, with fit range defined by n_sigma"""
 
     mu  = seed.mu.value
     std = seed.std.value
     amp = seed.amp.value
-
     fit_range = mu - n_sigma * std, mu + n_sigma * std
 
     x, y      = x[in_range(x, *fit_range)], y[in_range(x, *fit_range)]
     yu        = poisson_sigma(y)
     fseed     = (amp, mu, std)
 
-    fp = None
-    with warnings.catch_warnings():
-        warnings.filterwarnings('error')
-        try:
-            # print(x)
-            # print(y)
-            # print(yu)
-            # print(fseed)
-            f     = fitf.fit(fitf.gauss, x, y, fseed, sigma=yu)
-            c2    = chi2(f, x, y, yu)
-            par  = np.array(f.values)
-            err  = np.array(f.errors)
-            valid = True
-
-            fp = FitPar(x  = x,
-                        y  = y,
-                        yu = yu,
-                        f  = f.fn)
-
-
-        except RuntimeError:
-            #warnings.warn(f' fit failed for seed  = {seed} ', UserWarning)
-            print(f' fit failed for seed  = {seed}  due to RunTimeError')
-            valid = False
-            c2 = NN
-            par, err = par_and_err_from_seed(seed)
-
-        except TypeError:
-            #warnings.warn(f' fit failed for seed  = {seed} ', UserWarning)
-            print(f' fit failed for seed  = {seed}  due to TypeError')
-            valid = False
-            c2 = NN
-            par, err = par_and_err_from_seed(seed)
-
-        except RuntimeWarning:
-            #warnings.warn(f' fit failed for seed  = {seed} ', UserWarning)
-            print(f' fit failed for seed  = {seed}, due to RunTimeWarning, retry fit ')
-
-            fseed = (10*fseed[0], fseed[1], fseed[2] )
-
-            try:
-
-                f     = fitf.fit(fitf.gauss, x, y, fseed, sigma=yu)
-                c2    = chi2(f, x, y, yu)
-                par  = np.array(f.values)
-                err  = np.array(f.errors)
-                valid = True
-
-                fp = FitPar(x  = x,
-                            y  = y,
-                            yu = yu,
-                            f  = f)
-
-            except RuntimeWarning:
-                print(f' fit failed for seed  = {seed}, due to RunTimeWarning, give up ')
-                valid = False
-                c2 = NN
-                par, err = par_and_err_from_seed(seed)
-
-        except OptimizeWarning:
-            #warnings.warn(f' OptimizeWarning was raised for seed  = {seed} ', UserWarning)
-            print(f' OptimizeWarning was raised for seed  = {seed} due to OptimizeWarning')
-            valid = False
-            c2 = NN
-            par, err = par_and_err_from_seed(seed)
-
-
+    par, err = par_and_err_from_seed(seed)
     fr = FitResult(par = par,
                    err = err,
-                   chi2 = c2,
-                   valid = valid)
+                   chi2 = NN,
+                   valid = False)
+    fp = None
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings('error')  # in order to handle fit failures here
+        try:
+            fp, fr = gfit(x, y, yu, fseed)
+        except RuntimeWarning:   # this is the most usual failure, and usually solved trying fitx
+                                 # with a different seed
+            print(f' fit failed for seed  = {seed}, due to RunTimeWarning, retry fit ')
+            fseed = (10*fseed[0], fseed[1], fseed[2] )
+            try:
+                fp, fr = gfit(x, y, yu, fseed)
+            except RuntimeWarning: #  Give up on second failure
+                print(f' fit failed for seed  = {seed}, due to RunTimeWarning, give up ')
+        except OptimizeWarning:
+            print(f' OptimizeWarning was raised for seed  = {seed} due to OptimizeWarning')
+        except RuntimeError:
+            print(f' fit failed for seed  = {seed}  due to RunTimeError')
+        except TypeError:
+            print(f' fit failed for seed  = {seed}  due to TypeError')
 
     return fp, fr
 
