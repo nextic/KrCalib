@@ -270,9 +270,7 @@ def selection_in_band(z         : np.array,
     zbins  = np.linspace(*range_z, nbins_z + 1)
     zerror = np.diff(zbins) * 0.5
     ebins  = np.linspace(*range_e, nbins_e + 1)
-
     zc = shift_to_bin_centers(zbins)
-    zerror   = np.diff(zbins) * 0.5
 
     sel_e = in_range(e, *range_e)
     mean, sigma, chi2, ok = fit_slices_1d_gauss(z[sel_e], e[sel_e], zbins, ebins, min_entries=5e2)
@@ -285,9 +283,9 @@ def selection_in_band(z         : np.array,
     #2. Fit two exponentials to e_mmean +- ns_igma * e_sigma defining a band
 
     y         = e_mean +  nsigma * e_sigma
-    fph, _    = fit_lifetime_unbined(zc, y, nbins_z)
+    fph, _, _    = fit_lifetime_unbined(zc, y, nbins_z, range_z)
     y         = e_mean - nsigma * e_sigma
-    fpl, _    = fit_lifetime_unbined(zc, y, nbins_z)
+    fpl, _, _ = fit_lifetime_unbined(zc, y, nbins_z, range_z)
 
     # 3. Select events in the range defined by the band
 
