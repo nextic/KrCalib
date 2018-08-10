@@ -82,8 +82,8 @@ def histo_gaussian_params_and_pulls(mean, sigma, mus, umus, stds, ustds,
     (_)       = h1(stds, bins=bin_stds, range=range_stds)
     plot_histo(pltLabels, ax)
 
-    ax      = fig.add_subplot(2, 2, 4)
-    n, b, p = h1((stds-sigma) / ustds, bins=50, range=range_pull)
+    ax        = fig.add_subplot(2, 2, 4)
+    (_)       = h1((stds-sigma) / ustds, bins=50, range=range_pull)
     pltLabels =PlotLabels(x='pull (std) ', y='Events', title='Pull (std)')
     plot_histo(pltLabels, ax)
 
