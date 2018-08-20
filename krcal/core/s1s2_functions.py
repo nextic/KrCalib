@@ -1,18 +1,59 @@
 import numpy as np
-
+import matplotlib.dates  as md
+import datetime
 import matplotlib.pyplot as plt
 from   invisible_cities.evm  .ic_containers  import Measurement
 from   invisible_cities.core.system_of_units_c import units
 
 from   invisible_cities.core.core_functions import loc_elem_1d
+import invisible_cities.core.fit_functions as fitf
 
-from . stat_functions    import mean_and_std
-from . core_functions    import divide_np_arrays
+from . stat_functions       import mean_and_std
+from . core_functions       import divide_np_arrays
 
-from typing      import Tuple
-from . kr_types import S1D, S2D
-from pandas.core.frame import DataFrame
+from typing                 import Tuple
+from . kr_types             import S1D, S2D
+from pandas.core.frame      import DataFrame
+from . kr_types             import Number, Int, Range, Sel
+from typing                 import List, Tuple, Sequence, Iterable
+from . kr_types             import KrEvent
 
+
+def s12_time_profile(kdst       : KrEvent,
+                     Tnbins     : Int,
+                     Trange     : Range,
+                     timeStamps : List[datetime.datetime],
+                     s2range    : Range =(8e+3, 1e+4),
+                     s1range    : Range =(10,11),
+                     figsize=(8,8)):
+
+    xfmt = md.DateFormatter('%d-%m %H:%M')
+    fig = plt.figure(figsize=figsize)
+
+    x, y, yu = fitf.profileX(kdst.T, kdst.S2e, Tnbins, Trange)
+    ax = fig.add_subplot(1, 2, 1)
+    #plt.figure()
+    #ax=plt.gca()
+    #fig.add_subplot(1, 2, 1)
+    ax.xaxis.set_major_formatter(xfmt)
+    plt.errorbar(timeStamps, y, yu, fmt="kp", ms=7, lw=3)
+    plt.xlabel('date')
+    plt.ylabel('S2 (pes)')
+    plt.ylim(s2range)
+    plt.xticks( rotation=25 )
+
+    x, y, yu = fitf.profileX(kdst.T, kdst.S1e, Tnbins, Trange)
+    ax = fig.add_subplot(1, 2, 2)
+    #ax=plt.gca()
+
+    #xfmt = md.DateFormatter('%d-%m %H:%M')
+    ax.xaxis.set_major_formatter(xfmt)
+    plt.errorbar(timeStamps, y, yu, fmt="kp", ms=7, lw=3)
+    plt.xlabel('date')
+    plt.ylabel('S1 (pes)')
+    plt.ylim(s1range)
+    plt.xticks( rotation=25 )
+    plt.tight_layout()
 
 
 def s1d_from_dst(dst       : DataFrame,
