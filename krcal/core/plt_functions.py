@@ -93,6 +93,86 @@ def plot_s2e_vs_z_r_regions(kdsts, krBins, figsize=(14,10)):
     plt.tight_layout()
 
 
+
+def plot_Eg_vs_z_r_regions(kdsts, krBins, figsize=(14,10)):
+
+    full, fid, core, hcore = kdsts
+
+    fig = plt.figure(figsize=figsize)
+    fig.add_subplot(2, 2, 1)
+    nevt, *_  = plt.hist2d(full.Z, full.E, (krBins.Z, krBins.S2e))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Eg (pes)", f" full "))
+
+    fig.add_subplot(2, 2, 2)
+    nevt, *_  = plt.hist2d(fid.Z, fid.E, (krBins.Z, krBins.S2e))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Eg (pes)", f" fid "))
+
+    fig.add_subplot(2, 2, 3)
+    nevt, *_  = plt.hist2d(core.Z, core.E, (krBins.Z, krBins.S2e))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Eg (pes)", f" core "))
+
+    fig.add_subplot(2, 2, 4)
+    nevt, *_  = plt.hist2d(hcore.Z, hcore.E, (krBins.Z, krBins.S2e))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Eg (pes)", f" hard core Z"))
+    plt.tight_layout()
+
+
+def plot_Qg_vs_z_r_regions(kdsts, krBins, figsize=(14,10)):
+
+    full, fid, core, hcore = kdsts
+
+    fig = plt.figure(figsize=figsize)
+    fig.add_subplot(2, 2, 1)
+    nevt, *_  = plt.hist2d(full.Z, full.Q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Qg (pes)", f" full "))
+
+    fig.add_subplot(2, 2, 2)
+    nevt, *_  = plt.hist2d(fid.Z, fid.Q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Qg (pes)", f" fid "))
+
+    fig.add_subplot(2, 2, 3)
+    nevt, *_  = plt.hist2d(core.Z, core.Q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Qg (pes)", f" core "))
+
+    fig.add_subplot(2, 2, 4)
+    nevt, *_  = plt.hist2d(hcore.Z, hcore.Q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Qg (pes)", f" hard core Z"))
+    plt.tight_layout()
+
+def plot_s2q_vs_z_r_regions(kdsts, krBins, figsize=(14,10)):
+
+    full, fid, core, hcore = kdsts
+
+    fig = plt.figure(figsize=figsize)
+    fig.add_subplot(2, 2, 1)
+    nevt, *_  = plt.hist2d(full.Z, full.S2q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "S2q (pes)", f" full "))
+
+    fig.add_subplot(2, 2, 2)
+    nevt, *_  = plt.hist2d(fid.Z, fid.S2q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "S2q (pes)", f" fid "))
+
+    fig.add_subplot(2, 2, 3)
+    nevt, *_  = plt.hist2d(core.Z, core.S2q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "S2q (pes)", f" core "))
+
+    fig.add_subplot(2, 2, 4)
+    nevt, *_  = plt.hist2d(hcore.Z, hcore.S2q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "S2q (pes)", f" hard core Z"))
+    plt.tight_layout()
+
 def plot_s1e_vs_z_r_regions(kdsts, krBins, figsize=(14,10)):
 
     full, fid, core, hcore = kdsts
