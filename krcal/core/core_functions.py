@@ -1,7 +1,17 @@
 import numpy as np
-
+from datetime import datetime
 from   typing      import Tuple, List
 from . kr_types    import Number
+from numpy import pi
+
+def phirad_to_deg(r : float)-> float:
+    return (r + pi) * 180 / pi
+
+def time_delta_from_time(ts):
+    dt = [(datetime.fromtimestamp(ts[i]) - datetime.fromtimestamp(ts[0])).total_seconds()
+            for i in range (len(ts))]
+    return np.array(dt)
+
 
 def find_nearest(array : np.array, value : Number)->Number:
     """Return the array element nearest to value"""
