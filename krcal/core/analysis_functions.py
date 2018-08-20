@@ -1,7 +1,7 @@
 import numpy as np
 import datetime
 from   pandas.core.frame import DataFrame
-import matplotlib.dates  as md
+
 import matplotlib.pyplot as plt
 from . histo_functions import labels
 from . kr_types        import PlotLabels
@@ -13,48 +13,20 @@ from   invisible_cities.core.core_functions  import in_range
 
 from . fit_lt_functions     import fit_lifetime, fit_lifetime_unbined
 from . fit_functions        import fit_slices_1d_gauss
-from   typing               import Tuple, List, Iterable
-from . kr_types             import Number, Int, Range, Sel
+
+from . kr_types             import Number, Int, Range, Array
 from . kr_types             import KrBins, KrNBins, KrRanges, KrTimes
-from . kr_types             import KrEvent, KrGEvent
-from . kr_types              import HistoPar2, ProfilePar, FitPar
+from . kr_types             import KrEvent
+from . kr_types             import KrWedge
+from . kr_types             import HistoPar2, ProfilePar, FitPar, KrSector
+from . core_functions       import phirad_to_deg
 
+from typing      import List, Tuple, Sequence, Iterable, Dict
 
-def s12_time_profile(kdst       : KrEvent,
-                     Tnbins     : Int,
-                     Trange     : Range,
-                     timeStamps : List[datetime.datetime],
-                     s2range    : Range =(8e+3, 1e+4),
-                     s1range    : Range =(10,11),
-                     figsize=(8,8)):
+from .histo_functions    import h1, h1d, h2, h2d, plot_histo
 
-    xfmt = md.DateFormatter('%d-%m %H:%M')
-    fig = plt.figure(figsize=figsize)
+import dataclasses as dc
 
-    x, y, yu = fitf.profileX(kdst.T, kdst.S2e, Tnbins, Trange)
-    ax = fig.add_subplot(1, 2, 1)
-    #plt.figure()
-    #ax=plt.gca()
-    #fig.add_subplot(1, 2, 1)
-    ax.xaxis.set_major_formatter(xfmt)
-    plt.errorbar(timeStamps, y, yu, fmt="kp", ms=7, lw=3)
-    plt.xlabel('date')
-    plt.ylabel('S2 (pes)')
-    plt.ylim(s2range)
-    plt.xticks( rotation=25 )
-
-    x, y, yu = fitf.profileX(kdst.T, kdst.S1e, Tnbins, Trange)
-    ax = fig.add_subplot(1, 2, 2)
-    #ax=plt.gca()
-
-    #xfmt = md.DateFormatter('%d-%m %H:%M')
-    ax.xaxis.set_major_formatter(xfmt)
-    plt.errorbar(timeStamps, y, yu, fmt="kp", ms=7, lw=3)
-    plt.xlabel('date')
-    plt.ylabel('S1 (pes)')
-    plt.ylim(s1range)
-    plt.xticks( rotation=25 )
-    plt.tight_layout()
 
 def kr_bins(xxrange   : Range = (-220,  220),
             yrange    : Range = (-220,  220),
@@ -126,6 +98,7 @@ def kr_ranges_and_bins(dst       : DataFrame,
 
     dst_time = dst.sort_values('event')
     T       = dst_time.time.values
+
     tstart  = T[0]
     tfinal  = T[-1]
     Trange  = (tstart,tfinal)
@@ -146,96 +119,179 @@ def kr_ranges_and_bins(dst       : DataFrame,
     return krTimes, krRanges, krNbins, krBins
 
 
+def kre_concat(KRL : List[KrEvent])->KrEvent:
 
-def kr_event(dst : DataFrame, sel: bool = False, sel_mask : Sel = None)->KrEvent:
-    dst_time = dst.sort_values('event')
+    if len(KRL) == 1:
+        return KRL[0]
 
-    if sel == False:
-        return KrEvent(X   = dst.X.values,
-                       Y   = dst.Y.values,
-                       Z   = dst.Z.values,
-                       R   = dst.R.values,
-                       Phi = dst.R.values,
-                       T   = dst_time.time.values,
-                       S2e = dst.S2e.values,
-                       S1e = dst.S1e.values,
-                       S2q = dst.S2q.values)
+    krg0 = dc.asdict(KRL[0])
+
+    for i in range(1, len(KRL)):
+        krg1 = dc.asdict(KRL[i])
+        C = [np.concatenate((krg0[key], krg1[key])) for key in krg0.keys()]
+        krg0 =  dc.asdict(KrEvent(*C))
+
+    C = [krg0[key] for key in krg0.keys()]
+    return KrEvent(*C)
+
+
+def kr_event(dst      : DataFrame,
+             DT       : Array      = [],
+             E        : Array      = [],
+             Q        : Array      = [],
+             sel_mask : Array      = [])->KrEvent:
+
+    if len(DT) == 0:
+        DT = np.zeros(len(dst))
     else:
+        assert len(DT) == len(dst)
+
+    if len(E) == 0:
+        E = np.zeros(len(dst))
+    else:
+        assert len(E) == len(dst)
+
+    if len(Q) == 0:
+        Q = np.zeros(len(dst))
+    else:
+        assert len(Q) == len(dst)
+
+    if len(sel_mask) > 0:
+        assert len(sel_mask) == len(dst)
+
         return KrEvent(X   = dst.X.values[sel_mask],
                        Y   = dst.Y.values[sel_mask],
                        Z   = dst.Z.values[sel_mask],
                        R   = dst.R.values[sel_mask],
-                       Phi = dst.R.values[sel_mask],
-                       T   = dst_time.time.values[sel_mask],
+                       Phi = dst.Phi.values[sel_mask],
+                       T   = dst.time.values[sel_mask],
+                       DT  = DT[sel_mask],
                        S2e = dst.S2e.values[sel_mask],
                        S1e = dst.S1e.values[sel_mask],
-                       S2q = dst.S2q.values[sel_mask])
-
-
-def krg_event(dst      : DataFrame,
-              Eg       : np.array,
-              Qg       : np.array,
-              sel      :  bool = False,
-              sel_mask : Sel   = None)->KrGEvent:
-
-    dst_time = dst.sort_values('event')
-
-    if sel:
-        return KrGEvent(X   = dst.X.values[sel_mask],
-                        Y   = dst.Y.values[sel_mask],
-                        Z   = dst.Z.values[sel_mask],
-                        R   = dst.R.values[sel_mask],
-                        Phi = dst.R.values[sel_mask],
-                        T   = dst_time.time.values[sel_mask],
-                        S2e = dst.S2e.values[sel_mask],
-                        S1e = dst.S1e.values[sel_mask],
-                        S2q = dst.S2q.values[sel_mask],
-                        Eg  = Eg[sel_mask],
-                        Qg  = Qg[sel_mask])
+                       S2q = dst.S2q.values[sel_mask],
+                       E   = E[sel_mask],
+                       Q   = Q[sel_mask])
     else:
-        return KrGEvent(X   = dst.X.values,
-                        Y   = dst.Y.values,
-                        Z   = dst.Z.values,
-                        R   = dst.R.values,
-                        Phi = dst.R.values,
-                        T   = dst_time.time.values,
-                        S2e = dst.S2e.values,
-                        S1e = dst.S1e.values,
-                        S2q = dst.S2q.values,
-                        Eg  = Eg,
-                        Qg  = Qg)
+        return KrEvent(X   = dst.X.values,
+                       Y   = dst.Y.values,
+                       Z   = dst.Z.values,
+                       R   = dst.R.values,
+                       Phi = dst.Phi.values,
+                       T   = dst.time.values,
+                       DT  = DT,
+                       S2e = dst.S2e.values,
+                       S1e = dst.S1e.values,
+                       S2q = dst.S2q.values,
+                       E   = E,
+                       Q   = Q)
 
+
+def kr_event_selection(kh : KrEvent, sel_mask : Array = [])->KrEvent:
+
+    if len(sel_mask) > 0:
+        assert len(sel_mask) == len(kh.X)
+
+        return KrEvent(X   = kh.X[sel_mask],
+                       Y   = kh.Y[sel_mask],
+                       Z   = kh.Z[sel_mask],
+                       R   = kh.R[sel_mask],
+                       Phi = kh.Phi[sel_mask],
+                       T   = kh.T[sel_mask],
+                       DT  = kh.DT[sel_mask],
+                       S2e = kh.S2e[sel_mask],
+                       S1e = kh.S1e[sel_mask],
+                       S2q = kh.S2q[sel_mask],
+                       E   = kh.E[sel_mask],
+                       Q   = kh.Q[sel_mask])
+    else:
+        return KrEvent(X   = kh.X,
+                       Y   = kh.Y,
+                       Z   = kh.Z,
+                       R   = kh.R,
+                       Phi = kh.Phi,
+                       T   = kh.T,
+                       DT  = kh.DT,
+                       S2e = kh.S2e,
+                       S1e = kh.S1e,
+                       S2q = kh.S2q,
+                       E   = kh.E,
+                       Q   = kh.Q)
 
 
 def fiducial_volumes(dst     : DataFrame,
-                     R_full  : float  = 200,
-                     R_fid   : float  = 150,
-                     R_core  : float  = 100,
-                     R_hcore : float  = 50)->Iterable[KrEvent]:
+                     dt      : np.array,
+                     E       : np.array,
+                     Q       : np.array,
+                     sectors : Iterable[KrSector])->List[KrEvent]:
 
 
-    dst_full   = dst[dst.R < R_full]
-    dst_fid    = dst[dst.R < R_fid]
-    dst_core   = dst[dst.R < R_core]
-    dst_hcore  = dst[dst.R < R_hcore]
+    return [kr_event(dst, dt, E, Q,
+            sel_mask = (in_range(dst.R,
+                                s.rmin,
+                                s.rmax).values) & in_range(phirad_to_deg(dst.Phi),
+                                                           s.phimin,
+                                                           s.phimax).values) for s in sectors]
 
+def fid_eff(dst  : DataFrame,
+            kdst : KrEvent)->float:
     n_dst      = len(dst)
-    n_full     = len(dst_full)
-    n_fid      = len(dst_fid)
-    n_core     = len(dst_core)
-    n_hcore    = len(dst_hcore)
+    n_kdst     = len(kdst.S2e)
+    return  n_kdst / n_dst
 
-    eff_full   = n_full  / n_dst
-    eff_fid    = n_fid   / n_dst
-    eff_core   = n_core  / n_dst
-    eff_hcore  = n_hcore / n_dst
 
-    print(f" nfull : {n_full}: eff_full = {eff_full} ")
-    print(f" nfid : {n_fid}: eff_fid = {eff_fid} ")
-    print(f" ncore : {n_core}: eff_core = {eff_core} ")
-    print(f" nhcore : {n_hcore}: eff_hcore = {eff_hcore} ")
+def select_rphi_sectors(dst     : DataFrame,
+                        dt      : np.array,
+                        E       : np.array,
+                        Q       : np.array,
+                        RPS     : Dict[int, List[KrSector]],
+                        verbose : bool = False)-> Dict[int, List[KrEvent]]:
+    """Return a dict of KrEvent organized by rphi sector"""
 
-    return kr_event(dst_full), kr_event(dst_fid), kr_event(dst_core), kr_event(dst_hcore)
+    def selection_mask_rphi_sectors(dst     : DataFrame,
+                                    RPS     : Dict[int, List[KrSector]],
+                                    verbose : bool  = False)->Dict[int, np.array]:
+        """Returns a dict of selections arranged in a dict of rphi sectors"""
+
+        MSK = {}
+        for i, rps in RPS.items():
+            if verbose:
+                print(f' i = {i}')
+                print(f' rps = {rps}')
+
+            sel_mask = [in_range(dst.R,
+                                 s.Rmin,
+                                 s.Rmax).values & in_range(phirad_to_deg(dst.Phi),
+                                                           s.Phimin,
+                                                           s.Phimax).values for s in rps]
+            MSK[i] = sel_mask
+
+        return MSK
+
+    MSK = selection_mask_rphi_sectors(dst, RPS, verbose)
+
+    RGES = {}
+    for i, msk in MSK.items():
+        if verbose:
+            print(f' defining kr_event for sector {i}')
+        RGES[i] = [kr_event(dst, dt, E, Q, sel_mask = m) for m in msk]
+    return RGES
+
+
+def plot_sector(KRES : Dict[int, List[KrEvent]], nbins_x, nbins_y, ranges_x, ranges_y, sector =0):
+    krl = KRES[sector]
+    kre = kre_concat(krl)
+    nevt = h2(kre.X, kre.Y, nbins_x, nbins_y, ranges_x, ranges_y, profile = False)
+    print(f'number of events in sector = {np.sum(nevt)}')
+
+
+
+def plot_sectors(KRES : Dict[int, List[KrEvent]], nbins_x, nbins_y, ranges_x, ranges_y,
+                 figsize=(14,14), sectors=range(0,10)):
+    fig = plt.figure(figsize=figsize)
+    for i in sectors:
+        fig.add_subplot(4, 3, i+1)
+        plot_sector(KRES, nbins_x, nbins_y, ranges_x, ranges_y, sector=i)
+    plt.tight_layout()
 
 
 def select_in_XYRange(kre : KrEvent, xyr : Range)->KrEvent:
