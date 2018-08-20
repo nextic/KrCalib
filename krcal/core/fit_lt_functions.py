@@ -5,16 +5,17 @@ import matplotlib.dates  as md
 import warnings
 
 
-from typing  import List, Tuple, Sequence, Iterable
+from typing  import Dict, List, Tuple, Sequence, Iterable
 
 
 from   invisible_cities.core.core_functions import in_range
 from   invisible_cities.evm  .ic_containers  import Measurement
 
 from . import fit_functions_ic as fitf
-from . fit_functions import  expo_seed, chi2, chi2f, profile1d
-from . stat_functions import mean_and_std
-from . core_functions import Number
+from . fit_functions import   expo_seed, chi2, chi2f
+from . histo_functions import profile1d
+from . stat_functions import  mean_and_std
+from . core_functions import  Number
 
 from invisible_cities.core .stat_functions import poisson_sigma
 from invisible_cities.icaro. hst_functions import shift_to_bin_centers
@@ -36,8 +37,10 @@ from . kr_types import FitResult
 from . kr_types import HistoPar
 from . kr_types import FitCollection
 from . kr_types import PlotLabels
-from . kr_types import FitType
+from . kr_types import FitType, MapType
 from . kr_types import Number, Range
+from . kr_types import KrEvent
+from . kr_types import TSectorMap, ASectorMap
 
 from . histo_functions import labels
 from numpy import sqrt, pi
@@ -221,6 +224,22 @@ def plot_fit_lifetime_chi2(fc : FitCollection):
         warnings.warn(f' fit did not succeed, cannot plot ', UserWarning)
 
 
+def lt_lifetime(fcs : List[FitCollection])->Iterable[Measurement]:
+    E=[]
+    LT = []
+    C2 = []
+    for fc in fcs:
+        if fc.fr.valid:
+            par  = fc.fr.par
+            err  = fc.fr.err
+            E.append(Measurement(par[0], err[0]))
+            LT.append(Measurement(par[1], err[1]))
+            C2.append(fc.fr.chi2)
+        else:
+            warnings.warn(f' fit did not succeed, cannot print ', UserWarning)
+    return E, LT, C2
+
+
 def print_fit_lifetime(fc : FitCollection):
 
     if fc.fr.valid:
@@ -233,6 +252,165 @@ def print_fit_lifetime(fc : FitCollection):
         warnings.warn(f' fit did not succeed, cannot print ', UserWarning)
 
 
+def time_fcs(XT      : int,
+             DT      : np.array,
+             kh      : KrEvent,
+             nbins_z : int,
+             nbins_e : int,
+             range_z : Tuple[float, float] = (100,550),
+             range_e : Tuple[float, float] = (8000, 12000),
+             energy  : str                 = 'S2e',
+             fit     : FitType             = FitType.profile)->Tuple[np.array]:
+    """Fit lifetime of a time series define by DT each XT seconds. """
+
+    indx = [(i, i+XT) for i in range(0, int(DT[-1] -XT), XT) ]
+    ts = [indx[i][0] for i in range(len(indx))]
+    masks = [in_range(kh.DT, indx[i][0], indx[i][1]) for i in range(len(indx))]
+    kcts = [KrEvent(X   = kh.X[sel_mask],
+                    Y   = kh.Y[sel_mask],
+                    Z   = kh.Z[sel_mask],
+                    R   = kh.R[sel_mask],
+                    Phi = kh.Phi[sel_mask],
+                    T   = kh.T[sel_mask],
+                    DT  = kh.DT[sel_mask],
+                    S2e = kh.S2e[sel_mask],
+                    S1e = kh.S1e[sel_mask],
+                    S2q = kh.S2q[sel_mask],
+                    E  = kh.E[sel_mask],
+                    Q  = kh.Q[sel_mask]) for sel_mask in masks]
+
+    if energy == 'S2e':
+        fcs =[fit_lifetime(kct.Z, kct.S2e, fit = fit,
+                      nbins_z=nbins_z, nbins_e=nbins_e,
+                      range_z=range_z, range_e=range_e) for kct in kcts]
+    else:
+        fcs =[fit_lifetime(kct.Z, kct.E, fit = fit,
+                      nbins_z=nbins_z, nbins_e=nbins_e,
+                      range_z=range_z, range_e=range_e) for kct in kcts]
+
+
+
+    e0s_, lts_, c2s = lt_lifetime(fcs)
+
+    lts = np.array([lt.value for lt in lts_])
+    e0s = np.array([e0.value for e0 in e0s_])
+    return np.array(ts), e0s, lts, np.array(c2s)
+
+
+def fb_fits(XT       : int,
+            DT       : np.array,
+            kh       : KrEvent,
+            nbins_z  : int,
+            nbins_e  : int,
+            range_z  : Tuple[float, float] = (50,550),
+            range_zf : Tuple[float, float] = (50,300),
+            range_zb : Tuple[float, float] = (300,550),
+            range_e  : Tuple[float, float] = (7000, 12000),
+            energy   : str                 = 'S2e',
+            fit      : FitType             = FitType.profile)->Iterable[Tuple[np.array]]:
+    """Returns fits to full/forward/backward chamber"""
+
+    fp  = time_fcs(XT, DT, kh, nbins_z, nbins_e, range_z, range_e, energy, fit)
+    fpf = time_fcs(XT, DT, kh, nbins_z, nbins_e, range_zf, range_e, energy, fit)
+    fpb = time_fcs(XT, DT, kh, nbins_z, nbins_e, range_zb, range_e, energy, fit)
+
+    return fp, fpf, fpb
+
+
+def fit_fcs_in_sectors(sector  : int,
+                       XT      : int,
+                       DT      : np.array,
+                       KRES    : Dict[int, List[KrEvent]],
+                       nbins_z : int,
+                       nbins_e : int,
+                       range_z : Tuple[float, float] = (100,550),
+                       range_e : Tuple[float, float] = (8000, 12000),
+                       energy  : str                 = 'S2e',
+                       fit     : FitType             = FitType.profile)->List[Tuple[np.array]]:
+    """Returns fits in Rphi sectors specified by KRES"""
+
+    wedges =(1, 2, 4, 8, 8, 8, 8, 8, 8, 8)  # number of wedges per sector
+    fps =[]
+    for i in range(wedges[sector]):
+        fp  = time_fcs(XT, DT, KRES[sector][i],
+                       nbins_z, nbins_e,
+                       range_z = range_z,
+                       range_e = range_e,
+                       energy  = energy,
+                       fit     = fit)
+        fps.append(fp)
+
+    return fps
+
+
+
+def lt_maps(XT         : int,
+            DT         : np.array,
+            KRES       : Dict[int, List[KrEvent]],
+            nbins_z    : int,
+            nbins_e    : int,
+            range_z    : Tuple[float, float] = (50,550),
+            range_e    : Tuple[float, float] = (5000, 13000),
+            range_chi2 : Tuple[float, float] = (0,3),
+            range_lt   : Tuple[float, float] = (1800, 3000),
+            energy     : str                 = 'S2e',
+            fit        : FitType             = FitType.profile,
+            nsectors   : int                 = 10,
+            verbose    : bool                = False)->Tuple[np.array, TSectorMap, ASectorMap]:
+
+    tMChi2 = {}
+    tME0   = {}
+    tMLT   = {}
+
+    aMChi2 = {}
+    aME0   = {}
+    aMLT   = {}
+
+    for sector in range(nsectors):
+        if verbose:
+            print(f'Fitting sector {sector}')
+        fps = fit_fcs_in_sectors(sector, XT, DT, KRES, nbins_z, nbins_e,
+                                 range_z=range_z,
+                                 range_e = range_e,
+                                 energy = energy,
+                                 fit = fit)
+        tCHI2 = []
+        tE0 = []
+        tLT = []
+        aCHI2 = []
+        aE0 = []
+        aLT = []
+
+        if verbose:
+            print(f' number of wedges in sector {len(fps)}')
+
+        for fp in fps:
+            ts, e0s, lts, c2s = fp
+            tCHI2.append(c2s)
+            tE0.append(e0s)
+            tLT.append(lts)
+
+            c2, c2u = mean_and_std(c2s, range_chi2)
+            e0, e0u = mean_and_std(e0s, range_e)
+            lt, ltu = mean_and_std(lts, range_lt)
+
+            aCHI2.append(Measurement(c2, c2u))
+            aE0.append(Measurement(e0, e0u))
+            aLT.append(Measurement(lt, ltu))
+
+        tMChi2[sector] = tCHI2
+        tME0[sector]   = tE0
+        tMLT[sector]   = tLT
+
+        aMChi2[sector] = aCHI2
+        aME0[sector]   = aE0
+        aMLT[sector]   = aLT
+
+
+    return ts, TSectorMap(tMChi2, tME0, tMLT), ASectorMap(aMChi2, aME0, aMLT)
+
+
+
 def fit_lifetime_experiments(zs      : np.array,
                              es      : np.array,
                              nbins_z : int      ,
@@ -243,7 +421,8 @@ def fit_lifetime_experiments(zs      : np.array,
 
     return [fit_lifetime(z, e, nbins_z, nbins_e, range_z, range_e, fit) for z,e in zip(zs,es)]
 
-def lt_params_from_fcs(fcs : FitCollection)->Iterable[float]:
+
+def lt_params_from_fcs(fcs : Iterable[FitCollection])->Iterable[float]:
     e0s   = np.array([fc.fr.par[0] for fc in fcs])
     ue0s  = np.array([fc.fr.err[0] for fc in fcs])
     lts   = np.array([fc.fr.par[1] for fc in fcs])
