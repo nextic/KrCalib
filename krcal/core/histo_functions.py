@@ -19,6 +19,20 @@ def labels(pl : PlotLabels):
     plt.ylabel(pl.y)
     plt.title (pl.title)
 
+
+def profile1d(z : np.array,
+              e : np.array,
+              nbins_z : int,
+              range_z : np.array)->Tuple[float, float, float]:
+    """Adds an extra layer to profileX, returning only valid points"""
+    x, y, yu     = fitf.profileX(z, e, nbins_z, range_z)
+    valid_points = ~np.isnan(yu)
+    x    = x [valid_points]
+    y    = y [valid_points]
+    yu   = yu[valid_points]
+    return x, y, yu
+
+
 def h1(x      : np.array,
        bins    : int,
        range   : Tuple[float],
@@ -46,13 +60,27 @@ def h1(x      : np.array,
         stat     = ''
 
     if lbl == None:
-        lab = ''
+        lab = ' '
     else:
         lab = lbl
 
     lab = stat + lab
 
-    n, b, p = plt.hist(x,
+    if color == None:
+        n, b, p = plt.hist(x,
+                       bins      = bins,
+                       range     = range,
+                       weights   = weights,
+                       log       = log,
+                       density   = normed,
+                       histtype  = 'step',
+                       linewidth = width,
+                       linestyle = style,
+                       label     = lab)
+
+    else:
+
+        n, b, p = plt.hist(x,
                        bins      = bins,
                        range     = range,
                        weights   = weights,
@@ -64,11 +92,14 @@ def h1(x      : np.array,
                        linestyle = style,
                        label     = lab)
 
-    return n, b
+    return n, b, mu, std
 
 
-def plot_histo(pltLabels: PlotLabels, ax, legendsize=10, legendloc='best', labelsize=11):
-    ax.legend(fontsize= legendsize, loc=legendloc)
+def plot_histo(pltLabels: PlotLabels, ax, legend= True,
+               legendsize=10, legendloc='best', labelsize=11):
+
+    if legend:
+        ax.legend(fontsize= legendsize, loc=legendloc)
     ax.set_xlabel(pltLabels.x,fontsize = labelsize)
     ax.set_ylabel(pltLabels.y, fontsize = labelsize)
     if pltLabels.title:
@@ -92,28 +123,31 @@ def h1d(x         : np.array,
 
     fig = plt.figure(figsize=figsize)
     ax      = fig.add_subplot(1, 1, 1)
-    n, b    = h1(x, bins=bins, range = range, stats = stats, lbl = lbl)
+    n, b, mu, std    = h1(x, bins=bins, range = range, stats = stats, lbl = lbl)
     plot_histo(pltLabels, ax, legendloc=legendloc)
-    return n, b
+    return n, b, mu, std
 
 
-def h2d(x       : np.array,
-        y       : np.array,
-        nbins_x : int,
-        nbins_y : int,
-        range_x : Tuple[float],
-        range_y : Tuple[float],
-        pltLabels=PlotLabels(x='x', y='y', title=None),
-        figsize=(10,6)):
+def h2(x         : np.array,
+       y         : np.array,
+       nbins_x   : int,
+       nbins_y   : int,
+       range_x   : Tuple[float],
+       range_y   : Tuple[float],
+       profile   : bool   = True):
 
     xbins  = np.linspace(*range_x, nbins_x + 1)
     ybins  = np.linspace(*range_y, nbins_y + 1)
-    fig = plt.figure(figsize=figsize)
-    fig.add_subplot(1, 1, 1)
+
     nevt, *_  = plt.hist2d(x, y, (xbins, ybins))
     plt.colorbar().set_label("Number of events")
-    labels(pltLabels)
+
+    if profile:
+        x, y, yu     = profile1d(x, y, nbins_x, range_x)
+        plt.errorbar(x, y, yu, np.diff(x)[0]/2, fmt="kp", ms=7, lw=3)
+
     return nevt
+
 
 def h2d(x         : np.array,
         y         : np.array,
@@ -122,24 +156,12 @@ def h2d(x         : np.array,
         range_x   : Tuple[float],
         range_y   : Tuple[float],
         pltLabels : PlotLabels   = PlotLabels(x='x', y='y', title=None),
-        profile  : bool          = True,
+        profile  : bool          = False,
         figsize=(10,6)):
-
-    xbins  = np.linspace(*range_x, nbins_x + 1)
-    ybins  = np.linspace(*range_y, nbins_y + 1)
 
     fig = plt.figure(figsize=figsize)
     fig.add_subplot(1, 1, 1)
-    nevt, *_  = plt.hist2d(x, y, (xbins, ybins))
-    plt.colorbar().set_label("Number of events")
 
-    if profile:
-        x, y, yu     = fitf.profileX(x, y, nbins_x)
-        valid_points = ~np.isnan(yu)
-        x    = x [valid_points]
-        y    = y [valid_points]
-        yu   = yu[valid_points]
-        plt.errorbar(x, y, yu, np.diff(x)[0]/2, fmt="kp", ms=7, lw=3)
-
+    nevt   = h2(x, y, nbins_x, nbins_y, range_x, range_y, profile)
     labels(pltLabels)
     return nevt
