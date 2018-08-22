@@ -17,8 +17,8 @@ Number = TypeVar('Number', None, int, float)
 Str   = TypeVar('Str', None, str)
 Range = TypeVar('Range', None, Tuple[float, float])
 Array = TypeVar('Array', List, np.array)
-Sel   = TypeVar('Sel',   None, np.array)  # where np.array is array of bool
-
+#Sel   = TypeVar('Sel',   None, np.array)  # where np.array is array of bool
+#LMeasurement =  List[Measurement]
 Int = TypeVar('Int', None, int)
 
 
@@ -209,7 +209,17 @@ class PlotLabels:
 
 
 @dataclass
-class FitFBPars:
+class FitParTS:             # Fit parameters Time Series
+    ts   : np.array          # contains the time series (integers expressing time differences)
+    e0   : np.array          # e0 fitted in time series
+    lt   : np.array
+    c2   : np.array
+    e0u  : np.array          # e0 error fitted in time series
+    ltu  : np.array
+
+
+@dataclass
+class FitParFB:            # Fit Parameters forward-backward
     c2  : Measurement
     c2f : Measurement
     c2b : Measurement
@@ -222,26 +232,24 @@ class FitFBPars:
     ltf : Measurement
     ltb : Measurement
 
-@dataclass
-class KrWedge:
-    rmin   : float
-    rmax   : float
-    phimin : float
-    phimax : float
 
 
 @dataclass
-class TSectorMap:  # Map in chamber sector containing time series of pars
-    chi2 : Dict[int, List[Tuple[np.array]]]
-    e0   : Dict[int, List[Tuple[np.array]]]
-    lt   : Dict[int, List[Tuple[np.array]]]
+class SectorMapTS:  # Map in chamber sector containing time series of pars
+    chi2  : Dict[int, List[np.array]]
+    e0    : Dict[int, List[np.array]]
+    lt    : Dict[int, List[np.array]]
+    e0u   : Dict[int, List[np.array]]
+    ltu   : Dict[int, List[np.array]]
 
 
 @dataclass
 class ASectorMap:  # Map in chamber sector containing average of pars
-    chi2 : Dict[int, List[Measurement]]
-    e0   : Dict[int, List[Measurement]]
-    lt   : Dict[int, List[Measurement]]
+    chi2  : Dict[int, List[float]]
+    e0    : Dict[int, List[float]]
+    lt    : Dict[int, List[float]]
+    e0u   : Dict[int, List[float]]
+    ltu   : Dict[int, List[float]]
 #------
 
 
