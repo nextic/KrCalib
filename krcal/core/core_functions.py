@@ -1,11 +1,20 @@
 import numpy as np
 from datetime import datetime
-from   typing      import Tuple, List
+from   typing      import Tuple, List, Iterable
 from . kr_types    import Number
 from numpy import pi
+from   invisible_cities.evm.ic_containers  import Measurement
 
 def phirad_to_deg(r : float)-> float:
     return (r + pi) * 180 / pi
+
+
+def value_from_measurement(mL : Iterable[Measurement]) -> np.array:
+    return np.array([m.value for m in mL])
+
+def uncertainty_from_measurement(mL : Iterable[Measurement]) -> np.array:
+    return np.array([m.uncertainty for m in mL])
+
 
 def time_delta_from_time(ts):
     dt = [(datetime.fromtimestamp(ts[i]) - datetime.fromtimestamp(ts[0])).total_seconds()
