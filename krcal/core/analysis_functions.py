@@ -17,7 +17,6 @@ from . fit_functions        import fit_slices_1d_gauss
 from . kr_types             import Number, Int, Range, Array
 from . kr_types             import KrBins, KrNBins, KrRanges, KrTimes
 from . kr_types             import KrEvent
-from . kr_types             import KrWedge
 from . kr_types             import HistoPar2, ProfilePar, FitPar, KrSector
 from . core_functions       import phirad_to_deg
 
@@ -259,10 +258,10 @@ def select_rphi_sectors(dst     : DataFrame,
                 print(f' rps = {rps}')
 
             sel_mask = [in_range(dst.R,
-                                 s.Rmin,
-                                 s.Rmax).values & in_range(phirad_to_deg(dst.Phi),
-                                                           s.Phimin,
-                                                           s.Phimax).values for s in rps]
+                                 s.rmin,
+                                 s.rmax).values & in_range(phirad_to_deg(dst.Phi),
+                                                           s.phimin,
+                                                           s.phimax).values for s in rps]
             MSK[i] = sel_mask
 
         return MSK
