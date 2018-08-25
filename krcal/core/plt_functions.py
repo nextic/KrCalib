@@ -5,24 +5,7 @@ import matplotlib.pyplot as plt
 from . histo_functions import labels
 from . histo_functions import h1, plot_histo
 from . kr_types        import PlotLabels
-# import matplotlib.dates  as md
-# from   invisible_cities.icaro.mpl_functions import set_plot_labels
-# from   invisible_cities.core.system_of_units_c import units
-#
-#
-# from   invisible_cities.evm  .ic_containers  import Measurement
-# from   invisible_cities.icaro. hst_functions import display_matrix
 
-
-# def figsize(type="small"):
-#     if type == "S":
-#         plt.rcParams["figure.figsize"]  = 8, 6
-#     elif type == "s":
-#          plt.rcParams["figure.figsize"] = 6, 4
-#     elif type == "l":
-#         plt.rcParams["figure.figsize"] = 10, 8
-#     else:
-#         plt.rcParams["figure.figsize"] = 12, 10
 
 def plot_xy_density(dst, xybins, figsize=(10,8)):
     fig = plt.figure(figsize=figsize)
@@ -92,6 +75,86 @@ def plot_s2e_vs_z_r_regions(kdsts, krBins, figsize=(14,10)):
     labels(PlotLabels("Z (mm)", "S2e (pes)", f" hard core Z"))
     plt.tight_layout()
 
+
+
+def plot_Eg_vs_z_r_regions(kdsts, krBins, figsize=(14,10)):
+
+    full, fid, core, hcore = kdsts
+
+    fig = plt.figure(figsize=figsize)
+    fig.add_subplot(2, 2, 1)
+    nevt, *_  = plt.hist2d(full.Z, full.E, (krBins.Z, krBins.S2e))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Eg (pes)", f" full "))
+
+    fig.add_subplot(2, 2, 2)
+    nevt, *_  = plt.hist2d(fid.Z, fid.E, (krBins.Z, krBins.S2e))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Eg (pes)", f" fid "))
+
+    fig.add_subplot(2, 2, 3)
+    nevt, *_  = plt.hist2d(core.Z, core.E, (krBins.Z, krBins.S2e))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Eg (pes)", f" core "))
+
+    fig.add_subplot(2, 2, 4)
+    nevt, *_  = plt.hist2d(hcore.Z, hcore.E, (krBins.Z, krBins.S2e))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Eg (pes)", f" hard core Z"))
+    plt.tight_layout()
+
+
+def plot_Qg_vs_z_r_regions(kdsts, krBins, figsize=(14,10)):
+
+    full, fid, core, hcore = kdsts
+
+    fig = plt.figure(figsize=figsize)
+    fig.add_subplot(2, 2, 1)
+    nevt, *_  = plt.hist2d(full.Z, full.Q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Qg (pes)", f" full "))
+
+    fig.add_subplot(2, 2, 2)
+    nevt, *_  = plt.hist2d(fid.Z, fid.Q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Qg (pes)", f" fid "))
+
+    fig.add_subplot(2, 2, 3)
+    nevt, *_  = plt.hist2d(core.Z, core.Q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Qg (pes)", f" core "))
+
+    fig.add_subplot(2, 2, 4)
+    nevt, *_  = plt.hist2d(hcore.Z, hcore.Q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "Qg (pes)", f" hard core Z"))
+    plt.tight_layout()
+
+def plot_s2q_vs_z_r_regions(kdsts, krBins, figsize=(14,10)):
+
+    full, fid, core, hcore = kdsts
+
+    fig = plt.figure(figsize=figsize)
+    fig.add_subplot(2, 2, 1)
+    nevt, *_  = plt.hist2d(full.Z, full.S2q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "S2q (pes)", f" full "))
+
+    fig.add_subplot(2, 2, 2)
+    nevt, *_  = plt.hist2d(fid.Z, fid.S2q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "S2q (pes)", f" fid "))
+
+    fig.add_subplot(2, 2, 3)
+    nevt, *_  = plt.hist2d(core.Z, core.S2q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "S2q (pes)", f" core "))
+
+    fig.add_subplot(2, 2, 4)
+    nevt, *_  = plt.hist2d(hcore.Z, hcore.S2q, (krBins.Z, krBins.S2q))
+    plt.colorbar().set_label("Number of events")
+    labels(PlotLabels("Z (mm)", "S2q (pes)", f" hard core Z"))
+    plt.tight_layout()
 
 def plot_s1e_vs_z_r_regions(kdsts, krBins, figsize=(14,10)):
 

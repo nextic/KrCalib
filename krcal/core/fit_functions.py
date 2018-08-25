@@ -10,19 +10,6 @@ from   invisible_cities.icaro.hst_functions  import labels
 from   invisible_cities.evm.ic_containers import FitFunction
 
 
-def profile1d(z : np.array,
-              e : np.array,
-              nbins_z : int,
-              range_z : np.array)->Tuple[float, float, float]:
-    """Adds an extra layer to profileX, returning only valid points"""
-    x, y, yu     = fitf.profileX(z, e, nbins_z, range_z)
-    valid_points = ~np.isnan(yu)
-    x    = x [valid_points]
-    y    = y [valid_points]
-    yu   = yu[valid_points]
-    return x, y, yu
-
-
 def chi2f(f   : Callable,
           nfp : int,        # number of function parameters
           x   : np.array,

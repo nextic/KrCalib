@@ -22,7 +22,7 @@ from invisible_cities.core.testing_utils       import random_length_float_arrays
 from . core_functions       import find_nearest
 from . core_functions       import divide_np_arrays
 from . core_functions       import file_numbers_from_file_range
-
+from   invisible_cities.evm.ic_containers  import Measurement
 
 def nearest(a, v):
     """Alternative (not optimized) implementation of find_nearest

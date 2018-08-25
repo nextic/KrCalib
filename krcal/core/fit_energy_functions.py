@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from typing      import List, Tuple, Sequence, Iterable
+from typing      import List, Dict, Tuple, Sequence, Iterable
 import warnings
 
 #import matplotlib.dates  as md
@@ -24,6 +24,8 @@ from . kr_types import FitResult
 from . kr_types import HistoPar
 from . kr_types import FitCollection
 from . kr_types import PlotLabels
+from . kr_types import KrEvent
+
 
 from . histo_functions import labels
 from scipy.optimize import OptimizeWarning
@@ -148,7 +150,6 @@ def fit_energy(e : np.array,
 
 
 def plot_fit_energy(fc : FitCollection):
-    """Takes a KrEvent and a FitPar object and plots fit"""
 
     if fc.fr.valid:
         par  = fc.fr.par
@@ -186,7 +187,6 @@ def print_fit_energy(fc : FitCollection):
 
 
 def plot_fit_energy_chi2(fc : FitCollection):
-    """Takes a KrEvent and a FitPar object and plots fit"""
 
     if fc.fr.valid:
         x  = fc.fp.x
@@ -220,6 +220,15 @@ def display_energy_fit_and_chi2(fc : FitCollection, pl : PlotLabels, figsize : T
         warnings.warn(f' fit did not succeed, cannot display ', UserWarning)
 
 
+def energy_map(KRES : Dict[int, List[KrEvent]])->Dict[int, List[float]]:
+
+    wedges =[len(kre) for kre in KRES.values() ]  # number of wedges per sector
+    eMap = {}
+
+    for sector in KRES.keys():
+        eMap[sector] = [np.mean(KRES[sector][i].E) for i in range(wedges[sector])]
+    return eMap
+
 # def energy_fit_XYRange(kre    : KrEvent,
 #                        nbins   : int,
 #                        range   : Tuple[float],
@@ -232,6 +241,44 @@ def display_energy_fit_and_chi2(fc : FitCollection, pl : PlotLabels, figsize : T
 #     e    = kre.E[sel]
 #
 #     return energy_fit(e, nbins,erange, n_sigma)
+
+def resolution_r_z(Ri : Iterable[float], Zi : Iterable[float],
+                   R : np.array, Z : np.array, E : np.array)->Dict[int, List[float]]:
+    FWHM = {}
+    for i, r in enumerate(Ri):
+        ZR = []
+        for z in Zi:
+            Rr = 0, r
+            Zr = 0, z
+
+            sel_r = in_range(R, *Rr)
+            sel_z = in_range(Z, *Zr)
+            sel   = sel_r & sel_z
+            fc = fit_energy(E[sel], nbins=100, range=(11500, 13000))
+            par  = fc.fr.par
+            err  = fc.fr.err
+            fwhm = 2.35 * 100 *  par[2] / par[1]
+            ZR.append(fwhm)
+        FWHM[i] = ZR
+    return FWHM
+
+
+def plot_resolution_r_z(Ri : Iterable[float], Zi : Iterable[float], FWHM : Dict[int, List[float]]):
+
+    Zcenters =np.array(list(Zi))
+    for i, fwhm in FWHM.items():
+        label = f'0 < R < {Ri[i]:2.0f}'
+
+        es = np.array(fwhm)
+        eus = np.ones(len(fwhm))*0.01
+        plt.errorbar(Zcenters, es, eus,
+                     label = label,
+                     fmt='o', markersize=10., elinewidth=10.)
+    plt.grid(True)
+    plt.xlabel(' z (mm)')
+    plt.ylabel('resolution FWHM (%)')
+    plt.legend()
+    
 
 def fit_gaussian_experiments(exps    : np.array,
                              nbins   : int       = 50,

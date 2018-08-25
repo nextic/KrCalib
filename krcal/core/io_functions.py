@@ -1,10 +1,15 @@
 import os
 import glob
 import numpy as np
+import pandas as pd
 import tables as tb
 
-from   typing         import Tuple, List, Iterable
+from   typing         import Tuple, Dict, List, Iterable
 from . kr_types       import Number
+from . kr_types       import ASectorMap
+from . kr_types       import KrFileName
+from pandas           import DataFrame
+
 from . core_functions import file_numbers_from_file_range
 from pandas import Series
 
@@ -28,10 +33,10 @@ def filenames_from_paths(run_number  : int,
 
         if trigger =='':
             input_dst_filenames = [os.path.expandvars(
-            f"{path}/{run_number}/kdst_{number}_{run_number}_{tags}_krth.h5") for number in N]
+            f"{path}/{run_number}/kdst_{number}_{run_number}_{tags}.h5") for number in N]
         else:
             input_dst_filenames = [os.path.expandvars(
-            f"{path}/{run_number}/kdst_{number}_{run_number}_{trigger}_{tags}_krth.h5") for number in N]
+            f"{path}/{run_number}/kdst_{number}_{run_number}_{trigger}_{tags}.h5") for number in N]
 
         if trigger =='':
             output_dst_filename  = os.path.expandvars(
@@ -65,22 +70,23 @@ def file_numbers_from_file_range(file_range : Tuple[int, int])->List[str]:
     return N
 
 
-def filenames_from_list(input_file_names : List[str],
-                        output_file_name : str,
-                        map_file_name    : str,
+def filenames_from_list(krfn : KrFileName,
                         input_path       : str,
                         output_path      : str,
-                        map_path         : str)->Tuple[List[str], str, str]:
+                        map_path         : str)->KrFileName:
 
     path  = input_path
     opath = output_path
     mpath = map_path
 
-    input_dst_filenames = [os.path.expandvars(f"{path}/{file_name}") for file_name in input_file_names]
-    output_dst_filename = os.path.expandvars(f"{opath}/{output_file_name}")
-    map_filename        = os.path.expandvars(f"{mpath}/{map_file_name}")
+    ifn = [os.path.expandvars(f"{path}/{file_name}") for file_name in krfn.input_file_names]
+    ofn = os.path.expandvars(f"{opath}/{krfn.output_file_name}")
+    mfn = os.path.expandvars(f"{mpath}/{krfn.map_file_name}")
+    mts = os.path.expandvars(f"{mpath}/{krfn.map_file_name_ts}")
+    efn = os.path.expandvars(f"{mpath}/{krfn.emap_file_name}")
 
-    return input_dst_filenames, output_dst_filename, map_filename
+    return KrFileName(ifn, ofn, mfn, mts, efn)
+
 
 
 def write_monitor_vars(mdf : Series, log_filename : str):
@@ -103,3 +109,50 @@ def kdst_write(dst, filename):
     with tb.open_file(filename, "r+") as f:
         f.rename_node(f.root.DST.table, "Events")
         f.root.DST.Events.title = "Events"
+
+
+def write_maps(asm : ASectorMap, filename : str):
+
+    e0df  = pd.DataFrame.from_dict(asm.e0)
+    e0udf = pd.DataFrame.from_dict(asm.e0u)
+    ltdf  = pd.DataFrame.from_dict(asm.lt)
+    ltudf = pd.DataFrame.from_dict(asm.ltu)
+    e0df.to_hdf(filename, key='e0', mode='w')
+    e0udf.to_hdf(filename, key='e0u', mode='a')
+    ltdf.to_hdf(filename, key='lt', mode='a')
+    ltudf.to_hdf(filename, key='ltu', mode='a')
+
+
+def write_maps_ts(aMaps : Iterable[ASectorMap], ts: np.array, filename : str):
+
+    assert len(ts) == len(aMaps)
+    tsdf = pd.Series(ts)
+    tsdf.to_hdf(filename, key='ts', mode='w')
+    for i, t in enumerate(ts):
+        asm = aMaps[i]
+
+        e0df  = pd.DataFrame.from_dict(asm.e0)
+        e0udf = pd.DataFrame.from_dict(asm.e0u)
+        ltdf  = pd.DataFrame.from_dict(asm.lt)
+        ltudf = pd.DataFrame.from_dict(asm.ltu)
+        e0df.to_hdf(filename,  key =f'e0_{i}',  mode='a')
+        e0udf.to_hdf(filename, key =f'e0u_{i}', mode='a')
+        ltdf.to_hdf(filename,  key =f'lt_{i}',  mode='a')
+        ltudf.to_hdf(filename, key =f'ltu_{i}', mode='a')
+
+
+def write_energy_map(em : Dict[int, List[float]], filename : str):
+    e0df  = pd.DataFrame.from_dict(em)
+    e0df.to_hdf(filename, key='e', mode='w')
+
+
+def read_energy_map(filename : str)->DataFrame:
+    me0  = pd.read_hdf(filename, 'e')
+    return me0
+
+def read_maps(filename : str)->Iterable[DataFrame]:
+    me0  = pd.read_hdf(filename, 'e0')
+    me0u = pd.read_hdf(filename, 'e0u')
+    mlt  = pd.read_hdf(filename, 'lt')
+    mltu = pd.read_hdf(filename, 'ltu')
+    return me0, me0u, mlt, mltu
