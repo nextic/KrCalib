@@ -297,6 +297,7 @@ def events_sector(nMap : Dict[int, List[float]])->np.array:
     for  nL in nMap.values():
         N.append(np.mean(nL))
     return np.array(N)
+    
 
 def event_map(KRES : Dict[int, List[KrEvent]])->Dict[int, List[float]]:
     nMap = {}
