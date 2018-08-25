@@ -220,14 +220,14 @@ def display_energy_fit_and_chi2(fc : FitCollection, pl : PlotLabels, figsize : T
         warnings.warn(f' fit did not succeed, cannot display ', UserWarning)
 
 
-def energy_map(KRES : Dict[int, List[KrEvent]])->Dict[int, List[float]]:
-
-    wedges =[len(kre) for kre in KRES.values() ]  # number of wedges per sector
-    eMap = {}
-
-    for sector in KRES.keys():
-        eMap[sector] = [np.mean(KRES[sector][i].E) for i in range(wedges[sector])]
-    return eMap
+# def energy_map(KRES : Dict[int, List[KrEvent]])->Dict[int, List[float]]:
+#
+#     wedges =[len(kre) for kre in KRES.values() ]  # number of wedges per sector
+#     eMap = {}
+#
+#     for sector in KRES.keys():
+#         eMap[sector] = [np.mean(KRES[sector][i].E) for i in range(wedges[sector])]
+#     return eMap
 
 # def energy_fit_XYRange(kre    : KrEvent,
 #                        nbins   : int,
@@ -278,7 +278,7 @@ def plot_resolution_r_z(Ri : Iterable[float], Zi : Iterable[float], FWHM : Dict[
     plt.xlabel(' z (mm)')
     plt.ylabel('resolution FWHM (%)')
     plt.legend()
-    
+
 
 def fit_gaussian_experiments(exps    : np.array,
                              nbins   : int       = 50,
