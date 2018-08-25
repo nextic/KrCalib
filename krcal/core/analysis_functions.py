@@ -254,8 +254,8 @@ def select_rphi_sectors(dst     : DataFrame,
         MSK = {}
         for i, rps in RPS.items():
             if verbose:
-                print(f' i = {i}')
-                print(f' rps = {rps}')
+                print(f' sector = {i}')
+                #print(f' wedge = {rps}')
 
             sel_mask = [in_range(dst.R,
                                  s.rmin,
@@ -266,13 +266,22 @@ def select_rphi_sectors(dst     : DataFrame,
 
         return MSK
 
+    if verbose:
+        print(f' calling selection_mask')
     MSK = selection_mask_rphi_sectors(dst, RPS, verbose)
+
+    if verbose:
+        print(f' selection_mask computed, filling RGES')
 
     RGES = {}
     for i, msk in MSK.items():
         if verbose:
             print(f' defining kr_event for sector {i}')
         RGES[i] = [kr_event(dst, dt, E, Q, sel_mask = m) for m in msk]
+
+    if verbose:
+        print(f' RGES computed')
+
     return RGES
 
 
@@ -283,12 +292,25 @@ def plot_sector(KRES : Dict[int, List[KrEvent]], nbins_x, nbins_y, ranges_x, ran
     print(f'number of events in sector = {np.sum(nevt)}')
 
 
+def events_sector(nMap : Dict[int, List[float]])->np.array:
+    N = []
+    for  nL in nMap.values():
+        N.append(np.mean(nL))
+    return np.array(N)
+
+def event_map(KRES : Dict[int, List[KrEvent]])->Dict[int, List[float]]:
+    nMap = {}
+    for i, kres in KRES.items():
+        nMap[i] = [len(k.S2e) for k in kres]
+    return nMap
+
 
 def plot_sectors(KRES : Dict[int, List[KrEvent]], nbins_x, nbins_y, ranges_x, ranges_y,
-                 figsize=(14,14), sectors=range(0,10)):
+                 nx = 4, ny = 3,
+                 figsize=(14,14)):
     fig = plt.figure(figsize=figsize)
-    for i in sectors:
-        fig.add_subplot(4, 3, i+1)
+    for i in KRES.keys():
+        fig.add_subplot(nx, ny, i+1)
         plot_sector(KRES, nbins_x, nbins_y, ranges_x, ranges_y, sector=i)
     plt.tight_layout()
 
