@@ -5,24 +5,7 @@ import matplotlib.pyplot as plt
 from . histo_functions import labels
 from . histo_functions import h1, plot_histo
 from . kr_types        import PlotLabels
-# import matplotlib.dates  as md
-# from   invisible_cities.icaro.mpl_functions import set_plot_labels
-# from   invisible_cities.core.system_of_units_c import units
-#
-#
-# from   invisible_cities.evm  .ic_containers  import Measurement
-# from   invisible_cities.icaro. hst_functions import display_matrix
 
-
-# def figsize(type="small"):
-#     if type == "S":
-#         plt.rcParams["figure.figsize"]  = 8, 6
-#     elif type == "s":
-#          plt.rcParams["figure.figsize"] = 6, 4
-#     elif type == "l":
-#         plt.rcParams["figure.figsize"] = 10, 8
-#     else:
-#         plt.rcParams["figure.figsize"] = 12, 10
 
 def plot_xy_density(dst, xybins, figsize=(10,8)):
     fig = plt.figure(figsize=figsize)
