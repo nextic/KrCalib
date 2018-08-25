@@ -33,6 +33,14 @@ class MapType(Enum):
     E0u  = 4
     chi2 = 5
 
+@dataclass
+class KrFileName:
+    input_file_names : List[str]
+    output_file_name : str
+    map_file_name    : str
+    map_file_name_ts : str
+    emap_file_name   : str
+
 
 @dataclass
 class S1D:
@@ -42,6 +50,7 @@ class S1D:
     H  : Measurement
     R  : Measurement # R = H/E
     T  : Measurement
+
 
 
 @dataclass
