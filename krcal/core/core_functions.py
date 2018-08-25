@@ -16,10 +16,11 @@ def uncertainty_from_measurement(mL : Iterable[Measurement]) -> np.array:
     return np.array([m.uncertainty for m in mL])
 
 
-def time_delta_from_time(ts):
-    dt = [(datetime.fromtimestamp(ts[i]) - datetime.fromtimestamp(ts[0])).total_seconds()
-            for i in range (len(ts))]
-    return np.array(dt)
+def time_delta_from_time(T):
+    return np.array([t - T[0] for t in T])
+    # dt = [(datetime.fromtimestamp(ts[i]) - datetime.fromtimestamp(ts[0])).total_seconds()
+    #         for i in range (len(ts))]
+    # return np.array(dt)
 
 
 def find_nearest(array : np.array, value : Number)->Number:
