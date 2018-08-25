@@ -14,7 +14,7 @@ from . core_functions       import divide_np_arrays
 from typing                 import Tuple
 from . kr_types             import S1D, S2D
 from pandas.core.frame      import DataFrame
-from . kr_types             import Number, Int, Range, Sel
+from . kr_types             import Number, Int, Range
 from typing                 import List, Tuple, Sequence, Iterable
 from . kr_types             import KrEvent
 
@@ -55,6 +55,46 @@ def s12_time_profile(kdst       : KrEvent,
     plt.xticks( rotation=25 )
     plt.tight_layout()
 
+def energy_time_profile(T           : np.array,
+                        E           : np.array,
+                        Tnbins      : int,
+                        Trange      : Tuple[float, float],
+                        timeStamps  : List[datetime.datetime],
+                        erange      : Tuple[float, float] = (9e+3, 14e+3),
+                        figsize     : Tuple[float, float] = (10,8)):
+
+    xfmt = md.DateFormatter('%d-%m %H:%M')
+    fig = plt.figure(figsize=figsize)
+
+    x, y, yu = fitf.profileX(T, E, Tnbins, Trange)
+    ax = fig.add_subplot(1, 1, 1)
+
+    ax.xaxis.set_major_formatter(xfmt)
+    plt.errorbar(timeStamps, y, yu, fmt="kp", ms=7, lw=3)
+    plt.xlabel('date')
+    plt.ylabel('E (pes)')
+    plt.ylim(erange)
+    plt.xticks( rotation=25 )
+
+
+def energy_X_profile(X      : np.array,
+                     E      : np.array,
+                     xnbins : int,
+                     xrange : Tuple[float, float],
+                     xlabel : str = 'R',
+                     erange : Tuple[float, float] = (9e+3, 14e+3),
+                     figsize : Tuple[float, float] = (10,8)):
+
+    fig = plt.figure(figsize=figsize)
+
+    x, y, yu = fitf.profileX(X, E, xnbins, xrange)
+    ax = fig.add_subplot(1, 1, 1)
+
+    plt.errorbar(x, y, yu, fmt="kp", ms=7, lw=3)
+    plt.xlabel(xlabel)
+    plt.ylabel('E (pes)')
+    plt.ylim(erange)
+    
 
 def s1d_from_dst(dst       : DataFrame,
                  range_s1e : Tuple[float, float] = (0,40),
