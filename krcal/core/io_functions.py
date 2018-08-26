@@ -113,14 +113,15 @@ def kdst_write(dst, filename):
 
 def write_maps(asm : ASectorMap, filename : str):
 
-    e0df  = pd.DataFrame.from_dict(asm.e0)
-    e0udf = pd.DataFrame.from_dict(asm.e0u)
-    ltdf  = pd.DataFrame.from_dict(asm.lt)
-    ltudf = pd.DataFrame.from_dict(asm.ltu)
-    e0df.to_hdf(filename, key='e0', mode='w')
-    e0udf.to_hdf(filename, key='e0u', mode='a')
-    ltdf.to_hdf(filename, key='lt', mode='a')
-    ltudf.to_hdf(filename, key='ltu', mode='a')
+    # e0df  = pd.DataFrame.from_dict(asm.e0)
+    # e0udf = pd.DataFrame.from_dict(asm.e0u)
+    # ltdf  = pd.DataFrame.from_dict(asm.lt)
+    # ltudf = pd.DataFrame.from_dict(asm.ltu)
+
+    asm.e0.to_hdf(filename, key='e0', mode='w')
+    asm.e0u.to_hdf(filename, key='e0u', mode='a')
+    asm.lt.to_hdf(filename, key='lt', mode='a')
+    asm.ltu.to_hdf(filename, key='ltu', mode='a')
 
 
 def write_maps_ts(aMaps : Iterable[ASectorMap], ts: np.array, filename : str):
@@ -131,19 +132,19 @@ def write_maps_ts(aMaps : Iterable[ASectorMap], ts: np.array, filename : str):
     for i, t in enumerate(ts):
         asm = aMaps[i]
 
-        e0df  = pd.DataFrame.from_dict(asm.e0)
-        e0udf = pd.DataFrame.from_dict(asm.e0u)
-        ltdf  = pd.DataFrame.from_dict(asm.lt)
-        ltudf = pd.DataFrame.from_dict(asm.ltu)
-        e0df.to_hdf(filename,  key =f'e0_{i}',  mode='a')
-        e0udf.to_hdf(filename, key =f'e0u_{i}', mode='a')
-        ltdf.to_hdf(filename,  key =f'lt_{i}',  mode='a')
-        ltudf.to_hdf(filename, key =f'ltu_{i}', mode='a')
+        # e0df  = pd.DataFrame.from_dict(asm.e0)
+        # e0udf = pd.DataFrame.from_dict(asm.e0u)
+        # ltdf  = pd.DataFrame.from_dict(asm.lt)
+        # ltudf = pd.DataFrame.from_dict(asm.ltu)
+        asm.e0.to_hdf(filename,  key =f'e0_{i}',  mode='a')
+        asm.e0u.to_hdf(filename, key =f'e0u_{i}', mode='a')
+        asm.lt.to_hdf(filename,  key =f'lt_{i}',  mode='a')
+        asm.ltu.to_hdf(filename, key =f'ltu_{i}', mode='a')
 
 
-def write_energy_map(em : Dict[int, List[float]], filename : str):
-    e0df  = pd.DataFrame.from_dict(em)
-    e0df.to_hdf(filename, key='e', mode='w')
+def write_energy_map(em : DataFrame, filename : str):
+    #e0df  = pd.DataFrame.from_dict(em)
+    em.to_hdf(filename, key='e', mode='w')
 
 
 def read_energy_map(filename : str)->DataFrame:
