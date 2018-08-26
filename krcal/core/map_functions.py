@@ -380,7 +380,7 @@ def draw_maps(W       : Dict[int, List[KrSector]],
 
 
 def draw_energy_map(W       : Dict[int, List[KrSector]],
-                    eMap    : Dict[int, List[float]],
+                    eMap    : DataFrame,
                     elims   : Optional[Tuple[float, float]] = None,
                     cmap    :  Colormap                      = matplotlib.cm.viridis,
                     alpha   : float                          = 1.0,  # level of transparency
@@ -389,12 +389,9 @@ def draw_energy_map(W       : Dict[int, List[KrSector]],
                     figsize : Tuple[float, float]            = (14,10)):
 
     def map_minmax(LTM):
-        LT = []
-        for l in LTM.values():
-            for v in l:
-                LT.append(v)
-
-        return min(LT), max(LT)
+        e0M = LTM.max().max()
+        e0m = LTM.min().min()
+        return e0m, e0M
 
 
     fig = plt.figure(figsize=figsize) # give plots a rectangular frame
