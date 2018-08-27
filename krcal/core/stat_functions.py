@@ -4,6 +4,11 @@ from   invisible_cities.core.core_functions    import in_range
 from   invisible_cities.evm  .ic_containers    import Measurement
 from   typing                                  import Tuple, List
 from . kr_types                                import Number, Range
+from numpy import sqrt
+
+def relative_error_ratio(a : float, sigma_a: float, b :float, sigma_b : float) ->float:
+    return sqrt((sigma_a / a)**2 + (sigma_b / b)**2)
+    
 
 def mean_and_std(x : np.array, range_ : Tuple[Number, Number])->Tuple[Number, Number]:
     """Computes mean and std for an array within a range"""
