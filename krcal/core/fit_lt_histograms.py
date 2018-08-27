@@ -145,21 +145,21 @@ def histo_fit_sectors(fps : Iterable[FitParTS],
     ax      = fig.add_subplot(1, 3, 1)
     for fp in fps:
         _, _, c2_mu, c2_std        = h1(fp.c2, bins=20, range = range_chi2, color=None, stats=False)
-        plot_histo(PlotLabels('Chi2','Entries',''), ax)
+        #plot_histo(PlotLabels('Chi2','Entries',''), ax)
         C2.append(c2_mu)
         C2u.append(c2_std)
 
     ax      = fig.add_subplot(1, 3, 2)
     for fp in fps:
         _, _, e0_mu, e0_std       = h1(fp.e0, bins=20, range = range_e0, color=None, stats=False)
-        plot_histo(PlotLabels('E0','Entries',''), ax)
+        #plot_histo(PlotLabels('E0','Entries',''), ax)
         E0.append(e0_mu)
         E0u.append(e0_std)
 
     ax      = fig.add_subplot(1, 3, 3)
     for fp in fps:
         _, _, lt_mu, lt_std        = h1(fp.lt, bins=20, range = range_lt, color=None, stats=False)
-        plot_histo(PlotLabels('LT','Entries',''), ax)
+        #plot_histo(PlotLabels('LT','Entries',''), ax)
         LT.append(lt_mu)
         LTu.append(lt_std)
 
