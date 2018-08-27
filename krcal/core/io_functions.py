@@ -8,7 +8,7 @@ from   typing         import Tuple, Dict, List, Iterable
 from . kr_types       import Number
 from . kr_types       import ASectorMap
 from . kr_types       import KrFileName
-from pandas           import DataFrame
+from pandas           import DataFrame, Series
 
 from . core_functions import file_numbers_from_file_range
 from pandas import Series
@@ -142,6 +142,20 @@ def write_maps_ts(aMaps : Iterable[ASectorMap], ts: np.array, filename : str):
         asm.ltu.to_hdf(filename, key =f'ltu_{i}', mode='a')
 
 
+def read_maps_ts(filename : str)->Tuple[Series, Dict[int, ASectorMap]]:
+
+    tsMaps = {}
+    ts = pd.read_hdf(filename, 'ts')
+
+    for i in ts.index:
+        e0  = pd.read_hdf(filename, f'e0_{i}')
+        e0u = pd.read_hdf(filename, f'e0u_{i}')
+        lt  = pd.read_hdf(filename, f'lt_{i}')
+        ltu = pd.read_hdf(filename, f'ltu_{i}')
+        tsMaps[i] = ASectorMap(None, e0, lt, e0u, ltu)
+    return ts, tsMaps
+
+
 def write_energy_map(em : DataFrame, filename : str):
     #e0df  = pd.DataFrame.from_dict(em)
     em.to_hdf(filename, key='e', mode='w')
@@ -150,6 +164,7 @@ def write_energy_map(em : DataFrame, filename : str):
 def read_energy_map(filename : str)->DataFrame:
     me0  = pd.read_hdf(filename, 'e')
     return me0
+
 
 def read_maps(filename : str)->Iterable[DataFrame]:
     me0  = pd.read_hdf(filename, 'e0')
