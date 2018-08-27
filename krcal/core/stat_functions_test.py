@@ -21,6 +21,35 @@ from invisible_cities.core.testing_utils       import random_length_float_arrays
 
 from . stat_functions       import gaussian_experiment
 from . stat_functions       import mean_and_std
+from . stat_functions       import relative_error_ratio
+
+
+def test_simple_relative_error_ratio():
+    a = 10
+    sigma_a = 1
+    b = 20
+    sigma_b = 1
+
+    sigma_a_rel = sigma_a / a
+    sigma_b_rel = sigma_b / b
+
+    rer = relative_error_ratio(a, sigma_a, b, sigma_b)
+    assert rer**2   == approx(sigma_a_rel**2 +  sigma_b_rel**2 , rel=1e-3, abs=1e-3)
+
+
+
+@given(floats(min_value = 100, max_value = +200),
+       floats(min_value = 100, max_value = +200),
+       floats(min_value = + 0.1, max_value = + 1),
+       floats(min_value = + 0.1,max_value = + 1) )
+@settings(max_examples=50)
+
+def test_relative_error_ratio(a, b, sigma_a, sigma_b):
+    rer = relative_error_ratio(a, sigma_a, b, sigma_b)
+    sigma_a_rel = sigma_a / a
+    sigma_b_rel = sigma_b / b
+
+    assert rer**2   == approx(sigma_a_rel**2 +  sigma_b_rel**2 , rel=1e-3, abs=1e-3)
 
 
 def test_simple_mean_and_std():
