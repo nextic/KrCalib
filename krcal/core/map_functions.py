@@ -20,9 +20,34 @@ from .kr_types         import KrSector, KrEvent
 from . kr_types        import FitType, MapType
 from . kr_types        import FitParTS
 from . kr_types        import ASectorMap, SectorMapTS
+
 from typing            import List, Tuple, Dict, Sequence, Iterable
 from typing            import Optional
 
+def rphi_sector_equal_area_map(rmin : float  =  18,
+                               rmax : float  = 180,
+                               sphi : float =45)->Tuple[Dict[int, Tuple[float, float]],
+                                     Dict[int, List[Tuple[float]]]]:
+    # PHI = {0 : [(0, 360)],
+    #        1 : [(0,180), (180,360)],
+    #        2 : [(i, i+90) for i in range(0, 360, 90) ]
+    #        }
+    nSectors = int((rmax / rmin)**2)
+    print(f'nSectors = {nSectors}')
+    R = {}
+    PHI = {}
+    ri =[np.sqrt(i) * rmin for i in range(nSectors + 1)]
+    #print(ri)
+
+    for ns in range(nSectors):
+
+        R[ns] = (ri[ns], ri[ns+1])
+        #print(f'R[{ns}] =({ri[ns]},{ri[ns+1]})')
+
+    for ns in range(0, nSectors):
+        PHI[ns] = [(i, i+sphi) for i in range(0, 360, sphi)]
+
+    return R, PHI
 
 def rphi_sector_map(nSectors : int   =10,
                     rmax     : float =200,
@@ -48,50 +73,6 @@ def rphi_sector_map(nSectors : int   =10,
         PHI[ns] = [(i, i+sphi) for i in range(0, 360, sphi)]
 
     return R, PHI
-
-
-def rphi_sector_map2(ns1  : int   =10,
-                     ns2  : int   =50,
-                     ns3  : int   =40,
-                     r1   : float =50,
-                     r2   : float =150,
-                     rmax : float =200,
-                     sphi : float =15)->Tuple[Dict[int, Tuple[float, float]],
-                                              Dict[int, List[Tuple[float]]], int]:
-
-    PHI = {}
-    R = {}
-
-    dr = r1 / ns1
-    r0 = 0
-    for ns in range(ns1):
-        ri = r0 + dr * ns
-        rs = r0 + dr* (ns+1)
-        R[ns] = (ri, rs)
-        print(f'R[{ns}] =({ri},{rs})')
-
-    dr = (r2 -r1) / ns2
-    r0 = rs - dr * ns1
-    for ns in range(ns1, ns1+ns2):
-        ri = r0 + dr * ns
-        rs = r0 + dr* (ns+1)
-        R[ns] = (ri, rs)
-        print(f'R[{ns}] =({ri},{rs})')
-
-    dr = (rmax -r2) / ns3
-    r0 = rs - dr * (ns1 + ns2)
-    for ns in range(ns1+ns2, ns1 + ns2 + ns3):
-        ri = r0 + dr * ns
-        rs = r0 + dr* (ns+1)
-        R[ns] = (ri, rs)
-        print(f'R[{ns}] =({ri},{rs})')
-
-    nSectors = ns1 + ns2 + ns3
-
-    for ns in range(0, nSectors):
-        PHI[ns] = [(i, i+sphi) for i in range(0, 360, sphi)]
-
-    return R, PHI, nSectors
 
 
 def define_rphi_sectors(R       : Dict[int,  Tuple[float, float]],
@@ -259,28 +240,6 @@ def amap_from_tsmap(tsMap      : SectorMapTS,
 
 
 def relative_errors(am : ASectorMap)->ASectorMap:
-    # mC2  = am.chi2
-    # mE0  = am.e0
-    # mLT  = am.lt
-    # mE0u = am.e0u / mE0
-    # mLTu = am.ltu
-    #
-    #
-    # for i, L in am.chi2.items():
-    #     mC2[i] = L
-    # for i, L in am.e0.items():
-    #     mE0[i] = L
-    # for i, L in am.lt.items():
-    #     mLT[i] = L
-    # for i, L in am.e0u.items():
-    #     Le0 = am.e0[i]
-    #     Le0u =am.e0u[i]
-    #     mE0u[i] = [100* y/x for x,y in zip(Le0, Le0u)]
-    # for i, L in am.ltu.items():
-    #     Llt = am.lt[i]
-    #     Lltu =am.ltu[i]
-    #     mLTu[i] = [100* y/x if x > 0 else -1 for x,y in zip(Llt, Lltu) ]
-
     return ASectorMap(chi2  = am.chi2,
                       e0    = am.e0,
                       lt    = am.lt,
@@ -379,38 +338,39 @@ def draw_maps(W       : Dict[int, List[KrSector]],
     plt.show()
 
 
-def draw_energy_map(W       : Dict[int, List[KrSector]],
-                    eMap    : DataFrame,
-                    elims   : Optional[Tuple[float, float]] = None,
-                    cmap    :  Colormap                      = matplotlib.cm.viridis,
-                    alpha   : float                          = 1.0,  # level of transparency
-                    rmax    : float                          = 200,  # the largest radius
-                    scale   : float                          = 0.5,  # needed to fit the map
-                    figsize : Tuple[float, float]            = (14,10)):
-
-    def map_minmax(LTM):
-        e0M = LTM.max().max()
-        e0m = LTM.min().min()
-        return e0m, e0M
-
-
-    fig = plt.figure(figsize=figsize) # give plots a rectangular frame
-
-    ax = fig.add_subplot(1,1,1)
-    if elims == None:
-        e0m, e0M = map_minmax(eMap)
-    else:
-        e0m, e0M = elims[0], elims[1]
-    p = add_map_values_to_axis(W, eMap, ax, cmap, alpha, rmax, scale, clims=(e0m, e0M))
-    fig.colorbar(p, ax=ax)
-    plt.title('E')
-
-    plt.show()
+# def draw_energy_map(W       : Dict[int, List[KrSector]],
+#                     eMap    : DataFrame,
+#                     elims   : Optional[Tuple[float, float]] = None,
+#                     cmap    :  Colormap                      = matplotlib.cm.viridis,
+#                     alpha   : float                          = 1.0,  # level of transparency
+#                     rmax    : float                          = 200,  # the largest radius
+#                     scale   : float                          = 0.5,  # needed to fit the map
+#                     figsize : Tuple[float, float]            = (14,10)):
+#
+#     def map_minmax(LTM):
+#         e0M = LTM.max().max()
+#         e0m = LTM.min().min()
+#         return e0m, e0M
+#
+#
+#     fig = plt.figure(figsize=figsize) # give plots a rectangular frame
+#
+#     ax = fig.add_subplot(1,1,1)
+#     if elims == None:
+#         e0m, e0M = map_minmax(eMap)
+#     else:
+#         e0m, e0M = elims[0], elims[1]
+#     p = add_map_values_to_axis(W, eMap, ax, cmap, alpha, rmax, scale, clims=(e0m, e0M))
+#     fig.colorbar(p, ax=ax)
+#     plt.title('E')
+#
+#     plt.show()
 
 
 def draw_map(W       : Dict[int, List[KrSector]],
              aMap    : DataFrame,
              alims   : Optional[Tuple[float, float]] = None,
+             title   : str                           = 'E',
              cmap    :  Colormap                      = matplotlib.cm.viridis,
              alpha   : float                          = 1.0,  # level of transparency
              rmax    : float                          = 200,  # the largest radius
@@ -428,13 +388,51 @@ def draw_map(W       : Dict[int, List[KrSector]],
         e0m, e0M = alims[0], alims[1]
     p = add_map_values_to_axis(W, aMap, ax, cmap, alpha, rmax, scale, clims=(e0m, e0M))
     fig.colorbar(p, ax=ax)
-    plt.title('E')
+    plt.title(title)
     plt.tight_layout()
     plt.show()
 
 
-def draw_lt_maps(W       : Dict[int, List[KrSector]],
+# def draw_lt_maps(W       : Dict[int, List[KrSector]],
+#                  aMaps   : List[ASectorMap],
+#                  ltlims  : Optional[Tuple[float, float]] = None,
+#                  ixy     : Optional[Tuple[float, float]] = None,
+#                  cmap    :  Colormap                      = matplotlib.cm.viridis,
+#                  alpha   : float                          = 1.0,  # level of transparency
+#                  rmax    : float                          = 200,  # the largest radius
+#                  scale   : float                          = 0.5,  # needed to fit the map
+#                  figsize : Tuple[float, float]            = (14,10)):
+#
+#     fig = plt.figure(figsize=figsize)
+#     if ixy == None:
+#         if len(aMaps)%2 == 0:
+#             ix = len(aMaps) / 2
+#             iy = len(aMaps) / 2
+#         else:
+#             ix = len(aMaps) + 1 / 2
+#             iy = len(aMaps) + 1 / 2
+#     else:
+#         ix = ixy[0]
+#         iy = ixy[1]
+#     for i, aMap in enumerate(aMaps):
+#         ax = fig.add_subplot(ix,iy,i+1)
+#
+#         ltmap = aMap.lt
+#         if ltlims == None:
+#             e0M = ltmap.max().max()
+#             e0m = ltmap.min().min()
+#         else:
+#             e0m, e0M = ltlims[0], ltlims[1]
+#         p = add_map_values_to_axis(W, ltmap, ax, cmap, alpha, rmax, scale, clims=(e0m, e0M))
+#         fig.colorbar(p, ax=ax)
+#         plt.title(f'E : ts = {i}')
+#     plt.tight_layout()
+#     plt.show()
+
+
+def draw_maps_ts(W       : Dict[int, List[KrSector]],
                  aMaps   : List[ASectorMap],
+                 wmap    : MapType                       = MapType.LT,
                  ltlims  : Optional[Tuple[float, float]] = None,
                  ixy     : Optional[Tuple[float, float]] = None,
                  cmap    :  Colormap                      = matplotlib.cm.viridis,
@@ -457,7 +455,22 @@ def draw_lt_maps(W       : Dict[int, List[KrSector]],
     for i, aMap in enumerate(aMaps):
         ax = fig.add_subplot(ix,iy,i+1)
 
-        ltmap = aMap.lt
+        if wmap == MapType.LT:
+            title = f'LT : ts = {i}'
+            ltmap = aMap.lt
+        elif wmap == MapType.LTu:
+            title = f'LTu : ts = {i}'
+            ltmap = aMap.ltu
+        elif wmap == MapType.E0:
+            title = f'E0 : ts = {i}'
+            ltmap = aMap.e0
+        elif wmap == MapType.E0u:
+            title = f'E0u : ts = {i}'
+            ltmap = aMap.E0u
+        else:
+            title = f'Chi2 : ts = {i}'
+            ltmap = aMap.chi2
+
         if ltlims == None:
             e0M = ltmap.max().max()
             e0m = ltmap.min().min()
@@ -465,6 +478,6 @@ def draw_lt_maps(W       : Dict[int, List[KrSector]],
             e0m, e0M = ltlims[0], ltlims[1]
         p = add_map_values_to_axis(W, ltmap, ax, cmap, alpha, rmax, scale, clims=(e0m, e0M))
         fig.colorbar(p, ax=ax)
-        plt.title(f'E : ts = {i}')
+        plt.title(title)
     plt.tight_layout()
     plt.show()
