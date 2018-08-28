@@ -265,6 +265,7 @@ def resolution_r_z(Ri : Iterable[float],
                    E : np.array,
                    enbins = 25,
                    erange = (10e+3, 12500),
+                   ixy = (3,4),
                    fdraw = True,
                    fprint = True,
                    figsize = (14,10))->Tuple[DataFrame, DataFrame]:
@@ -274,6 +275,8 @@ def resolution_r_z(Ri : Iterable[float],
     FCE = {}
     FCE = {}
     j=0
+    ix = ixy[0]
+    iy = ixy[1]
     for i, r in enumerate(Ri):
         ZR = []
         ZRE = []
@@ -282,7 +285,7 @@ def resolution_r_z(Ri : Iterable[float],
             Zr = 0, z
             j+=1
             if fdraw:
-                ax  = fig.add_subplot(3, 4, j)
+                ax  = fig.add_subplot(ix, iy, j)
             fc = resolution_selected_r_z(Rr, Zr, R, Z, E, enbins, erange)
             if fdraw:
                 plot_fit_energy(fc)
