@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.dates  as md
 import warnings
 
-
-from typing  import Dict, List, Tuple, Sequence, Iterable
+from   pandas.core.frame import DataFrame
+from typing  import Dict, List, Tuple, Sequence, Iterable, Optional
 
 
 from   invisible_cities.core.core_functions import in_range
@@ -16,10 +16,11 @@ from . fit_functions import   expo_seed, chi2, chi2f
 from . histo_functions import profile1d
 from . stat_functions import  mean_and_std
 from . core_functions import  value_from_measurement, uncertainty_from_measurement
+from . core_functions import  NN
 
 from invisible_cities.core .stat_functions import poisson_sigma
 from invisible_cities.icaro. hst_functions import shift_to_bin_centers
-from invisible_cities.types.ic_types       import NN
+
 
 from . kr_types import GaussPar
 from . kr_types import FitPar
@@ -87,7 +88,7 @@ def fit_lifetime_profile(z : np.array,
 
     try:
         f      = fitf.fit(fitf.expo, x, y, seed, sigma=yu)
-        c2     = chi2(f, x, y, yu)
+        c2     = f.chi2
         par    = np.array(f.values)
         par[1] = - par[1]
         err    = np.array(f.errors)
@@ -343,17 +344,17 @@ def fit_fcs_in_sectors(sector  : int,
 
 
 def fit_map(XT         : int,
-            DT         : np.array,
-            KRES       : Dict[int, List[KrEvent]],
-            nbins_z    : int,
-            nbins_e    : int,
-            range_z    : Tuple[float, float] = (50,550),
-            range_e    : Tuple[float, float] = (5000, 13000),
-            range_chi2 : Tuple[float, float] = (0,3),
-            range_lt   : Tuple[float, float] = (1800, 3000),
-            energy     : str                 = 'S2e',
-            fit        : FitType             = FitType.profile,
-            verbose    : bool                = False)->Dict[int, List[FitParTS]]:
+               DT         : np.array,
+               KRES       : Dict[int, List[KrEvent]],
+               nbins_z    : int,
+               nbins_e    : int,
+               range_z    : Tuple[float, float] = (50,550),
+               range_e    : Tuple[float, float] = (5000, 13000),
+               range_chi2 : Tuple[float, float] = (0,3),
+               range_lt   : Tuple[float, float] = (1800, 3000),
+               energy     : str                 = 'S2e',
+               fit        : FitType             = FitType.profile,
+               verbose    : bool                = False)->Dict[int, List[FitParTS]]:
 
 
     fMAP = {}
@@ -373,6 +374,80 @@ def fit_map(XT         : int,
             print(f' number of wedges in sector {len(fps)}')
 
 
+    return fMAP
+
+
+def fit_fcs_in_xy_bin (ixy     : Tuple[int, int],
+                       XT      : int,
+                       DT      : np.array,
+                       KRES    : Dict[int, List[KrEvent]],
+                       nbins_z : int,
+                       nbins_e : int,
+                       range_z : Tuple[float, float] = (100,550),
+                       range_e : Tuple[float, float] = (5000, 12500),
+                       energy  : str                 = 'S2e',
+                       fit     : FitType             = FitType.profile)->FitParTS:
+    """Returns fits in Rphi sectors specified by KRES"""
+
+    i = ixy[0]
+    j = ixy[1]
+    return time_fcs(XT, DT, KRES[i][j],
+                    nbins_z,
+                    nbins_e,
+                    range_z = range_z,
+                    range_e = range_e,
+                    energy  = energy,
+                    fit     = fit)
+
+
+def fit_map_xy(XT         : int,
+               DT         : np.array,
+               KRES       : Dict[int, List[KrEvent]],
+               neM        : DataFrame,
+               nbins_z    : int,
+               nbins_e    : int,
+               range_z    : Tuple[float, float] = (50,550),
+               range_e    : Tuple[float, float] = (5000, 13000),
+               range_chi2 : Tuple[float, float] = (0,3),
+               range_lt   : Tuple[float, float] = (1800, 3000),
+               energy     : str                 = 'S2e',
+               fit        : FitType             = FitType.profile,
+               n_min      : int                 = 100,
+               verbose    : bool                = False,
+               nprint     : int                 = 100)->Dict[int, List[FitParTS]]:
+
+    indx = [(i, i+XT) for i in range(0, int(DT[-1] -XT), XT) ]
+    ts = [indx[i][0] for i in range(len(indx))]
+
+    fMAP = {}
+    n  = 0
+    nz = 0
+    r, c = neM.shape
+    for i in range(r):
+        FL = []
+        for j in range(c):
+            nevt = neM[i][j]
+            if verbose and n < nprint and nevt > n_min:
+                print(f'Fitting xy bin = ({i},{j}), with events ={nevt}')
+
+            if neM[i][j] >= n_min:
+                n += 1
+                fps = fit_fcs_in_xy_bin((i,j), XT, DT, KRES, nbins_z, nbins_e,
+                                        range_z=range_z,
+                                        range_e = range_e,
+                                        energy = energy,
+                                        fit = fit)
+            else:
+                nz += 1
+                dum = np.zeros(len(ts), dtype=float)
+                dum.fill(np.nan)
+                fps = FitParTS(ts, dum, dum, dum, dum, dum)
+            FL.append(fps)
+
+        fMAP[i] = FL
+
+    if verbose:
+        print(f' total number of zero events = {nz} ')
     return fMAP
 
 
