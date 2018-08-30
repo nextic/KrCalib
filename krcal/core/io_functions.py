@@ -113,15 +113,11 @@ def kdst_write(dst, filename):
 
 def write_maps(asm : ASectorMap, filename : str):
 
-    # e0df  = pd.DataFrame.from_dict(asm.e0)
-    # e0udf = pd.DataFrame.from_dict(asm.e0u)
-    # ltdf  = pd.DataFrame.from_dict(asm.lt)
-    # ltudf = pd.DataFrame.from_dict(asm.ltu)
-
-    asm.e0.to_hdf(filename, key='e0', mode='w')
-    asm.e0u.to_hdf(filename, key='e0u', mode='a')
-    asm.lt.to_hdf(filename, key='lt', mode='a')
-    asm.ltu.to_hdf(filename, key='ltu', mode='a')
+    asm.chi2.to_hdf(filename, key='chi2', mode='w')
+    asm.e0.to_hdf(filename,   key='e0',   mode='a')
+    asm.e0u.to_hdf(filename,  key='e0u',  mode='a')
+    asm.lt.to_hdf(filename,   key='lt',   mode='a')
+    asm.ltu.to_hdf(filename,  key='ltu',  mode='a')
 
 
 def write_maps_ts(aMaps : Iterable[ASectorMap], ts: np.array, filename : str):
@@ -132,14 +128,11 @@ def write_maps_ts(aMaps : Iterable[ASectorMap], ts: np.array, filename : str):
     for i, t in enumerate(ts):
         asm = aMaps[i]
 
-        # e0df  = pd.DataFrame.from_dict(asm.e0)
-        # e0udf = pd.DataFrame.from_dict(asm.e0u)
-        # ltdf  = pd.DataFrame.from_dict(asm.lt)
-        # ltudf = pd.DataFrame.from_dict(asm.ltu)
-        asm.e0.to_hdf(filename,  key =f'e0_{i}',  mode='a')
-        asm.e0u.to_hdf(filename, key =f'e0u_{i}', mode='a')
-        asm.lt.to_hdf(filename,  key =f'lt_{i}',  mode='a')
-        asm.ltu.to_hdf(filename, key =f'ltu_{i}', mode='a')
+        asm.chi2.to_hdf(filename, key =f'chi2_{i}', mode='a')
+        asm.e0.to_hdf(filename,   key =f'e0_{i}',   mode='a')
+        asm.e0u.to_hdf(filename,  key =f'e0u_{i}',  mode='a')
+        asm.lt.to_hdf(filename,   key =f'lt_{i}',   mode='a')
+        asm.ltu.to_hdf(filename,  key =f'ltu_{i}',  mode='a')
 
 
 def read_maps_ts(filename : str)->Tuple[Series, Dict[int, ASectorMap]]:
@@ -148,16 +141,16 @@ def read_maps_ts(filename : str)->Tuple[Series, Dict[int, ASectorMap]]:
     ts = pd.read_hdf(filename, 'ts')
 
     for i in ts.index:
-        e0  = pd.read_hdf(filename, f'e0_{i}')
-        e0u = pd.read_hdf(filename, f'e0u_{i}')
-        lt  = pd.read_hdf(filename, f'lt_{i}')
-        ltu = pd.read_hdf(filename, f'ltu_{i}')
-        tsMaps[i] = ASectorMap(None, e0, lt, e0u, ltu)
+        chi2  = pd.read_hdf(filename, f'chi2_{i}')
+        e0    = pd.read_hdf(filename, f'e0_{i}')
+        e0u   = pd.read_hdf(filename, f'e0u_{i}')
+        lt    = pd.read_hdf(filename, f'lt_{i}')
+        ltu   = pd.read_hdf(filename, f'ltu_{i}')
+        tsMaps[i] = ASectorMap(chi2, e0, lt, e0u, ltu)
     return ts, tsMaps
 
 
 def write_energy_map(em : DataFrame, filename : str):
-    #e0df  = pd.DataFrame.from_dict(em)
     em.to_hdf(filename, key='e', mode='w')
 
 
@@ -166,9 +159,10 @@ def read_energy_map(filename : str)->DataFrame:
     return me0
 
 
-def read_maps(filename : str)->Iterable[DataFrame]:
-    me0  = pd.read_hdf(filename, 'e0')
-    me0u = pd.read_hdf(filename, 'e0u')
-    mlt  = pd.read_hdf(filename, 'lt')
-    mltu = pd.read_hdf(filename, 'ltu')
-    return me0, me0u, mlt, mltu
+def read_maps(filename : str)->ASectorMap:
+    chi2 = pd.read_hdf(filename, 'chi2')
+    e0   = pd.read_hdf(filename, 'e0')
+    e0u  = pd.read_hdf(filename, 'e0u')
+    lt   = pd.read_hdf(filename, 'lt')
+    ltu  = pd.read_hdf(filename, 'ltu')
+    return ASectorMap(chi2, e0, lt, e0u, ltu)
