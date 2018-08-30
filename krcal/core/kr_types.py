@@ -197,19 +197,6 @@ class FitCollection2(FitCollection):
     fp2   : FitPar
 
 
-@dataclass
-class MapXY:
-    xs    : np.array
-    ys    : np.array
-    value : np.array
-    error : np.array
-    valid : np.array
-
-
-@dataclass
-class MapXYFitC(MapXY):
-    fc    : List[List[FitCollection]]
-
 
 @dataclass
 class PlotLabels:
@@ -268,54 +255,62 @@ class ASectorMap:  # Map in chamber sector containing average of pars
     e0u   : DataFrame
     ltu   : DataFrame
 
+@dataclass
+class FitMapValue:  # A ser of values of a FitMap
+    chi2  : float
+    e0    : float
+    lt    : float
+    e0u   : float
+    ltu   : float
+
 #------
 
 
-@dataclass
-class KrLTSlices:
-    Es    : np.array
-    LT    : np.array
-    chi2  : np.array
-    valid : np.array
-
-
-@dataclass
-class KrLTLimits:
-    Es  : minmax
-    LT  : minmax
-    Eu  : minmax
-    LTu : minmax
-
-
-
-
-@dataclass
-class KrMean:
-    mu    : float
-    mu_u  : float
-
-
-@dataclass
-class KrMeanAndStd(KrMean):
-    std   : float
-    std_u : float
-
-
-@dataclass
-class KrMeanStdMinMax(KrMeanAndStd):
-    min     : float
-    max     : float
-    min_u   : float
-    max_u   : float
-
-
-@dataclass
-class KrMeans:
-    mu    : np.array
-    mu_u  : np.array
-
-
-@dataclass
-class KrMeansAndStds(KrMeans):
-    std   : np.array
-    std_u : np.array
+# @dataclass
+# class KrLTSlices:
+#     Es    : np.array
+#     LT    : np.array
+#     chi2  : np.array
+#     valid : np.array
+#
+#
+# @dataclass
+# class KrLTLimits:
+#     Es  : minmax
+#     LT  : minmax
+#     Eu  : minmax
+#     LTu : minmax
+#
+#
+#
+#
+# @dataclass
+# class KrMean:
+#     mu    : float
+#     mu_u  : float
+#
+#
+# @dataclass
+# class KrMeanAndStd(KrMean):
+#     std   : float
+#     std_u : float
+#
+#
+# @dataclass
+# class KrMeanStdMinMax(KrMeanAndStd):
+#     min     : float
+#     max     : float
+#     min_u   : float
+#     max_u   : float
+#
+#
+# @dataclass
+# class KrMeans:
+#     mu    : np.array
+#     mu_u  : np.array
+#
+#
+# @dataclass
+# class KrMeansAndStds(KrMeans):
+#     std   : np.array
+#     std_u : np.array
