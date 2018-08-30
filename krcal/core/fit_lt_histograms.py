@@ -195,6 +195,26 @@ def plot_fit_sectors(fps : Iterable[FitParTS],
     plt.tight_layout()
 
 
+def plot_fit_xy(fp :FitParTS,
+                range_chi2 : Tuple[float, float] =(0,3),
+                range_e0   : Tuple[float, float] =(10000,12500),
+                range_lt   : Tuple[float, float] =(2000, 3000)):
+
+    fig = plt.figure(figsize=(14,6))
+
+    ax      = fig.add_subplot(1, 2, 1)
+    plt.errorbar(fp.ts, fp.lt, np.sqrt(fp.lt), fmt="p")
+    plt.ylim(*range_lt)
+    plt.title('lifetime (t) ')
+
+    ax      = fig.add_subplot(1, 2, 2)
+    plt.errorbar(fp.ts, fp.e0, np.sqrt(fp.e0), fmt="p")
+    plt.ylim(*range_e0)
+    plt.title('E0z (t)')
+
+    plt.tight_layout()
+
+
 def print_fit_sectors_pars(fpts : FitParTS) :
 
     for i, c2, e0, lt, e0u, ltu in zip(fpts.ts,
