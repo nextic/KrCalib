@@ -33,8 +33,8 @@ def test_filenames_from_paths():
                                                                               tags    ='v1',
                                                                               file_range=(0,10))
 
-    assert input_dst_filenames[0]  == '/input/6261/kdst_0000_6261_trigger1_v1_krth.h5'
-    assert input_dst_filenames[-1] == '/input/6261/kdst_0009_6261_trigger1_v1_krth.h5'
+    assert input_dst_filenames[0]  == '/input/6261/kdst_0000_6261_trigger1_v1.h5'
+    assert input_dst_filenames[-1] == '/input/6261/kdst_0009_6261_trigger1_v1.h5'
     assert output_dst_filename     == '/out/dst_6261_trigger1_0000_0009.h5'
     assert log_filename            == '/log/log_6261_trigger1_0000_0009.h5'
 
@@ -47,7 +47,7 @@ def test_filenames_from_paths_trigger_empty():
                                                                               tags    ='v1',
                                                                               file_range=(0,10))
 
-    assert input_dst_filenames[0]  == '/input/6261/kdst_0000_6261_v1_krth.h5'
-    assert input_dst_filenames[-1] == '/input/6261/kdst_0009_6261_v1_krth.h5'
+    assert input_dst_filenames[0]  == '/input/6261/kdst_0000_6261_v1.h5'
+    assert input_dst_filenames[-1] == '/input/6261/kdst_0009_6261_v1.h5'
     assert output_dst_filename     == '/out/dst_6261_0000_0009.h5'
     assert log_filename            == '/log/log_6261_0000_0009.h5'
