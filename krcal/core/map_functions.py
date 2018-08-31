@@ -280,6 +280,49 @@ def amap_from_tsmap(tsMap      : SectorMapTS,
                       ltu   = pd.DataFrame.from_dict(mLTu))
 
 
+def map_average(aMaps : List[ASectorMap])->ASectorMap:
+    mapAV = aMaps[0]
+    chi2 = mapAV.chi2
+    e0   = mapAV.e0
+    lt   = mapAV.lt
+    e0u  = mapAV.e0u
+    ltu  = mapAV.ltu
+
+    for i in range(1, len(aMaps)):
+        chi2 = chi2.add(aMaps[i].chi2)
+        e0   = e0.  add(aMaps[i].e0)
+        lt   = lt.  add(aMaps[i].lt)
+        e0u  = e0u. add(aMaps[i].e0u)
+        ltu  = ltu. add(aMaps[i].ltu)
+
+    return ASectorMap(chi2 / len(aMaps),
+                        e0 / len(aMaps),
+                        lt/ len(aMaps),
+                       e0u/ len(aMaps),
+                       ltu/ len(aMaps))
+
+
+def get_maps_from_tsmap(tsm     : Dict[int, List[float]],
+                        times   : np.array,
+                        erange  : Tuple[float, float] = (2000, 14000),
+                        ltrange : Tuple[float, float] = (500,5000),
+                        c2range : Tuple[float, float] = (0,3),
+                        debug   : bool                = False)->List[ASectorMap]:
+    """Extracts maps for each time tranch, regularizes the maps and sets relative errors"""
+
+    aMaps = []
+    for i, _ in enumerate(times):
+        am = amap_from_tsmap(tsm,
+                             ts = i,
+                             range_e     = erange,
+                             range_chi2  = c2range,
+                             range_lt    = ltrange)
+
+        rmap = regularize_maps(am, erange=erange, ltrange=ltrange, debug=debug)
+        asm = relative_errors(rmap)
+        aMaps.append(asm)
+    return aMaps
+
 
 def amap_valid_mask(amap : ASectorMap)->ASectorMap:
 
@@ -304,19 +347,38 @@ def amap_average(amap : ASectorMap)->FitMapValue:
                       ltu   = amap.ltu.mean().mean())
 
 
+def amap_max(amap : ASectorMap)->FitMapValue:
+    return ASectorMap(chi2  = amap.chi2.max().max(),
+                      e0    = amap.e0.max().max(),
+                      lt    = amap.lt.max().max(),
+                      e0u   = amap.e0u.max().max(),
+                      ltu   = amap.ltu.max().max())
+
+
+def amap_min(amap : ASectorMap)->FitMapValue:
+    return ASectorMap(chi2  = amap.chi2.min().min(),
+                      e0    = amap.e0.min().min(),
+                      lt    = amap.lt.min().min(),
+                      e0u   = amap.e0u.min().min(),
+                      ltu   = amap.ltu.min().min())
+
+
 def amap_replace_nan_by_mean(amap : ASectorMap, amMean : FitMapValue)->ASectorMap:
-    return ASectorMap(chi2  = amap.chi2.fillna(amMean.chi2),
-                          e0    = amap.e0.fillna(amMean.e0),
-                          lt    = amap.lt.fillna(amMean.lt),
-                          e0u   = amap.e0u.fillna(amMean.e0u),
-                          ltu   = amap.ltu.fillna(amMean.ltu))
+
+    return ASectorMap(chi2  = amap.chi2.copy().fillna(amMean.chi2),
+                      e0    = amap.e0.copy().fillna(amMean.e0),
+                      lt    = amap.lt.copy().fillna(amMean.lt),
+                      e0u   = amap.e0u.copy().fillna(amMean.e0u),
+                      ltu   = amap.ltu.copy().fillna(amMean.ltu))
 
 
-    return ASectorMap(chi2  = amap.chi2.mean().mean(),
-                      e0    = amap.e0.mean().mean(),
-                      lt    = amap.lt.mean().mean(),
-                      e0u   = amap.e0u.mean().mean(),
-                      ltu   = amap.ltu.mean().mean())
+def amap_replace_nan_by_zero(amap : ASectorMap)->ASectorMap:
+    return ASectorMap(chi2  = amap.chi2.copy().fillna(0),
+                      e0    = amap.e0.copy().fillna(0),
+                      lt    = amap.lt.copy().fillna(0),
+                      e0u   = amap.e0u.copy().fillna(0),
+                      ltu   = amap.ltu.copy().fillna(0))
+
 
 
 def amap_valid_fraction(vmask: ASectorMap)->FitMapValue:
@@ -342,6 +404,54 @@ def relative_errors(am : ASectorMap)->ASectorMap:
                       lt    = am.lt,
                       e0u   = 100 * am.e0u / am.e0,
                       ltu   = 100 * am.ltu / am.lt)
+
+
+def regularize_maps(amap    : ASectorMap,
+                    erange  : Tuple[float, float] = (2000, 14000),
+                    ltrange : Tuple[float, float] = (500,5000),
+                    debug   : bool = False)->ASectorMap:
+
+    OL   = find_outliers(amap.e0, xr=erange, debug=debug)
+    me0  = set_outliers_to_nan(amap.e0, OL)
+    me0u = set_outliers_to_nan(amap.e0u, OL)
+    OL   = find_outliers(amap.lt, xr=ltrange, debug=debug)
+    mlt  = set_outliers_to_nan(amap.lt, OL)
+    mltu = set_outliers_to_nan(amap.ltu, OL)
+    return ASectorMap(chi2  = amap.chi2,
+                      e0    =       me0,
+                      lt    =       mlt,
+                      e0u   =       me0u,
+                      ltu   =       mltu)
+
+
+def set_outliers_to_nan(dfmap : DataFrame, OL : Dict[int, List[int]])->DataFrame:
+    newmap = dfmap.copy()
+    for i, lst in OL.items():
+        for j in lst:
+            newmap[i][j] = np.nan
+    return newmap
+
+
+def find_outliers(dfmap : DataFrame,
+                  xr    : Tuple[float,float],
+                  debug : bool  = False)->Dict[int, List[int]]:
+    OL = {}
+    v = (xr[1] + xr[0]) / 2
+    if debug:
+        print(f' set nans to average value of interval = {v}')
+    newmap = (dfmap.copy()).fillna(v)
+    for i in newmap.columns:
+        ltc = newmap[i]
+        gltc = ltc.between(*xr)
+        lst = list(gltc[gltc==False].index)
+        if len(lst) > 0:
+            OL[i] = lst
+            if debug:
+                print(f'column {i}')
+            for il in lst:
+                if debug:
+                    print(f'outlier found, index = {il}, value ={ltc[il]}')
+    return OL
 
 
 def energy_map(KRES : Dict[int, List[KrEvent]])->DataFrame:
@@ -557,6 +667,7 @@ def draw_xy_maps(aMap    : ASectorMap,
 
 def draw_xy_map(aMap    : ASectorMap,
                 wmap    : MapType,
+                norm    : float                         = 1,
                 alims   : Optional[Tuple[float, float]] = None,
                 cmap    :  Colormap                      = matplotlib.cm.viridis,
                 figsize : Tuple[float, float]            = (14,10)):
@@ -566,7 +677,7 @@ def draw_xy_map(aMap    : ASectorMap,
 
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(1,1,1)
-    sns.heatmap(ltmap.fillna(0), vmin=vmin, vmax=vmax, cmap=cmap, square=True)
+    sns.heatmap(ltmap.fillna(0) /norm, vmin=vmin, vmax=vmax, cmap=cmap, square=True)
 
     plt.title(title)
     plt.tight_layout()
