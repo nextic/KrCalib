@@ -230,18 +230,6 @@ def display_energy_fit_and_chi2(fc : FitCollection, pl : PlotLabels, figsize : T
 
 
 
-# def energy_fit_XYRange(kre    : KrEvent,
-#                        nbins   : int,
-#                        range   : Tuple[float],
-#                        xr      : Tuple[float],
-#                        yr      : Tuple[float],
-#                        n_sigma : float = 3.0)->FitCollection:
-#
-#
-#     sel  = in_range(kre.X, *xr) & in_range(kre.Y, *yr)
-#     e    = kre.E[sel]
-#
-#     return energy_fit(e, nbins,erange, n_sigma)
 def resolution_selected_r_z(Rr : Tuple[float, float],
                             Zr : Tuple[float, float],
                             R  : np.array,
@@ -313,29 +301,15 @@ def resolution_r_z(Ri : Iterable[float],
     return pd.DataFrame.from_dict(FC), pd.DataFrame.from_dict(FCE)
 
 
-# def resolution_r_z(Ri : Iterable[float], Zi : Iterable[float],
-#                    R : np.array, Z : np.array, E : np.array)->Dict[int, List[float]]:
-#     FWHM = {}
-#     for i, r in enumerate(Ri):
-#         ZR = []
-#         for z in Zi:
-#             Rr = 0, r
-#             Zr = 0, z
-#
-#             sel_r = in_range(R, *Rr)
-#             sel_z = in_range(Z, *Zr)
-#             sel   = sel_r & sel_z
-#             fc = fit_energy(E[sel], nbins=25, range=(11500, 13000))
-#             par  = fc.fr.par
-#             err  = fc.fr.err
-#             fwhm = 2.35 * 100 *  par[2] / par[1]
-#             ZR.append(fwhm)
-#         FWHM[i] = ZR
-#     return FWHM
 
+def plot_resolution_r_z(Ri : Iterable[float],
+                        Zi : Iterable[float],
+                        FC : DataFrame,
+                        FCE : DataFrame,
+                        figsize = (14,10)):
 
-def plot_resolution_r_z(Ri : Iterable[float], Zi : Iterable[float], FC : DataFrame, FCE : DataFrame):
-
+    fig       = plt.figure(figsize=figsize)
+    ax  = fig.add_subplot(1, 1, 1)
     Zcenters =np.array(list(Zi))
     for i in FC.columns:
         label = f'0 < R < {Ri[i]:2.0f}'
@@ -349,23 +323,7 @@ def plot_resolution_r_z(Ri : Iterable[float], Zi : Iterable[float], FC : DataFra
     plt.xlabel(' z (mm)')
     plt.ylabel('resolution FWHM (%)')
     plt.legend()
-
-
-# def plot_resolution_r_z(Ri : Iterable[float], Zi : Iterable[float], FWHM : DataFrame):
-#
-#     Zcenters =np.array(list(Zi))
-#     for i, fwhm in FWHM.items():
-#         label = f'0 < R < {Ri[i]:2.0f}'
-#
-#         es = np.array(fwhm)
-#         eus = np.ones(len(fwhm))*0.01
-#         plt.errorbar(Zcenters, es, eus,
-#                      label = label,
-#                      fmt='o', markersize=10., elinewidth=10.)
-#     plt.grid(True)
-#     plt.xlabel(' z (mm)')
-#     plt.ylabel('resolution FWHM (%)')
-#     plt.legend()
+    plt.show()
 
 
 def fit_gaussian_experiments(exps    : np.array,
