@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import datetime
 from   pandas.core.frame import DataFrame
 
@@ -285,11 +286,56 @@ def select_rphi_sectors(dst     : DataFrame,
     return RGES
 
 
+def select_xy_sectors(dst     : DataFrame,
+                      dt      : np.array,
+                      E       : np.array,
+                      Q       : np.array,
+                      krnb    : KrNBins,
+                      krb     : KrBins,
+                      verbose : bool = False)-> Dict[int, List[KrEvent]]:
+    """Return a dict of KrEvent organized by xy sector"""
+
+    def selection_mask_xy_sectors(dst     : DataFrame,
+                                  krnb    : KrNBins,
+                                  krb     : KrBins,
+                                  verbose : bool)->Dict[int, np.array]:
+        """Returns a dict of selections arranged in a dict of rphi sectors"""
+
+        MSK = {}
+        for i in range(krnb.X):
+            if verbose:
+                print(f'computing selection mask for sector {i}')
+            sel_x = in_range(dst.X.values, *krb.X[i: i+2])
+            MSK[i] = [sel_x & in_range(dst.Y.values, *krb.Y[j: j+2]) for j in range(krnb.Y) ]
+
+        return MSK
+
+    if verbose:
+        print(f' calling selection_mask')
+    MSK = selection_mask_xy_sectors(dst, krnb, krb, verbose)
+
+    if verbose:
+        print(f' selection_mask computed, filling RGES')
+
+    RGES = {}
+    for i, msk in MSK.items():
+        if verbose:
+            print(f' defining kr_event for sector {i}')
+        RGES[i] = [kr_event(dst, dt, E, Q, sel_mask = m) for m in msk]
+
+    if verbose:
+        print(f' RGES computed')
+
+    return RGES
+
+
+
 def plot_sector(KRES : Dict[int, List[KrEvent]], nbins_x, nbins_y, ranges_x, ranges_y, sector =0):
     krl = KRES[sector]
     kre = kre_concat(krl)
     nevt = h2(kre.X, kre.Y, nbins_x, nbins_y, ranges_x, ranges_y, profile = False)
     print(f'number of events in sector = {np.sum(nevt)}')
+
 
 
 def events_sector(nMap : Dict[int, List[float]])->np.array:
@@ -298,11 +344,12 @@ def events_sector(nMap : Dict[int, List[float]])->np.array:
         N.append(np.mean(nL))
     return np.array(N)
 
-def event_map(KRES : Dict[int, List[KrEvent]])->Dict[int, List[float]]:
+
+def event_map(KRES : Dict[int, List[KrEvent]])->DataFrame:
     nMap = {}
     for i, kres in KRES.items():
         nMap[i] = [len(k.S2e) for k in kres]
-    return nMap
+    return pd.DataFrame.from_dict(nMap)
 
 
 def plot_sectors(KRES : Dict[int, List[KrEvent]], nbins_x, nbins_y, ranges_x, ranges_y,

@@ -12,6 +12,7 @@ import scipy.stats
 from invisible_cities.core                   import core_functions as coref
 from invisible_cities.core.stat_functions    import poisson_sigma
 from invisible_cities.evm.ic_containers      import FitFunction
+from . core_functions                        import  NN
 
 
 def get_errors(cov):
@@ -156,7 +157,13 @@ def fit(func, x, y, seed=(), fit_range=None, **kwargs):
     fitx       = fitf(x)
     errors     = get_errors(cov)
     ndof       = len(y) - len(vals)
-    chi2, pval = get_chi2_and_pvalue(y, fitx, ndof, sigma_r)
+
+    if ndof == 0:
+        print(f'Warning: len(y) = {len(y)}, len(vals) = {len(vals)}, ndof ={ndof}')
+        chi2 = NN
+        pval = NN
+    else:
+        chi2, pval = get_chi2_and_pvalue(y, fitx, ndof, sigma_r)
 
 
     return FitFunction(fitf, vals, errors, chi2, pval, cov)

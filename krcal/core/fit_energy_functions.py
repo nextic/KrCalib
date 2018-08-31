@@ -12,6 +12,8 @@ from . import fit_functions_ic as fitf
 from   invisible_cities.evm  .ic_containers  import Measurement
 from . fit_functions import chi2
 from . stat_functions import mean_and_std
+
+from pandas import DataFrame
 from . kr_types import Number, Range
 
 from invisible_cities.core .stat_functions import poisson_sigma
@@ -26,10 +28,11 @@ from . kr_types import FitCollection
 from . kr_types import PlotLabels
 from . kr_types import KrEvent
 
-
-from . histo_functions import labels
+from . kr_types        import PlotLabels
+from . histo_functions import plot_histo
 from scipy.optimize import OptimizeWarning
 from numpy import sqrt, pi
+from . stat_functions       import relative_error_ratio
 
 
 def gfit(x     : np.array,
@@ -153,15 +156,21 @@ def plot_fit_energy(fc : FitCollection):
 
     if fc.fr.valid:
         par  = fc.fr.par
-        err  = fc.fr.err
+        x    = fc.hp.var
+        r    = 2.35 * 100 *  par[2] / par[1]
+        entries  =  f'Entries = {len(x)}'
+        mean     =  r'$\mu$ = {:7.2f}'.format(par[1])
+        sigma    =  r'$\sigma$ = {:7.2f}'.format(par[2])
+        rx       =  r'$\sigma/mu$ (FWHM)  = {:7.2f}'.format(r)
+        stat     =  f'{entries}\n{mean}\n{sigma}\n{rx}'
+
         _, _, _   = plt.hist(fc.hp.var,
                              bins = fc.hp.nbins,
                              range=fc.hp.range,
                              histtype='step',
                              edgecolor='black',
                              linewidth=1.5,
-                             label=r'$\mu={:7.2f} +- {:7.3f},\ \sigma={:7.2f} +- {:7.3f}$'.format(
-                               par[1], err[1], par[2], err[2]))
+                             label=stat)
 
         plt.plot(fc.fp.x, fc.fp.f(fc.fp.x), "r-", lw=4)
     else:
@@ -220,57 +229,93 @@ def display_energy_fit_and_chi2(fc : FitCollection, pl : PlotLabels, figsize : T
         warnings.warn(f' fit did not succeed, cannot display ', UserWarning)
 
 
-def energy_map(KRES : Dict[int, List[KrEvent]])->Dict[int, List[float]]:
 
-    wedges =[len(kre) for kre in KRES.values() ]  # number of wedges per sector
-    eMap = {}
+def resolution_selected_r_z(Rr : Tuple[float, float],
+                            Zr : Tuple[float, float],
+                            R  : np.array,
+                            Z  : np.array,
+                            E  : np.array,
+                            enbins = 25,
+                            erange = (10e+3, 12500))->FitCollection:
 
-    for sector in KRES.keys():
-        eMap[sector] = [np.mean(KRES[sector][i].E) for i in range(wedges[sector])]
-    return eMap
 
-# def energy_fit_XYRange(kre    : KrEvent,
-#                        nbins   : int,
-#                        range   : Tuple[float],
-#                        xr      : Tuple[float],
-#                        yr      : Tuple[float],
-#                        n_sigma : float = 3.0)->FitCollection:
-#
-#
-#     sel  = in_range(kre.X, *xr) & in_range(kre.Y, *yr)
-#     e    = kre.E[sel]
-#
-#     return energy_fit(e, nbins,erange, n_sigma)
+    sel_r = in_range(R, *Rr)
+    sel_z = in_range(Z, *Zr)
+    sel   = sel_r & sel_z
+    fc = fit_energy(E[sel], nbins=enbins, range=erange)
+    return fc
 
-def resolution_r_z(Ri : Iterable[float], Zi : Iterable[float],
-                   R : np.array, Z : np.array, E : np.array)->Dict[int, List[float]]:
-    FWHM = {}
+
+def resolution_r_z(Ri : Iterable[float],
+                   Zi : Iterable[float],
+                   R : np.array,
+                   Z : np.array,
+                   E : np.array,
+                   enbins = 25,
+                   erange = (10e+3, 12500),
+                   ixy = (3,4),
+                   fdraw = True,
+                   fprint = True,
+                   figsize = (14,10))->Tuple[DataFrame, DataFrame]:
+    if fdraw:
+        fig       = plt.figure(figsize=figsize)
+    FC = {}
+    FCE = {}
+    FCE = {}
+    j=0
+    ix = ixy[0]
+    iy = ixy[1]
     for i, r in enumerate(Ri):
         ZR = []
+        ZRE = []
         for z in Zi:
             Rr = 0, r
             Zr = 0, z
+            j+=1
+            if fdraw:
+                ax  = fig.add_subplot(ix, iy, j)
+            fc = resolution_selected_r_z(Rr, Zr, R, Z, E, enbins, erange)
+            if fdraw:
+                plot_fit_energy(fc)
+                plot_histo(PlotLabels('E','Entries',f' 0 < R < {r} 0 < z < {z}'), ax, legend= True,
+                        legendsize=10, legendloc='best', labelsize=11)
+            if fprint:
+                print(f'0 < R < {r} 0 < z < {z}')
+                print_fit_energy(fc)
 
-            sel_r = in_range(R, *Rr)
-            sel_z = in_range(Z, *Zr)
-            sel   = sel_r & sel_z
-            fc = fit_energy(E[sel], nbins=100, range=(11500, 13000))
-            par  = fc.fr.par
-            err  = fc.fr.err
-            fwhm = 2.35 * 100 *  par[2] / par[1]
+            par     = fc.fr.par
+            err     = fc.fr.err
+            fwhm    = 2.35 * 100 *  par[2] / par[1]
+            a       = 2.35 * 100 *  par[2]
+            b       = par[1]
+            sigma_a = 2.35 * 100 * err[2]
+            sigma_b = err[1]
+
+            rer = relative_error_ratio(a, sigma_a, b, sigma_b)
             ZR.append(fwhm)
-        FWHM[i] = ZR
-    return FWHM
+            ZRE.append(rer*fwhm)
+        FC[i] = ZR
+        FCE[i] = ZRE
+
+    plt.tight_layout()
+    return pd.DataFrame.from_dict(FC), pd.DataFrame.from_dict(FCE)
 
 
-def plot_resolution_r_z(Ri : Iterable[float], Zi : Iterable[float], FWHM : Dict[int, List[float]]):
 
+def plot_resolution_r_z(Ri : Iterable[float],
+                        Zi : Iterable[float],
+                        FC : DataFrame,
+                        FCE : DataFrame,
+                        figsize = (14,10)):
+
+    fig       = plt.figure(figsize=figsize)
+    ax  = fig.add_subplot(1, 1, 1)
     Zcenters =np.array(list(Zi))
-    for i, fwhm in FWHM.items():
+    for i in FC.columns:
         label = f'0 < R < {Ri[i]:2.0f}'
 
-        es = np.array(fwhm)
-        eus = np.ones(len(fwhm))*0.01
+        es = FC[i].values
+        eus = FCE[i].values
         plt.errorbar(Zcenters, es, eus,
                      label = label,
                      fmt='o', markersize=10., elinewidth=10.)
@@ -278,7 +323,8 @@ def plot_resolution_r_z(Ri : Iterable[float], Zi : Iterable[float], FWHM : Dict[
     plt.xlabel(' z (mm)')
     plt.ylabel('resolution FWHM (%)')
     plt.legend()
-    
+    plt.show()
+
 
 def fit_gaussian_experiments(exps    : np.array,
                              nbins   : int       = 50,

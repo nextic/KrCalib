@@ -4,12 +4,37 @@ from   invisible_cities.core.core_functions    import in_range
 from   invisible_cities.evm  .ic_containers    import Measurement
 from   typing                                  import Tuple, List
 from . kr_types                                import Number, Range
+from . core_functions import  NN
+
+from numpy import sqrt
+
+def relative_error_ratio(a : float, sigma_a: float, b :float, sigma_b : float) ->float:
+    return sqrt((sigma_a / a)**2 + (sigma_b / b)**2)
+
 
 def mean_and_std(x : np.array, range_ : Tuple[Number, Number])->Tuple[Number, Number]:
-    """Computes mean and std for an array within a range"""
+    """Computes mean and std for an array within a range: takes into account nans"""
 
-    mu = np.mean(x[in_range(x, *range_)])
-    std = np.std(x[in_range(x, *range_)])
+    mu = NN
+    std = NN
+
+    if np.count_nonzero(np.isnan(x)) == len(x):  # all elements are nan
+        mu  = NN
+        std  = NN
+    elif np.count_nonzero(np.isnan(x)) > 0:
+        mu = np.nanmean(x)
+        std = np.nanstd(x)
+    else:
+        x = np.array(x)
+        if len(x) > 0:
+            y = x[in_range(x, *range_)]
+            if len(y) == 0:
+                print(f'warning, empty slice of x = {x} in range = {range_}')
+                print(f'returning mean and std of x = {x}')
+                y = x
+            mu = np.mean(y)
+            std = np.std(y)
+
     return mu, std
 
 

@@ -4,7 +4,7 @@ import random
 import matplotlib.pyplot as plt
 from . import fit_functions_ic as fitf
 
-from typing import Tuple
+from typing import Tuple, Optional
 
 from . stat_functions  import mean_and_std
 from . kr_types import Number, Array, Str
@@ -43,7 +43,7 @@ def h1(x      : np.array,
        width   : float = 1.5,
        style   : str   ='solid',
        stats   : bool  = True,
-       lbl     : Str   = None):
+       lbl     : Optional[str]  = None):
     """
     histogram 1d with continuous steps and display of statsself.
     number of bins (bins) and range are compulsory.
