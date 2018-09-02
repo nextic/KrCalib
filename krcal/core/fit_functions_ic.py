@@ -64,7 +64,11 @@ def get_chi2_and_pvalue(ydata, yfit, ndf, sigma=None):
     chi2   = np.sum(((ydata - yfit) / sigma)**2)
     pvalue = scipy.stats.chi2.sf(chi2, ndf)
 
-    return chi2 / ndf, pvalue
+    if ndf > 0:
+        return chi2 / ndf, pvalue
+    else:
+        print(f'Warning in fit_functions_ic:chi2: ndf =0: chi2 = {chi2}')
+        return chi2, pvalue
 
 
 # ###########################################################
