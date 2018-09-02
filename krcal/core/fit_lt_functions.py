@@ -39,6 +39,10 @@ from scipy.optimize import OptimizeWarning
 from . histo_functions import labels
 from numpy import sqrt, pi
 
+import logging
+log = logging.getLogger(__name__)
+
+
 
 def fit_lifetime(z       : np.array,
                  e       : np.array,
@@ -128,6 +132,7 @@ def fit_lifetime_unbined(z       : np.array,
     """
 
     fp    = None
+    fp2   = None
     valid = True
     c2    = NN
     par   = NN  * np.ones(2)
@@ -244,47 +249,195 @@ def pars_from_fcs(fcs : List[FitCollection])->Tuple[List[Measurement],
             LT.append(Measurement(par[1], err[1]))
             C2.append(fc.fr.chi2)
         else:
-            warnings.warn(f' fit did not succeed, cannot print ', UserWarning)
+            warnings.warn(f' fit did not succeed, returning NaN ', UserWarning)
+            E.append(Measurement(NN, NN))
+            LT.append(Measurement(NN, NN))
+            C2.append(NN)
     return E, LT, np.array(C2)
 
+# Fitting maps
+def fit_map(selection_map : Dict[int, List[KrEvent]],
+            event_map     : DataFrame,
+            n_time_bins   : int,
+            time_diffs    : np.array,
+            nbins_z       : int,
+            nbins_e       : int,
+            range_z       : Tuple[float, float],
+            range_e       : Tuple[float, float],
+            range_chi2    : Tuple[float, float],
+            range_lt      : Tuple[float, float],
+            energy        : str                 = 'S2e',
+            fit           : FitType             = FitType.profile,
+            verbose       : bool                = False,
+            n_min         : int                 = 100)->Dict[int, List[FitParTS]]:
 
-def time_fcs(XT      : int,
-             DT      : np.array,
-             kh      : KrEvent,
+    fMAP = {}
+    nsectors = len(selection_map.keys())
+    for sector in range(nsectors):
+        logging.debug(f'Fitting sector {sector}')
+
+        fps = fit_fcs_in_sectors(sector, selection_map, event_map, n_time_bins, time_diffs
+                                 nbins_z, nbins_e, range_z, range_e, energy, fit, n_min)
+        if verbose:
+            logging.debug(f' number of wedges fitted in sector {len(fps)}')
+
+        fMAP[sector] = fps
+
+    return fMAP
+
+
+def fit_map_xy(selection_map : Dict[int, List[KrEvent]],
+               event_map     : DataFrame,
+               n_time_bins   : int,
+               time_diffs     : np.array,
+               nbins_z       : int,
+               nbins_e       : int,
+               range_z       : Tuple[float, float],
+               range_e       : Tuple[float, float],
+               range_chi2    : Tuple[float, float],
+               range_lt      : Tuple[float, float],
+               energy        : str                 = 'S2e',
+               fit           : FitType             = FitType.profile,
+               n_min         : int                 = 100)->Dict[int, List[FitParTS]]:
+
+    fMAP = {}
+    r, c = event_map.shape
+
+    for i in range(r):
+        FL = []
+        for j in range(c):
+            nevt = event_map[i][j]
+            logging.debug(f'Fitting xy bin = ({i},{j}), with events ={nevt}')
+
+            fps = fit_fcs_in_xy_bin((i,j), selection_map, event_map, n_time_bins, time_diffs,
+                                    nbins_z, nbins_e, range_z,range_e, energy, fit, n_min)
+        fMAP[i] = FL
+
+    return fMAP
+
+
+def fit_fcs_in_xy_bin (xybin         : Tuple[int, int],
+                       selection_map : Dict[int, List[KrEvent]],
+                       event_map     : DataFrame,
+                       n_time_bins   : int,
+                       time_diffs    : np.array,
+                       nbins_z       : int,
+                       nbins_e       : int,
+                       range_z       : Tuple[float, float],
+                       range_e       : Tuple[float, float],
+                       energy        : str                 = 'S2e',
+                       fit           : FitType             = FitType.profile,
+                       n_min         : int                 = 100)->FitParTS:
+    """Returns fits in xy bins specified by KRES"""
+
+    i = xybin[0]
+    j = xybin[1]
+    tlast = time_difs[-1]
+    ts, masks =  get_time_series(n_time_bins, tlast, selection_map)
+
+    if event_map[i][j] > n_min:
+        logging.debug(f'fitting bin ({i},{j}) with {event_map[i][j]} events')
+
+        return time_fcs(masks, selection_map[i][j],
+                        nbins_z, nbins_e, range_z, range_e, energy, fit)
+    else:
+        warnings.warn(f'Cannot fit: events in bin[{i}][{j}] ={event_map[i][j]} < {n_min}',
+                     UserWarning)
+
+        dum = np.zeros(len(ts), dtype=float)
+        dum.fill(np.nan)
+        return FitParTS(ts, dum, dum, dum, dum, dum)
+
+
+def fit_fcs_in_sectors(sector        : int,
+                       selection_map : Dict[int, List[KrEvent]],
+                       event_map     : DataFrame,
+                       n_time_bins   : int,
+                       time_diffs    : np.array,
+                       nbins_z       : int,
+                       nbins_e       : int,
+                       range_z       : Tuple[float, float],
+                       range_e       : Tuple[float, float],
+                       energy        : str                 = 'S2e',
+                       fit           : FitType             = FitType.profile,
+                       n_min         : int                 = 100)->List[FitParTS]:
+    """Returns fits in Rphi sectors specified by KRES"""
+
+    wedges    =[len(kre) for kre in selection_map.values() ]  # number of wedges per sector
+    tlast     = time_difs[-1]
+    ts, masks =  get_time_series(n_time_bins, tlast, selection_map)
+
+    fps =[]
+    for i in range(wedges[sector]):
+        if event_map[sector][i] > n_min:
+            logging.debug(f'fitting sector/wedge ({sector},{i}) with {event_map[sector][i]} events')
+
+            fp  = time_fcs(masks, selection_map[sector][i],
+                            nbins_z, nbins_e, range_z, range_e, energy, fit)
+        else:
+            warnings.warn(f'Cannot fit: events in s/w[{sector}][{i}] ={event_map[sector][i]} < {n_min}',
+                         UserWarning)
+
+            dum = np.zeros(len(ts), dtype=float)
+            dum.fill(np.nan)
+            fp  = FitParTS(ts, dum, dum, dum, dum, dum)
+
+        fps.append(fp)
+    return fps
+
+
+def fb_fits(n_time_bins : int,
+            time_diffs  : np.array,
+            kre         : KrEvent,
+            nbins_z     : int,
+            nbins_e     : int,
+            range_z     : Tuple[float, float] = (50,550),
+            range_zf    : Tuple[float, float] = (50,300),
+            range_zb    : Tuple[float, float] = (300,550),
+            range_e     : Tuple[float, float] = (7000, 12000),
+            energy      : str                 = 'S2e',
+            fit         : FitType             = FitType.profile)->Iterable[FitParTS]:
+    """Returns fits to full/forward/backward chamber"""
+
+    tlast     = time_difs[-1]
+    ts, masks = get_time_series(n_time_bins, tlast, selection_map)
+
+    fp        = time_fcs(masks, kre, nbins_z, nbins_e, range_z, range_e, energy, fit)
+    fpf       = time_fcs(masks, kre,  nbins_z, nbins_e, range_zf, range_e, energy, fit)
+    fpb       = time_fcs(masks, kre,  nbins_z, nbins_e, range_zb, range_e, energy, fit)
+
+    return fp, fpf, fpb
+
+
+def time_fcs(masks   : List[np.array],
+             kre     : KrEvent,
              nbins_z : int,
              nbins_e : int,
              range_z : Tuple[float, float] = (100,550),
              range_e : Tuple[float, float] = (8000, 12000),
              energy  : str                 = 'S2e',
              fit     : FitType             = FitType.profile)->FitParTS:
-    """Fit lifetime of a time series define by DT each XT seconds. """
+    """Fit lifetime of a time series. """
 
-    indx = [(i, i+XT) for i in range(0, int(DT[-1] -XT), XT) ]
-    ts = [indx[i][0] for i in range(len(indx))]
-    masks = [in_range(kh.DT, indx[i][0], indx[i][1]) for i in range(len(indx))]
-    kcts = [KrEvent(X   = kh.X[sel_mask],
-                    Y   = kh.Y[sel_mask],
-                    Z   = kh.Z[sel_mask],
-                    R   = kh.R[sel_mask],
-                    Phi = kh.Phi[sel_mask],
-                    T   = kh.T[sel_mask],
-                    DT  = kh.DT[sel_mask],
-                    S2e = kh.S2e[sel_mask],
-                    S1e = kh.S1e[sel_mask],
-                    S2q = kh.S2q[sel_mask],
-                    E  = kh.E[sel_mask],
-                    Q  = kh.Q[sel_mask]) for sel_mask in masks]
+    kcts = [KrEvent(X   = kre.X[sel_mask],
+                    Y   = kre.Y[sel_mask],
+                    Z   = kre.Z[sel_mask],
+                    R   = kre.R[sel_mask],
+                    Phi = kre.Phi[sel_mask],
+                    T   = kre.T[sel_mask],
+                    DT  = kre.DT[sel_mask],
+                    S2e = kre.S2e[sel_mask],
+                    S1e = kre.S1e[sel_mask],
+                    S2q = kre.S2q[sel_mask],
+                    E   = kre.E[sel_mask],
+                    Q   = kre.Q[sel_mask]) for sel_mask in masks]
 
     if energy == 'S2e':
-        fcs =[fit_lifetime(kct.Z, kct.S2e, fit = fit,
-                      nbins_z=nbins_z, nbins_e=nbins_e,
-                      range_z=range_z, range_e=range_e) for kct in kcts]
+        fcs =[fit_lifetime(kct.Z, kct.S2e, fit,
+                           nbins_z, nbins_e, range_z, range_e) for kct in kcts]
     else:
-        fcs =[fit_lifetime(kct.Z, kct.E, fit = fit,
-                      nbins_z=nbins_z, nbins_e=nbins_e,
-                      range_z=range_z, range_e=range_e) for kct in kcts]
-
-
+        fcs =[fit_lifetime(kct.Z, kct.E, fit,
+                           nbins_z, nbins_e, range_z, range_e) for kct in kcts]
 
     e0s, lts, c2s = pars_from_fcs(fcs)
     return FitParTS(ts  = np.array(ts),
@@ -295,162 +448,28 @@ def time_fcs(XT      : int,
                     ltu = uncertainty_from_measurement(lts))
 
 
-def fb_fits(XT       : int,
-            DT       : np.array,
-            kh       : KrEvent,
-            nbins_z  : int,
-            nbins_e  : int,
-            range_z  : Tuple[float, float] = (50,550),
-            range_zf : Tuple[float, float] = (50,300),
-            range_zb : Tuple[float, float] = (300,550),
-            range_e  : Tuple[float, float] = (7000, 12000),
-            energy   : str                 = 'S2e',
-            fit      : FitType             = FitType.profile)->Iterable[FitParTS]:
-    """Returns fits to full/forward/backward chamber"""
+def get_time_series(nt    : int,
+                    tlast : int,
+                    KRES  : KrEvent)->Tuple[List[float], List[np.array]]:
 
-    fp  = time_fcs(XT, DT, kh, nbins_z, nbins_e, range_z, range_e, energy, fit)
-    fpf = time_fcs(XT, DT, kh, nbins_z, nbins_e, range_zf, range_e, energy, fit)
-    fpb = time_fcs(XT, DT, kh, nbins_z, nbins_e, range_zb, range_e, energy, fit)
+    x = int(tlast / nt)
+    if x == 1:
+        indx = [(0, int(tlast))]
+    else:
+        indx = [(i, i + nt) for i in range(0, int(tlast - nt), nt) ]
+        indx.append((x * nt, int(tlast)))
 
-    return fp, fpf, fpb
+    ts = [(indx[i][0] + indx[i][1]) / 2 for i in range(len(indx))]
 
+    logging.debug(f' number of time bins = {nt}, t_last = {tlast}')
+    logging.debug(f'indx = {indx}')
+    logging.debug(f'ts = {ts}')
 
-def fit_fcs_in_sectors(sector  : int,
-                       XT      : int,
-                       DT      : np.array,
-                       KRES    : Dict[int, List[KrEvent]],
-                       nbins_z : int,
-                       nbins_e : int,
-                       range_z : Tuple[float, float] = (100,550),
-                       range_e : Tuple[float, float] = (5000, 12500),
-                       energy  : str                 = 'S2e',
-                       fit     : FitType             = FitType.profile)->List[FitParTS]:
-    """Returns fits in Rphi sectors specified by KRES"""
+    masks = [in_range(KRES.DT, indx[i][0], indx[i][1]) for i in range(len(indx))]
 
-    wedges =[len(kre) for kre in KRES.values() ]  # number of wedges per sector
+    return ts, masks
 
-
-    fps =[]
-    for i in range(wedges[sector]):
-        fp  = time_fcs(XT, DT, KRES[sector][i],
-                          nbins_z, nbins_e,
-                          range_z = range_z,
-                          range_e = range_e,
-                          energy  = energy,
-                          fit     = fit)
-        fps.append(fp)
-
-    return fps
-
-
-def fit_map(XT         : int,
-               DT         : np.array,
-               KRES       : Dict[int, List[KrEvent]],
-               nbins_z    : int,
-               nbins_e    : int,
-               range_z    : Tuple[float, float] = (50,550),
-               range_e    : Tuple[float, float] = (5000, 13000),
-               range_chi2 : Tuple[float, float] = (0,3),
-               range_lt   : Tuple[float, float] = (1800, 3000),
-               energy     : str                 = 'S2e',
-               fit        : FitType             = FitType.profile,
-               verbose    : bool                = False)->Dict[int, List[FitParTS]]:
-
-
-    fMAP = {}
-    nsectors = len(KRES.keys())
-    for sector in range(nsectors):
-        if verbose:
-            print(f'Fitting sector {sector}')
-            fps = fit_fcs_in_sectors(sector, XT, DT, KRES,
-                                     nbins_z, nbins_e,
-                                     range_z=range_z,
-                                     range_e = range_e,
-                                     energy = energy,
-                                     fit = fit)
-        fMAP[sector] = fps
-
-        if verbose:
-            print(f' number of wedges in sector {len(fps)}')
-
-
-    return fMAP
-
-
-def fit_fcs_in_xy_bin (ixy     : Tuple[int, int],
-                       XT      : int,
-                       DT      : np.array,
-                       KRES    : Dict[int, List[KrEvent]],
-                       nbins_z : int,
-                       nbins_e : int,
-                       range_z : Tuple[float, float] = (100,550),
-                       range_e : Tuple[float, float] = (5000, 12500),
-                       energy  : str                 = 'S2e',
-                       fit     : FitType             = FitType.profile)->FitParTS:
-    """Returns fits in Rphi sectors specified by KRES"""
-
-    i = ixy[0]
-    j = ixy[1]
-    return time_fcs(XT, DT, KRES[i][j],
-                    nbins_z,
-                    nbins_e,
-                    range_z = range_z,
-                    range_e = range_e,
-                    energy  = energy,
-                    fit     = fit)
-
-
-def fit_map_xy(XT         : int,
-               DT         : np.array,
-               KRES       : Dict[int, List[KrEvent]],
-               neM        : DataFrame,
-               nbins_z    : int,
-               nbins_e    : int,
-               range_z    : Tuple[float, float] = (50,550),
-               range_e    : Tuple[float, float] = (5000, 13000),
-               range_chi2 : Tuple[float, float] = (0,3),
-               range_lt   : Tuple[float, float] = (1800, 3000),
-               energy     : str                 = 'S2e',
-               fit        : FitType             = FitType.profile,
-               n_min      : int                 = 100,
-               verbose    : bool                = False,
-               nprint     : int                 = 100)->Dict[int, List[FitParTS]]:
-
-    indx = [(i, i+XT) for i in range(0, int(DT[-1] -XT), XT) ]
-    ts = [indx[i][0] for i in range(len(indx))]
-
-    fMAP = {}
-    n  = 0
-    nz = 0
-    r, c = neM.shape
-    for i in range(r):
-        FL = []
-        for j in range(c):
-            nevt = neM[i][j]
-            if verbose and n < nprint and nevt > n_min:
-                print(f'Fitting xy bin = ({i},{j}), with events ={nevt}')
-
-            if neM[i][j] >= n_min:
-                n += 1
-                fps = fit_fcs_in_xy_bin((i,j), XT, DT, KRES, nbins_z, nbins_e,
-                                        range_z=range_z,
-                                        range_e = range_e,
-                                        energy = energy,
-                                        fit = fit)
-            else:
-                nz += 1
-                dum = np.zeros(len(ts), dtype=float)
-                dum.fill(np.nan)
-                fps = FitParTS(ts, dum, dum, dum, dum, dum)
-            FL.append(fps)
-
-        fMAP[i] = FL
-
-    if verbose:
-        print(f' total number of zero events = {nz} ')
-    return fMAP
-
-
+#experiments 
 def fit_lifetime_experiments(zs      : np.array,
                              es      : np.array,
                              nbins_z : int      ,
