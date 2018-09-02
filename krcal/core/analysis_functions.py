@@ -159,6 +159,7 @@ def kr_event(dst      : DataFrame,
     if len(sel_mask) > 0:
         assert len(sel_mask) == len(dst)
 
+
         return KrEvent(X   = dst.X.values[sel_mask],
                        Y   = dst.Y.values[sel_mask],
                        Z   = dst.Z.values[sel_mask],
@@ -287,7 +288,7 @@ def select_rphi_sectors(dst     : DataFrame,
 
 
 def select_xy_sectors(dst     : DataFrame,
-                      dt      : np.array,
+                      DT      : np.array,
                       E       : np.array,
                       Q       : np.array,
                       krnb    : KrNBins,
@@ -321,7 +322,7 @@ def select_xy_sectors(dst     : DataFrame,
     for i, msk in MSK.items():
         if verbose:
             print(f' defining kr_event for sector {i}')
-        RGES[i] = [kr_event(dst, dt, E, Q, sel_mask = m) for m in msk]
+        RGES[i] = [kr_event(dst, DT, E, Q, sel_mask = m) for m in msk]
 
     if verbose:
         print(f' RGES computed')
@@ -335,7 +336,6 @@ def plot_sector(KRES : Dict[int, List[KrEvent]], nbins_x, nbins_y, ranges_x, ran
     kre = kre_concat(krl)
     nevt = h2(kre.X, kre.Y, nbins_x, nbins_y, ranges_x, ranges_y, profile = False)
     print(f'number of events in sector = {np.sum(nevt)}')
-
 
 
 def events_sector(nMap : Dict[int, List[float]])->np.array:
