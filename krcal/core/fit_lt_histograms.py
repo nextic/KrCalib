@@ -195,11 +195,14 @@ def plot_fit_sectors(fps : Iterable[FitParTS],
     plt.tight_layout()
 
 
-def plot_fit_xy(fp :FitParTS,
+def plot_fit_xy(fp         : Optional[FitParTS],
                 range_chi2 : Tuple[float, float] =(0,3),
                 range_e0   : Tuple[float, float] =(10000,12500),
                 range_lt   : Tuple[float, float] =(2000, 3000)):
 
+    if fp == None:
+        print('Trying to plot a null fit. Refit and try again')
+        return None 
     fig = plt.figure(figsize=(14,6))
 
     ax      = fig.add_subplot(1, 2, 1)
