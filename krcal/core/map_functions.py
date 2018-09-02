@@ -91,11 +91,6 @@ def rphi_sector_map(nSectors : int   =10,
                     rmax     : float =200,
                     sphi     : float =45)->Tuple[Dict[int, Tuple[float, float]],
                                      Dict[int, List[Tuple[float, float]]]]:
-    # PHI = {0 : [(0, 360)],
-    #        1 : [(0,180), (180,360)],
-    #        2 : [(i, i+90) for i in range(0, 360, 90) ]
-    #        }
-
 
     PHI = {}
 
@@ -721,8 +716,8 @@ def get_plt_indexes(aMaps :List[ASectorMap], ixy : Optional[Tuple[int,int]])->Tu
             ix = len(aMaps) / 2
             iy = len(aMaps) / 2
         else:
-            ix = len(aMaps) + 1 / 2
-            iy = len(aMaps) + 1 / 2
+            ix = (len(aMaps) + 1) / 2
+            iy = (len(aMaps) + 1) / 2
     else:
         ix = ixy[0]
         iy = ixy[1]
