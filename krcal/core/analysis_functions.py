@@ -27,6 +27,10 @@ from .histo_functions    import h1, h1d, h2, h2d, plot_histo
 
 import dataclasses as dc
 
+import sys
+import logging
+log = logging.getLogger()
+
 
 def kr_bins(xxrange   : Range = (-220,  220),
             yrange    : Range = (-220,  220),
@@ -287,48 +291,44 @@ def select_rphi_sectors(dst     : DataFrame,
     return RGES
 
 
-def select_xy_sectors(dst     : DataFrame,
-                      DT      : np.array,
-                      E       : np.array,
-                      Q       : np.array,
-                      krnb    : KrNBins,
-                      krb     : KrBins,
-                      verbose : bool = False)-> Dict[int, List[KrEvent]]:
+def select_xy_sectors(dst        : DataFrame,
+                      time_diffs : np.array,
+                      E          : np.array,
+                      Q          : np.array,
+                      bins_x     : np.array,
+                      bins_y     : np.array)-> Dict[int, List[KrEvent]]:
     """Return a dict of KrEvent organized by xy sector"""
 
+
     def selection_mask_xy_sectors(dst     : DataFrame,
-                                  krnb    : KrNBins,
-                                  krb     : KrBins,
-                                  verbose : bool)->Dict[int, np.array]:
-        """Returns a dict of selections arranged in a dict of rphi sectors"""
+                                  bins_x  : np.array,
+                                  bins_y  : np.array)->Dict[int, np.array]:
+        """Returns a dict of selections arranged in a dict of xy bins"""
 
         MSK = {}
-        for i in range(krnb.X):
-            if verbose:
-                print(f'computing selection mask for sector {i}')
-            sel_x = in_range(dst.X.values, *krb.X[i: i+2])
-            MSK[i] = [sel_x & in_range(dst.Y.values, *krb.Y[j: j+2]) for j in range(krnb.Y) ]
+        nbins_x = len(bins_x) -1
+        nbins_y = len(bins_y) -1
+        for i in range(nbins_x):
+            logging.debug(f'computing selection mask for sector {i}')
+
+            sel_x = in_range(dst.X.values, *bins_x[i: i+2])
+            MSK[i] = [sel_x & in_range(dst.Y.values, *bins_y[j: j+2]) for j in range(nbins_y) ]
 
         return MSK
 
-    if verbose:
-        print(f' calling selection_mask')
-    MSK = selection_mask_xy_sectors(dst, krnb, krb, verbose)
+    logging.debug(f' function: select_xy_sectors')
+    logging.debug(f' calling selection_mask')
 
-    if verbose:
-        print(f' selection_mask computed, filling RGES')
+    MSK = selection_mask_xy_sectors(dst, bins_x, bins_y)
+    logging.debug(f' selection mask computed, filling selections')
 
     RGES = {}
     for i, msk in MSK.items():
-        if verbose:
-            print(f' defining kr_event for sector {i}')
-        RGES[i] = [kr_event(dst, DT, E, Q, sel_mask = m) for m in msk]
+        logging.debug(f' defining kr_event for sector {i}')
+        RGES[i] = [kr_event(dst, time_diffs, E, Q, sel_mask = m) for m in msk]
 
-    if verbose:
-        print(f' RGES computed')
-
+    logging.debug(f' RGES computed')
     return RGES
-
 
 
 def plot_sector(KRES : Dict[int, List[KrEvent]], nbins_x, nbins_y, ranges_x, ranges_y, sector =0):
