@@ -39,10 +39,9 @@ from scipy.optimize import OptimizeWarning
 from . histo_functions import labels
 from numpy import sqrt, pi
 
+import sys
 import logging
-log = logging.getLogger(__name__)
-
-
+log = logging.getLogger()
 
 def fit_lifetime(z       : np.array,
                  e       : np.array,
@@ -55,6 +54,9 @@ def fit_lifetime(z       : np.array,
     Fits the lifetime using a profile (FitType.profile) or an unbined
     fit (FitType.unbined).
     """
+    logging.debug(' fit_liftime ')
+    logging.debug(f' len (z) ={len(z)}, len (e) ={len(e)} ')
+    logging.debug(f' nbins_z ={nbins_z}, nbins_e ={nbins_e} range_z ={range_z} range_e ={range_e} ')
 
     hp = HistoPar2(var = z,
                    nbins = nbins_z,
@@ -65,7 +67,7 @@ def fit_lifetime(z       : np.array,
 
     if fit == FitType.profile:
         fp, fp2, fr = fit_lifetime_profile(z, e, nbins_z, range_z)
-    else:  # default is unbined
+    else:
         fp, fp2, fr = fit_lifetime_unbined(z, e, nbins_z, range_z)
 
     return FitCollection2(fp = fp, fp2 = fp2, hp = hp, fr = fr)
@@ -80,6 +82,9 @@ def fit_lifetime_profile(z : np.array,
     function.
     """
 
+    logging.debug(' fit_liftime_profile')
+    logging.debug(f' len (z) ={len(z)}, len (e) ={len(e)} ')
+    logging.debug(f' nbins_z ={nbins_z}, range_z ={range_z} ')
     fp    = None
     valid = True
     c2    = NN
@@ -90,6 +95,7 @@ def fit_lifetime_profile(z : np.array,
     xu        = np.diff(x) * 0.5
     seed      = expo_seed(x, y)
 
+    logging.debug(f' after profile: len (x) ={len(x)}, len (y) ={len(y)} ')
     try:
         f      = fitf.fit(fitf.expo, x, y, seed, sigma=yu)
         c2     = f.chi2
@@ -97,13 +103,16 @@ def fit_lifetime_profile(z : np.array,
         par[1] = - par[1]
         err    = np.array(f.errors)
 
+        logging.debug(f' e0z ={par[0]} +- {err[0]} ')
+        logging.debug(f' lt ={par[1]} +- {err[1]} ')
+        logging.debug(f' c2 ={c2} ')
         fp = FitPar(x  = x,
                     y  = y,
                     xu = xu,
                     yu = yu,
                     f  = f.fn)
     except:
-        print(f' fit failed for seed  = {seed} in fit_lifetime_profile')
+        warnings.warn(f' fit failed for seed  = {seed} in fit_lifetime_profile', UserWarning)
         valid = False
         raise
 
@@ -131,6 +140,10 @@ def fit_lifetime_unbined(z       : np.array,
 
     """
 
+    logging.debug(' fit_liftime_unbined')
+    logging.debug(f' len (z) ={len(z)}, len (e) ={len(e)} ')
+    logging.debug(f' nbins_z ={nbins_z}, range_z ={range_z} ')
+
     fp    = None
     fp2   = None
     valid = True
@@ -155,7 +168,13 @@ def fit_lifetime_unbined(z       : np.array,
         xu           = np.diff(x) * 0.5
         xus          = np.diff(xs) * 0.5
 
+        logging.debug(f' after profile: len (x) ={len(x)}, len (y) ={len(y)} ')
+
         c2 = chi2f(lambda z: a * xs + b, 2, xs, ys, yus)
+
+        logging.debug(f' e0z ={par[0]} +- {err[0]} ')
+        logging.debug(f' lt ={par[1]} +- {err[1]} ')
+        logging.debug(f' c2 ={c2} ')
 
         fp  = FitPar(x  = x,  y  = y,  xu = xu,  yu = yu,  f  = lambda z: e0 * np.exp(-z/lt))
         fp2 = FitPar(x  = xs, y  = ys, xu = xus, yu = yus, f  = lambda z: a * xs + b)
@@ -276,7 +295,7 @@ def fit_map(selection_map : Dict[int, List[KrEvent]],
     for sector in range(nsectors):
         logging.debug(f'Fitting sector {sector}')
 
-        fps = fit_fcs_in_sectors(sector, selection_map, event_map, n_time_bins, time_diffs
+        fps = fit_fcs_in_sectors(sector, selection_map, event_map, n_time_bins, time_diffs,
                                  nbins_z, nbins_e, range_z, range_e, energy, fit, n_min)
         if verbose:
             logging.debug(f' number of wedges fitted in sector {len(fps)}')
@@ -330,15 +349,18 @@ def fit_fcs_in_xy_bin (xybin         : Tuple[int, int],
                        n_min         : int                 = 100)->FitParTS:
     """Returns fits in xy bins specified by KRES"""
 
+    logging.debug(f'function: fit_fcs_in_xy_bin')
     i = xybin[0]
     j = xybin[1]
-    tlast = time_difs[-1]
-    ts, masks =  get_time_series(n_time_bins, tlast, selection_map)
+    tlast = time_diffs[-1]
+    KRE = selection_map
+    logging.debug(f'selection map has {len(KRE.keys())} bins in x {len(KRE.values())} bins in y')
+    ts, masks =  get_time_series(n_time_bins, tlast, selection_map[i][j]) # pass one KRE for tsel
 
     if event_map[i][j] > n_min:
         logging.debug(f'fitting bin ({i},{j}) with {event_map[i][j]} events')
 
-        return time_fcs(masks, selection_map[i][j],
+        return time_fcs(ts, masks, selection_map[i][j],
                         nbins_z, nbins_e, range_z, range_e, energy, fit)
     else:
         warnings.warn(f'Cannot fit: events in bin[{i}][{j}] ={event_map[i][j]} < {n_min}',
@@ -372,8 +394,8 @@ def fit_fcs_in_sectors(sector        : int,
         if event_map[sector][i] > n_min:
             logging.debug(f'fitting sector/wedge ({sector},{i}) with {event_map[sector][i]} events')
 
-            fp  = time_fcs(masks, selection_map[sector][i],
-                            nbins_z, nbins_e, range_z, range_e, energy, fit)
+            fp  = time_fcs(ts, masks, selection_map[sector][i],
+                           nbins_z, nbins_e, range_z, range_e, energy, fit)
         else:
             warnings.warn(f'Cannot fit: events in s/w[{sector}][{i}] ={event_map[sector][i]} < {n_min}',
                          UserWarning)
@@ -409,15 +431,24 @@ def fb_fits(n_time_bins : int,
     return fp, fpf, fpb
 
 
-def time_fcs(masks   : List[np.array],
+def time_fcs(ts      : np.array,
+             masks   : List[np.array],
              kre     : KrEvent,
              nbins_z : int,
              nbins_e : int,
-             range_z : Tuple[float, float] = (100,550),
-             range_e : Tuple[float, float] = (8000, 12000),
+             range_z : Tuple[float, float],
+             range_e : Tuple[float, float],
              energy  : str                 = 'S2e',
              fit     : FitType             = FitType.profile)->FitParTS:
-    """Fit lifetime of a time series. """
+    """Fit lifetime of a time series.
+    ts     : a vector of floats with the (central) values of the time series
+    masks  : a list of boolean vectors specifying the maks
+    kre    : kr_event (a subset of dst)
+           : bins and ranges in z and e.
+    energy : variable to be taken as the energy (S2e or Q)
+    fit    : type of fit.
+
+    """
 
     kcts = [KrEvent(X   = kre.X[sel_mask],
                     Y   = kre.Y[sel_mask],
@@ -432,12 +463,18 @@ def time_fcs(masks   : List[np.array],
                     E   = kre.E[sel_mask],
                     Q   = kre.Q[sel_mask]) for sel_mask in masks]
 
+    logging.debug('function:time_fcs ')
+    logging.debug(f' list of kre_event has length {len(kcts)}')
+    [logging.debug(f' mask {i} has length {len(mask)}') for i, mask in enumerate(masks)]
+    [logging.debug(f' mask {i} has {np.count_nonzero(mask)} True elements')
+                   for i, mask in enumerate(masks)]
+
     if energy == 'S2e':
-        fcs =[fit_lifetime(kct.Z, kct.S2e, fit,
-                           nbins_z, nbins_e, range_z, range_e) for kct in kcts]
+        fcs =[fit_lifetime(kct.Z, kct.S2e,
+                           nbins_z, nbins_e, range_z, range_e, fit) for kct in kcts]
     else:
-        fcs =[fit_lifetime(kct.Z, kct.E, fit,
-                           nbins_z, nbins_e, range_z, range_e) for kct in kcts]
+        fcs =[fit_lifetime(kct.Z, kct.E,
+                           nbins_z, nbins_e, range_z, range_e, fit) for kct in kcts]
 
     e0s, lts, c2s = pars_from_fcs(fcs)
     return FitParTS(ts  = np.array(ts),
@@ -448,16 +485,24 @@ def time_fcs(masks   : List[np.array],
                     ltu = uncertainty_from_measurement(lts))
 
 
-def get_time_series(nt    : int,
-                    tlast : int,
+def get_time_series(nt    : Number,
+                    tlast : Number,
                     KRES  : KrEvent)->Tuple[List[float], List[np.array]]:
+    """Returns a time series (ts) and a list of masks which are used to divide
+    the event in time tranches.
+    nt:    number of time tranches requested
+    tlast: last time entry in the time-differences vector that keeps the length of the
+           run in terms of time-differences wrt the initial time.
+    KRES:  An object of type kr_event (a subsection of the dst)
+    """
 
+    logging.debug(f'function: get_time_series')
     x = int(tlast / nt)
     if x == 1:
         indx = [(0, int(tlast))]
     else:
-        indx = [(i, i + nt) for i in range(0, int(tlast - nt), nt) ]
-        indx.append((x * nt, int(tlast)))
+        indx = [(i, i + x) for i in range(0, int(tlast - x), x) ]
+        indx.append((x * (nt -1), int(tlast)))
 
     ts = [(indx[i][0] + indx[i][1]) / 2 for i in range(len(indx))]
 
@@ -469,13 +514,13 @@ def get_time_series(nt    : int,
 
     return ts, masks
 
-#experiments 
+#experiments
 def fit_lifetime_experiments(zs      : np.array,
                              es      : np.array,
                              nbins_z : int      ,
                              nbins_e : int      ,
-                             range_z : Range    ,
-                             range_e : Range    ,
+                             range_z : Tuple[float,float],
+                             range_e : Tuple[float,float],
                              fit     : FitType  = FitType.unbined)->List[FitCollection2]:
 
     return [fit_lifetime(z, e, nbins_z, nbins_e, range_z, range_e, fit) for z,e in zip(zs,es)]
