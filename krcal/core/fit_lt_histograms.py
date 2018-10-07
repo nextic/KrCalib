@@ -196,14 +196,15 @@ def plot_fit_sectors(fps : Iterable[FitParTS],
 
 
 def plot_fit_xy(fp         : Optional[FitParTS],
-                range_chi2 : Tuple[float, float] =(0,3),
-                range_e0   : Tuple[float, float] =(10000,12500),
-                range_lt   : Tuple[float, float] =(2000, 3000)):
+                range_chi2 : Tuple[float, float] = (0,3),
+                range_e0   : Tuple[float, float] = (10000,12500),
+                range_lt   : Tuple[float, float] = (2000, 3000),
+                figsize    : Tuple[int, int]     = (12,6)):
 
     if fp == None:
         print('Trying to plot a null fit. Refit and try again')
-        return None 
-    fig = plt.figure(figsize=(14,6))
+        return None
+    fig = plt.figure(figsize=figsize)
 
     ax      = fig.add_subplot(1, 2, 1)
     plt.errorbar(fp.ts, fp.lt, np.sqrt(fp.lt), fmt="p")
@@ -217,6 +218,27 @@ def plot_fit_xy(fp         : Optional[FitParTS],
 
     plt.tight_layout()
 
+def plot_time_fcs(fps        : Optional[FitParTS],
+                  range_chi2 : Tuple[float, float] = (0,10),
+                  range_e0   : Tuple[float, float] = (8000,13500),
+                  range_lt   : Tuple[float, float] = (2000, 4000),
+                  figsize    : Tuple[int, int]     = (12,6)):
+    if fps == None:
+        print('Trying to plot a null fit. Refit and try again')
+        return None
+
+
+    fig = plt.figure(figsize=figsize)
+    ax  = fig.add_subplot(1, 3, 1)
+    (_) = plt.errorbar(fps.ts, fps.e0, fps.e0u, fmt="p")
+    plt.ylim(range_e0)
+    ax  = fig.add_subplot(1, 3, 2)
+    (_) = plt.errorbar(fps.ts, fps.lt, fps.ltu, fmt="p")
+    plt.ylim(range_lt)
+    ax  = fig.add_subplot(1, 3, 3)
+    (_) = plt.errorbar(fps.ts, fps.c2, np.sqrt(fps.c2), fmt="p")
+    plt.ylim(range_chi2)
+    plt.tight_layout()
 
 def print_fit_sectors_pars(fpts : FitParTS) :
 

@@ -4,11 +4,13 @@ import numpy as np
 
 from  invisible_cities.io.dst_io  import load_dsts
 
-from  krcal.core.kr_types         import KrFileName
-from  krcal.core.io_functions     import filenames_from_list
-from  krcal.core.core_functions   import time_delta_from_time
+from  krcal.core.kr_types            import KrFileName
+from  krcal.core.io_functions        import filenames_from_list
+from  krcal.core.core_functions      import time_delta_from_time
 from  krcal.core.analysis_functions  import kr_event
 from  krcal.core.fit_lt_functions    import get_time_series
+from  krcal.core.fit_lt_functions    import time_fcs
+from  krcal.core.kr_types            import FitType, KrSector, MapType
 import warnings
 import pytest
 
@@ -22,6 +24,13 @@ def DST(dst_filenames_path):
     DT            = time_delta_from_time(T)
     kge           = kr_event(dst, DT, dst.S2e, dst.S2q)
     return dst, DT, kge
+
+@pytest.fixture(scope='session')
+def time_series(DST):
+    nt = 10
+    dst, DT, kge = DST
+    ts, masks = get_time_series(nt, DT[-1], kge)
+    return nt, ts, masks
 
 
 def test_filenames_from_list(DSTDIR, MAPSDIR, LDSTDIR,
@@ -52,12 +61,35 @@ def test_filenames_from_list(DSTDIR, MAPSDIR, LDSTDIR,
 #     assert number_of_evts_full == len(dst)
 
 
-def test_get_time_series(DST):
+def test_get_time_series(time_series, DST):
     dst, DT, kge = DST
-    nt = 10
 
-    ts, masks = get_time_series(nt, DT[-1], kge)
+    nt, ts, masks = time_series
     lengths = [len(mask)for mask in masks]
     assert len(masks) == len(ts) == nt
     assert len(masks[0]) == len(kge.X) == len(dst)
     assert np.equal(lengths, len(dst) * np.ones(len(lengths))).all()
+
+
+def test_time_fcs(time_series, DST):
+    dst, DT, kge = DST
+
+    nt, ts, masks = time_series
+
+    fps = time_fcs(ts, masks, kge,
+                   nbins_z = 10,
+                   nbins_e = 25,
+                   range_z = (50, 550),
+                   range_e = (5000, 13500),
+                   energy  = 'S2e',
+                   fit     = FitType.profile)
+
+    fpu = time_fcs(ts, masks, kge,
+                    nbins_z = 10,
+                    nbins_e = 25,
+                    range_z = (50, 550),
+                    range_e = (5000, 13500),
+                    energy  = 'S2e',
+                    fit     = FitType.unbined)
+    assert np.allclose(fps.e0, fpu.e0, rtol=1e-02)
+    assert np.allclose(fps.lt, fpu.lt, rtol=1e-02)
