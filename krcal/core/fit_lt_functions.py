@@ -341,19 +341,19 @@ def fit_fcs_in_xy_bin (xybin         : Tuple[int, int],
                        energy        : str                 = 'S2e',
                        fit           : FitType             = FitType.profile,
                        n_min         : int                 = 100)->FitParTS:
-    """Returns fits in xy bins specified by KRES"""
+    """Returns fits in the bin specified by xybin"""
 
-    logging.debug(f'function: fit_fcs_in_xy_bin')
+
     i = xybin[0]
     j = xybin[1]
+    nevt = event_map[i][j]
     tlast = time_diffs[-1]
     KRE = selection_map
-    logging.debug(f'selection map has {len(KRE.keys())} bins in x {len(KRE.values())} bins in y')
     ts, masks =  get_time_series(n_time_bins, tlast, selection_map[i][j]) # pass one KRE for tsel
 
-    if event_map[i][j] > n_min:
-        logging.debug(f'fitting bin ({i},{j}) with {event_map[i][j]} events')
+    logging.debug(f' --fit_fcs_in_xy_bin called: xy bin = ({i},{j}), with events ={nevt}')
 
+    if nevt > n_min:
         return time_fcs(ts, masks, selection_map[i][j],
                         nbins_z, nbins_e, range_z, range_e, energy, fit)
     else:
