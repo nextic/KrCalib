@@ -11,6 +11,9 @@ from  krcal.core.analysis_functions  import kr_event
 from  krcal.core.fit_lt_functions    import get_time_series
 from  krcal.core.fit_lt_functions    import time_fcs
 from  krcal.core.kr_types            import FitType, KrSector, MapType
+from  krcal.core.analysis_functions  import event_map
+from  krcal.core.analysis_functions  import select_xy_sectors
+from krcal.core.fit_lt_functions    import fit_map_xy
 import warnings
 import pytest
 
@@ -32,6 +35,10 @@ def time_series(DST):
     ts, masks = get_time_series(nt, DT[-1], kge)
     return nt, ts, masks
 
+
+@pytest.fixture(scope='session')
+def kBins():
+    return np.array([-200., -120.,  -40.,   40.,  120.,  200.])
 
 def test_filenames_from_list(DSTDIR, MAPSDIR, LDSTDIR,
                              dst_filenames, ldst_filename, map_filename, map_filename_ts,
@@ -93,3 +100,66 @@ def test_time_fcs(time_series, DST):
                     fit     = FitType.unbined)
     assert np.allclose(fps.e0, fpu.e0, rtol=1e-02)
     assert np.allclose(fps.lt, fpu.lt, rtol=1e-02)
+
+
+def test_select_xy_sectors(DST, kBins):
+    dst, DT, kge = DST
+
+    KRE = select_xy_sectors(dst, DT, dst.S2e.values, dst.S2q.values, kBins, kBins)
+    neM = event_map(KRE)
+    l = ((neM[0]/neM[4]).values > 0.8).all()
+    r = ((neM[0]/neM[4]).values < 1.1).all()
+    assert l & r
+    
+
+def test_fit_xy_map(DST, kBins):
+    dst, DT, kge = DST
+
+    def get_maps_t0(fmxy):
+        pE0 = {}
+        pLT = {}
+        pC2 = {}
+        for nx in fmxy.keys():
+            pE0[nx] = [fmxy[nx][ny].e0[0] for ny in range(len(fmxy[nx]))] # notice [0] ts bin
+            pLT[nx] = [fmxy[nx][ny].lt[0] for ny in range(len(fmxy[nx]))]
+            pC2[nx] = [fmxy[nx][ny].c2[0] for ny in range(len(fmxy[nx]))]
+
+            return (pd.DataFrame.from_dict(pE0),
+            pd.DataFrame.from_dict(pLT),
+            pd.DataFrame.from_dict(pC2))
+
+    KRE = select_xy_sectors(dst, DT, dst.S2e.values, dst.S2q.values, kBins, kBins)
+    neM = event_map(KRE)
+
+    fpmxy = fit_map_xy(selection_map = KRE,
+                       event_map     = neM,
+                       n_time_bins   = 1,
+                       time_diffs    = DT,
+                       nbins_z       = 25,
+                       nbins_e       = 50,
+                       range_z       =(50, 550),
+                       range_e       = (5000, 13500),
+                       energy        = 'S2e',
+                       fit           = FitType.profile,
+                       n_min         = 100)
+
+    mE0p, mLTp, mC2p = get_maps_t0(fpmxy)
+
+    fumxy = fit_map_xy(selection_map = KRE,
+                       event_map     = neM,
+                       n_time_bins   = 1,
+                       time_diffs    = DT,
+                       nbins_z       = 25,
+                       nbins_e       = 50,
+                       range_z       =(50, 550),
+                       range_e       = (5000, 13500),
+                       energy        = 'S2e',
+                       fit           = FitType.unbined,
+                       n_min         = 100)
+
+    mE0u, mLTu, mC2u = get_maps_t0(fumxy)
+    r1 = (mLTp / mLTu).values
+    l1 = np.allclose(r1, 1, rtol=1e-01)
+    r2 = mE0p / mE0u
+    l2 = np.allclose(r2, 1, rtol=1e-02)
+    assert l1 & l2
