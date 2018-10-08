@@ -313,25 +313,19 @@ def fit_map_xy(selection_map : Dict[int, List[KrEvent]],
                nbins_e       : int,
                range_z       : Tuple[float, float],
                range_e       : Tuple[float, float],
-               range_chi2    : Tuple[float, float],
-               range_lt      : Tuple[float, float],
                energy        : str                 = 'S2e',
                fit           : FitType             = FitType.profile,
                n_min         : int                 = 100)->Dict[int, List[FitParTS]]:
 
+    logging.debug(f'function: fit_map_xy')
     fMAP = {}
     r, c = event_map.shape
 
+    logging.debug(f'event map has {r} bins in x {c} bins in y')
     for i in range(r):
-        FL = []
-        for j in range(c):
-            nevt = event_map[i][j]
-            logging.debug(f'Fitting xy bin = ({i},{j}), with events ={nevt}')
-
-            fps = fit_fcs_in_xy_bin((i,j), selection_map, event_map, n_time_bins, time_diffs,
-                                    nbins_z, nbins_e, range_z,range_e, energy, fit, n_min)
-        fMAP[i] = FL
-
+        fMAP[i] = [fit_fcs_in_xy_bin((i,j), selection_map, event_map, n_time_bins, time_diffs,
+                                     nbins_z, nbins_e, range_z,range_e, energy, fit, n_min)
+                                     for j in range(c) ]
     return fMAP
 
 
