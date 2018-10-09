@@ -113,8 +113,8 @@ def kr_ranges_and_bins(dst       : DataFrame,
     krRanges.T = Trange
     krNbins.T  = Tnbins
     krBins.T   = Tbins
-
     times      = [np.mean([Tbins[t],Tbins[t+1]]) for t in range(Tnbins)]
+
     TL         = [(Tbins[t],Tbins[t+1]) for t in range(Tnbins)]
     timeStamps = list(map(datetime.datetime.fromtimestamp, times))
     krTimes    = KrTimes(times = times, timeStamps = timeStamps, TL = TL)
