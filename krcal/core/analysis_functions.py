@@ -106,7 +106,6 @@ def kr_ranges_and_bins(dst       : DataFrame,
     tstart  = T[0]
     tfinal  = T[-1]
     Trange  = (tstart,tfinal)
-
     ntimebins  = int( np.floor( ( tfinal - tstart) / tpsamples) )
     Tnbins     = np.max([ntimebins, 1])
     Tbins      = np.linspace( tstart, tfinal, ntimebins+1)
