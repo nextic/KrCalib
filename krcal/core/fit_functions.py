@@ -1,5 +1,5 @@
 import numpy as np
-
+import warnings
 from typing      import List, Tuple, Sequence, Iterable, Callable
 
 import invisible_cities.core .fit_functions  as     fitf
@@ -27,7 +27,12 @@ def chi2f(f   : Callable,
     c2 = [abs(yi - fi)/syi for yi, fi, syi in zip(y, fitx, yu)]
     chi2_ =np.sum(np.array(c2))
 
-    return chi2_/(len(x)-n)
+    if len(x) > n:
+        return chi2_/(len(x)-n)
+    else:
+        warnings.warn('nof = 0 in chi2 calculation, return chi2 = {chi2_}', UserWarning)
+        return chi2_
+
 
 
 def chi2(f : FitFunction,
@@ -40,18 +45,6 @@ def chi2(f : FitFunction,
 
     """
     return chi2f(f.fn, len(f.values), x, y, sy)
-    #           nfp : int,        # number of function parameters
-    #           x   : np.array,
-    #           y   : np.array,
-    #           yu  : np.array)
-    #
-    # assert len(x) == len(y) == len(sy)
-    # fitx = f.fn(x)
-    # n = len(f.values)
-    #
-    # chi2_ =np.sum(np.array([abs(yi - fi)/syi for yi, fi, syi in zip(y, fitx, sy)]))
-    #
-    # return chi2_/(len(x)-n)
 
 
 def gauss_seed(x, y, sigma_rel=0.05):

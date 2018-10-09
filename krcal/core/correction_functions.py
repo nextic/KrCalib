@@ -8,6 +8,9 @@ from . kr_types        import KrEvent
 from . kr_types        import ASectorMap
 from   invisible_cities.core.core_functions import in_range
 
+import sys
+import logging
+log = logging.getLogger()
 
 def e0_xy_correction(E   : np.array,
                      X   : np.array,
@@ -61,12 +64,14 @@ def e0_xy_correction_ts(kh     : KrEvent,
 
     EE = []
     for j, kct in enumerate(kcts):
-        print(f'time sector {j}')
+        logging.info(f' e0_xy_correction_ts: time sector = {j}')
 
         E0m = E0Ms[j]
         mx = (E0m.max()).max()
         E0M = E0m / mx
-        EE.append(e0_xy_correction(kct.E, kct.X, kct.Y, E0M, xr, yr, nx, ny))
+        ec = e0_xy_correction(kct.E, kct.X, kct.Y, E0M, xr, yr, nx, ny)
+        logging.info(f' Correction vector (average):  = {np.mean(ec)}')
+        EE.append(ec)
 
     E = np.concatenate(EE)
 
@@ -93,6 +98,7 @@ def lt_xy_correction_ts(kh : KrEvent,
                         nx     : int,
                         ny     : int)->KrEvent:
 
+
     ts = tts.values
     masks = get_time_selection_masks(kh.DT, tts.values)
     kcts = get_krevent_time_series(kh, masks)
@@ -100,10 +106,12 @@ def lt_xy_correction_ts(kh : KrEvent,
 
     EE = []
     for j, kct in enumerate(kcts):
-        print(f'time sector {j}')
+        logging.info(f' lt_xy_correction_ts: time sector = {j}')
 
         LTM = LTMs[j]
-        EE.append(lt_xy_correction(kct.E, kct.X, kct.Y, kct.Z, LTM, xr, yr, nx, ny))
+        ec  = lt_xy_correction(kct.E, kct.X, kct.Y, kct.Z, LTM, xr, yr, nx, ny)
+        logging.info(f' Correction vector (average):  = {np.mean(ec)}')
+        EE.append(ec)
 
     E = np.concatenate(EE)
 

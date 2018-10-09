@@ -66,9 +66,9 @@ def energy_time_profile(T           : np.array,
     xfmt = md.DateFormatter('%d-%m %H:%M')
     fig = plt.figure(figsize=figsize)
 
-    x, y, yu = fitf.profileX(T, E, Tnbins, Trange)
+    x, y, yu = fitf.profileX(T, E, Tnbins, None, erange)
     ax = fig.add_subplot(1, 1, 1)
-
+    
     ax.xaxis.set_major_formatter(xfmt)
     plt.errorbar(timeStamps, y, yu, fmt="kp", ms=7, lw=3)
     plt.xlabel('date')
@@ -94,7 +94,7 @@ def energy_X_profile(X      : np.array,
     plt.xlabel(xlabel)
     plt.ylabel('E (pes)')
     plt.ylim(erange)
-    
+
 
 def s1d_from_dst(dst       : DataFrame,
                  range_s1e : Tuple[float, float] = (0,40),

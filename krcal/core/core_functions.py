@@ -7,12 +7,34 @@ from   invisible_cities.evm.ic_containers  import Measurement
 
 NN = np.nan
 
+def in_range(data, minval=-np.inf, maxval=np.inf):
+    """
+    Find values in range [minval, maxval).
+
+    Parameters
+    ---------
+    data : np.ndarray
+        Data set of arbitrary dimension.
+    minval : int or float, optional
+        Range minimum. Defaults to -inf.
+    maxval : int or float, optional
+        Range maximum. Defaults to +inf.
+
+    Returns
+    -------
+    selection : np.ndarray
+        Boolean array with the same dimension as the input. Contains True
+        for those values of data in the input range and False for the others.
+    """
+    return (minval <= data) & (data < maxval)
+
 def phirad_to_deg(r : float)-> float:
     return (r + pi) * 180 / pi
 
 
 def value_from_measurement(mL : Iterable[Measurement]) -> np.array:
     return np.array([m.value for m in mL])
+
 
 def uncertainty_from_measurement(mL : Iterable[Measurement]) -> np.array:
     return np.array([m.uncertainty for m in mL])

@@ -27,6 +27,9 @@ from typing            import List, Tuple, Dict, Sequence, Iterable
 from typing            import Optional
 
 from numpy import sqrt
+import logging
+log = logging.getLogger()
+
 
 
 def rphi_sector_equal_area_map(rmin : float  =  18,
@@ -91,11 +94,6 @@ def rphi_sector_map(nSectors : int   =10,
                     rmax     : float =200,
                     sphi     : float =45)->Tuple[Dict[int, Tuple[float, float]],
                                      Dict[int, List[Tuple[float, float]]]]:
-    # PHI = {0 : [(0, 360)],
-    #        1 : [(0,180), (180,360)],
-    #        2 : [(i, i+90) for i in range(0, 360, 90) ]
-    #        }
-
 
     PHI = {}
 
@@ -199,8 +197,9 @@ def draw_wedges(W       :  Dict[int, List[KrSector]],
     plt.show()
 
 
-def tsmap_from_fmap(fMap    : Dict[int, List[FitParTS]],
-                    verbose : bool = False) ->SectorMapTS:
+def tsmap_from_fmap(fMap    : Dict[int, List[FitParTS]]) ->SectorMapTS:
+
+    logging.debug(f' --tsmap_from_fmap')
 
     tmChi2  = {}
     tmE0    = {}
@@ -209,9 +208,7 @@ def tsmap_from_fmap(fMap    : Dict[int, List[FitParTS]],
     tmLTu   = {}
 
     for sector, fps in fMap.items():
-
-        if verbose:
-            print(f' filling maps for sector {sector}')
+        logging.debug(f' filling maps for sector {sector}')
 
         tCHI2 = [fp.c2 for fp in fps]
         tE0   = [fp.e0 for fp in fps]
@@ -721,8 +718,8 @@ def get_plt_indexes(aMaps :List[ASectorMap], ixy : Optional[Tuple[int,int]])->Tu
             ix = len(aMaps) / 2
             iy = len(aMaps) / 2
         else:
-            ix = len(aMaps) + 1 / 2
-            iy = len(aMaps) + 1 / 2
+            ix = (len(aMaps) + 1) / 2
+            iy = (len(aMaps) + 1) / 2
     else:
         ix = ixy[0]
         iy = ixy[1]
