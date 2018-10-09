@@ -27,6 +27,9 @@ from typing            import List, Tuple, Dict, Sequence, Iterable
 from typing            import Optional
 
 from numpy import sqrt
+import logging
+log = logging.getLogger()
+
 
 
 def rphi_sector_equal_area_map(rmin : float  =  18,
@@ -194,8 +197,9 @@ def draw_wedges(W       :  Dict[int, List[KrSector]],
     plt.show()
 
 
-def tsmap_from_fmap(fMap    : Dict[int, List[FitParTS]],
-                    verbose : bool = False) ->SectorMapTS:
+def tsmap_from_fmap(fMap    : Dict[int, List[FitParTS]]) ->SectorMapTS:
+
+    logging.debug(f' --tsmap_from_fmap')
 
     tmChi2  = {}
     tmE0    = {}
@@ -204,9 +208,7 @@ def tsmap_from_fmap(fMap    : Dict[int, List[FitParTS]],
     tmLTu   = {}
 
     for sector, fps in fMap.items():
-
-        if verbose:
-            print(f' filling maps for sector {sector}')
+        logging.debug(f' filling maps for sector {sector}')
 
         tCHI2 = [fp.c2 for fp in fps]
         tE0   = [fp.e0 for fp in fps]
