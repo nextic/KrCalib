@@ -20,11 +20,9 @@ from . kr_types             import KrBins, KrNBins, KrRanges, KrTimes
 from . kr_types             import KrEvent
 from . kr_types             import HistoPar2, ProfilePar, FitPar, KrSector
 from . core_functions       import phirad_to_deg
-
-from typing      import List, Tuple, Sequence, Iterable, Dict
-
 from .histo_functions    import h1, h1d, h2, h2d, plot_histo
 
+from typing      import List, Tuple, Sequence, Iterable, Dict
 import dataclasses as dc
 
 import sys
@@ -320,13 +318,6 @@ def select_xy_sectors(dst        : DataFrame,
     return RGES
 
 
-def plot_sector(KRES : Dict[int, List[KrEvent]], nbins_x, nbins_y, ranges_x, ranges_y, sector =0):
-    krl = KRES[sector]
-    kre = kre_concat(krl)
-    nevt = h2(kre.X, kre.Y, nbins_x, nbins_y, ranges_x, ranges_y, profile = False)
-    print(f'number of events in sector = {np.sum(nevt)}')
-
-
 def events_sector(nMap : Dict[int, List[float]])->np.array:
     N = []
     for  nL in nMap.values():
@@ -339,16 +330,6 @@ def event_map(KRES : Dict[int, List[KrEvent]])->DataFrame:
     for i, kres in KRES.items():
         nMap[i] = [len(k.S2e) for k in kres]
     return pd.DataFrame.from_dict(nMap)
-
-
-def plot_sectors(KRES : Dict[int, List[KrEvent]], nbins_x, nbins_y, ranges_x, ranges_y,
-                 nx = 4, ny = 3,
-                 figsize=(14,14)):
-    fig = plt.figure(figsize=figsize)
-    for i in KRES.keys():
-        fig.add_subplot(nx, ny, i+1)
-        plot_sector(KRES, nbins_x, nbins_y, ranges_x, ranges_y, sector=i)
-    plt.tight_layout()
 
 
 def select_in_XYRange(kre : KrEvent, xyr : Range)->KrEvent:
