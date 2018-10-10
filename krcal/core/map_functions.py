@@ -117,37 +117,43 @@ def rphi_sector_map_def(nSectors : int   =10,
     return RPhiMapDef(R, PHI)
 
 
-def define_rphi_sectors(R       : Dict[int,  Tuple[float, float]],
-                        PHI     : Dict[int,  List[Tuple[float]]],
-                        verbose : bool  = False)-> Dict[int, List[KrSector]]:
-    """ns defines the index of dicts where wedge division becomes regular"""
+def define_rphi_sectors(rpmf : RPhiMapDef)-> Dict[int, List[KrSector]]:
+    """For each radial sector (key of the Dict[int, List[KrSector]])
+       returns a list of KrSector
+       class KrSector:
+           rmin    : float
+           rmax    : float
+           phimin  : float
+           phimax  : float
+    """
 
     def rps_sector(sector_number : int  ,
                    rmin          : float,
                    rmax          : float,
-                   Phid          : List[Tuple[float]],
-                   verbose       : bool  = True)->List[KrSector]:
+                   Phid          : List[Tuple[float]])->List[KrSector]:
 
-        if verbose:
-            print(f'Sector number = {sector_number}, Rmin = {rmin}, Rmax = {rmax}')
-            print(f'Number of Phi wedges = {len(Phid)}')
-            print(f'Phi Wedges = {Phid}')
+        logging.debug('--rps_sector():')
+
+        logging.debug(f'Sector number = {sector_number}, Rmin = {rmin}, Rmax = {rmax}')
+        logging.debug(f'Number of Phi wedges = {len(Phid)}')
+        logging.debug(f'Phi Wedges = {Phid}')
 
         rps   =  [KrSector(rmin = rmin,
                            rmax = rmax,
                            phimin=phi[0], phimax=phi[1]) for phi in Phid]
         return rps
 
+    logging.debug('--define_rphi_sectors():')
     RPS = {}
-
+    R   = rpmf.r
+    PHI = rpmf.phi
     assert len(R.keys()) == len(PHI.keys())
 
     for i, r in R.items():
         RPS[i] = rps_sector(sector_number = i,
                             rmin = r[0],
                             rmax = r[1],
-                            Phid = PHI[i],
-                            verbose = verbose)
+                            Phid = PHI[i])
 
     return RPS
 
