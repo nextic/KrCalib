@@ -303,28 +303,28 @@ def fit_fcs_in_xy_bin (xybin         : Tuple[int, int],
         return FitParTS(ts, dum, dum, dum, dum, dum)
 
 
-def fit_fcs_in_sectors(sector        : int,
-                       selection_map : Dict[int, List[KrEvent]],
-                       event_map     : DataFrame,
-                       n_time_bins   : int,
-                       time_diffs    : np.array,
-                       nbins_z       : int,
-                       nbins_e       : int,
-                       range_z       : Tuple[float, float],
-                       range_e       : Tuple[float, float],
-                       energy        : str                 = 'S2e',
-                       fit           : FitType             = FitType.profile,
-                       n_min         : int                 = 100)->List[FitParTS]:
-    """Returns fits in Rphi sectors specified by KRES"""
+def fit_fcs_in_rphi_sectors(sector        : int,
+                            selection_map : Dict[int, List[KrEvent]],
+                            event_map     : DataFrame,
+                            n_time_bins   : int,
+                            time_diffs    : np.array,
+                            nbins_z       : int,
+                            nbins_e       : int,
+                            range_z       : Tuple[float, float],
+                            range_e       : Tuple[float, float],
+                            energy        : str                 = 'S2e',
+                            fit           : FitType             = FitType.profile,
+                            n_min         : int                 = 100)->List[FitParTS]:
+    """Returns fits in phi wedges for a given radial sector"""
 
     wedges    =[len(kre) for kre in selection_map.values() ]  # number of wedges per sector
-    tlast     = time_difs[-1]
-    ts, masks =  get_time_series(n_time_bins, tlast, selection_map)
+    tlast     = time_diffs[-1]
 
     fps =[]
     for i in range(wedges[sector]):
         if event_map[sector][i] > n_min:
             logging.debug(f'fitting sector/wedge ({sector},{i}) with {event_map[sector][i]} events')
+            ts, masks =  get_time_series(n_time_bins, tlast, selection_map[sector][i])
 
             fp  = time_fcs(ts, masks, selection_map[sector][i],
                            nbins_z, nbins_e, range_z, range_e, energy, fit)
