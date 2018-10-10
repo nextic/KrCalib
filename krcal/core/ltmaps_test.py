@@ -5,12 +5,16 @@ import numpy as np
 from  invisible_cities.io.dst_io  import load_dsts
 from  krcal.core.core_functions      import time_delta_from_time
 from  krcal.core.analysis_functions  import kr_event
-from  krcal.core.fit_lt_functions    import get_time_series
-from  krcal.core.fit_lt_functions    import time_fcs
-from  krcal.core.kr_types            import FitType, KrSector, MapType
 from  krcal.core.analysis_functions  import event_map
 from  krcal.core.analysis_functions  import select_xy_sectors
-from krcal.core.fit_lt_functions    import fit_map_xy
+
+from  krcal.core.fit_lt_functions    import get_time_series
+from  krcal.core.fit_lt_functions    import time_fcs
+from  krcal.core.fit_lt_functions    import fit_fcs_in_xy_bin
+from  krcal.core.fit_lt_functions    import fit_map_xy
+
+from  krcal.core.kr_types            import FitType, KrSector, MapType
+
 import warnings
 import pytest
 
@@ -73,9 +77,41 @@ def test_time_fcs(time_series, DST):
     assert np.allclose(fps.lt, fpu.lt, rtol=1e-02)
 
 
+def test_fit_fcs_in_xy_bin(DST, kBins):
+    dst, DT, kge = DST
+    KRE = select_xy_sectors(dst, DT, dst.S2e.values, dst.S2q.values, kBins, kBins)
+    neM = event_map(KRE)
+    fps_p = fit_fcs_in_xy_bin (xybin          = (2,2),
+                               selection_map   = KRE,
+                               event_map       = neM,
+                               n_time_bins     = 1,
+                               time_diffs      = DT,
+                               nbins_z          = 25,
+                               nbins_e          = 50,
+                               range_z          =(50, 550),
+                               range_e          = (5000, 13500),
+                               energy           = 'S2e',
+                               fit              = FitType.profile,
+                               n_min            = 100)
+
+    fps_u = fit_fcs_in_xy_bin (xybin          = (2,2),
+                               selection_map   = KRE,
+                               event_map       = neM,
+                               n_time_bins     = 1,
+                               time_diffs      = DT,
+                               nbins_z          = 25,
+                               nbins_e          = 50,
+                               range_z          =(50, 550),
+                               range_e          = (5000, 13500),
+                               energy           = 'S2e',
+                               fit              = FitType.unbined,
+                               n_min            = 100)
+
+    np.allclose(fps_p.e0 / fps_u.e0, 1, rtol=1e-02)
+    np.allclose(fps_p.lt / fps_u.lt, 1, rtol=1e-02)
+
 def test_select_xy_sectors(DST, kBins):
     dst, DT, kge = DST
-
     KRE = select_xy_sectors(dst, DT, dst.S2e.values, dst.S2q.values, kBins, kBins)
     neM = event_map(KRE)
     l = ((neM[0]/neM[4]).values > 0.8).all()
