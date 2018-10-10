@@ -5,9 +5,8 @@ import numpy as np
 import warnings
 import pytest
 
-from krcal.core.map_functions   import rphi_sector_map_def
-from krcal.core.map_functions   import define_rphi_sectors
-
+from krcal.core.rphi_maps_functions   import rphi_sector_map_def
+from krcal.core.rphi_maps_functions   import define_rphi_sectors
 
 
 def test_rphi_sector_map_def():
