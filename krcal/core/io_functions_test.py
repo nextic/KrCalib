@@ -19,8 +19,24 @@ from invisible_cities.core.testing_utils       import float_arrays
 from invisible_cities.core.testing_utils       import FLOAT_ARRAY
 from invisible_cities.core.testing_utils       import random_length_float_arrays
 
-from . io_functions   import filenames_from_paths
+from . io_functions                  import filenames_from_paths
+from  krcal.core.io_functions        import filenames_from_list
+from  krcal.core.kr_types            import KrFileName
 
+
+def test_filenames_from_list(DSTDIR, MAPSDIR, LDSTDIR,
+                             dst_filenames, ldst_filename, map_filename, map_filename_ts,
+                             dst_filenames_path, ldst_filename_path, map_filename_path,
+                             map_filename_ts_path):
+
+    krfn = KrFileName(dst_filenames, ldst_filename, map_filename, map_filename_ts, ' ')
+
+    fn =filenames_from_list(krfn, DSTDIR, LDSTDIR, MAPSDIR)
+    fn.input_file_names   == dst_filenames_path
+    fn.output_file_name   == ldst_filename_path
+    fn.map_file_name      == map_filename_path
+    fn.map_file_name_ts   == map_filename_path
+    fn.emap_file_name     == ' '
 
 
 
