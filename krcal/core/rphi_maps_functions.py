@@ -39,12 +39,10 @@ def rphi_sector_equal_area_map(rmin : float  =  18,
     R = {}
     PHI = {}
     ri =[np.sqrt(i) * rmin for i in range(nSectors + 1)]
-    #print(ri)
 
     for ns in range(nSectors):
 
         R[ns] = (ri[ns], ri[ns+1])
-        #print(f'R[{ns}] =({ri[ns]},{ri[ns+1]})')
 
     for ns in range(0, nSectors):
         PHI[ns] = [(i, i+sphi) for i in range(0, 360, sphi)]
@@ -83,6 +81,7 @@ def rphi_sector_alpha_map(rmin : float  =  20,
         PHI[ns] = [(i, i+sphi) for i in range(0, 360, sphi)]
 
     return R, PHI
+
 
 def rphi_sector_map_def(nSectors : int   =10,
                         rmax     : float =200,
