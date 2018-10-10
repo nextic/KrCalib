@@ -268,7 +268,7 @@ def select_rphi_sectors(dst     : DataFrame,
         return MSK
 
     logging.debug(f' --select_rphi_sectors:')
-    MSK = selection_mask_rphi_sectors(dst, RPS, verbose)
+    MSK = selection_mask_rphi_sectors(dst, RPS)
 
     logging.debug(f' selection_mask computed, filling r-phi sectors')
 
