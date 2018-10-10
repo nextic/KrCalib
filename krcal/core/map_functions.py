@@ -17,8 +17,9 @@ from   invisible_cities.evm.ic_containers  import Measurement
 from . stat_functions import  mean_and_std
 from . core_functions import  NN
 
+from . kr_types        import RPhiMapDef
 from . kr_types        import PlotLabels
-from .kr_types         import KrSector, KrEvent
+from . kr_types        import KrSector, KrEvent
 from . kr_types        import FitType, MapType
 from . kr_types        import FitParTS
 from . kr_types        import ASectorMap, SectorMapTS, FitMapValue
@@ -90,10 +91,16 @@ def rphi_sector_alpha_map(rmin : float  =  20,
 
     return R, PHI
 
-def rphi_sector_map(nSectors : int   =10,
-                    rmax     : float =200,
-                    sphi     : float =45)->Tuple[Dict[int, Tuple[float, float]],
-                                     Dict[int, List[Tuple[float, float]]]]:
+def rphi_sector_map_def(nSectors : int   =10,
+                        rmax     : float =200,
+                        sphi     : float =45)->RPhiMapDef:
+    """Returns a RPhiMapDef, which defines the values in (R,Phi) to compute RPHI maps
+
+    class RPhiMapDef:
+        r   : Dict[int, Tuple[float, float] -> (rmin, rmax) in each radial sector
+        phi : Dict[int, List[Tuple[float, float] -> (phi_0, ph_1... phi_s) per radial sector
+
+    """
 
     PHI = {}
 
@@ -103,12 +110,11 @@ def rphi_sector_map(nSectors : int   =10,
         ri = dr * ns
         rs = dr* (ns+1)
         R[ns] = (ri, rs)
-        #print(f'R[{ns}] =({ri},{rs})')
 
     for ns in range(0, nSectors):
         PHI[ns] = [(i, i+sphi) for i in range(0, 360, sphi)]
 
-    return R, PHI
+    return RPhiMapDef(R, PHI)
 
 
 def define_rphi_sectors(R       : Dict[int,  Tuple[float, float]],
