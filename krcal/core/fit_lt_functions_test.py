@@ -91,9 +91,9 @@ def test_lt_profile_yields_compatible_results_with_unbined_fit(sigma, lt):
     _, _,  frp = fit_lifetime_profile(z, es, nbins_z, range_z)
     _, _,  fru = fit_lifetime_unbined(z, es, nbins_z, range_z)
 
-    assert frp.par[0] == approx(fru.par[0],  rel=0.1)
-    assert frp.par[1] == approx(fru.par[1],  rel=0.1)
-    assert frp.err[0] == approx(fru.err[0],  rel=0.1)
+    assert frp.par[0] == approx(fru.par[0],  rel=0.2)
+    assert frp.par[1] == approx(fru.par[1],  rel=0.2)
+    assert frp.err[0] == approx(fru.err[0],  rel=0.2)
     assert frp.err[1] == approx(fru.err[1],  rel=0.5)
     assert frp.chi2   == approx(fru.chi2,    rel=0.5)
 
@@ -141,10 +141,10 @@ def test_fit_lifetime_experiments_yield_good_pars_and_pulls():
     assert p_lt   == approx(lt,  rel=0.01)
     p_mu, p_std = mean_and_std((e0s-e0) / ue0s, range_ =(-5,5))
     assert p_mu   <= 0  # the pull is biased
-    assert p_std  == approx(1,  rel=0.1)
+    assert p_std  == approx(1,  rel=0.2)
 
     p_mu, p_std = mean_and_std((lts-lt) / ults, range_ =(-5,5))
     assert p_mu   <= 0  # the pull is biased
-    assert p_std  == approx(1,  rel=0.1)
+    assert p_std  == approx(1,  rel=0.2)
     assert p_c2   == approx(1,   rel=0.5)
     #assert p_c2u  == approx(0.2, rel=0.5)
