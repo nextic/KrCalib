@@ -247,20 +247,16 @@ def select_rphi_sectors(dst     : DataFrame,
                         dt      : np.array,
                         E       : np.array,
                         Q       : np.array,
-                        RPS     : Dict[int, List[KrSector]],
-                        verbose : bool = False)-> Dict[int, List[KrEvent]]:
+                        RPS     : Dict[int, List[KrSector]])-> Dict[int, List[KrEvent]]:
     """Return a dict of KrEvent organized by rphi sector"""
 
     def selection_mask_rphi_sectors(dst     : DataFrame,
-                                    RPS     : Dict[int, List[KrSector]],
-                                    verbose : bool  = False)->Dict[int, np.array]:
+                                    RPS     : Dict[int, List[KrSector]])->Dict[int, np.array]:
         """Returns a dict of selections arranged in a dict of rphi sectors"""
-
+        logging.debug(f' --selection_mask_rphi_sectors:')
         MSK = {}
         for i, rps in RPS.items():
-            if verbose:
-                print(f' sector = {i}')
-                #print(f' wedge = {rps}')
+            logging.debug(f' computing mask in sector {i}')
 
             sel_mask = [in_range(dst.R,
                                  s.rmin,
@@ -271,21 +267,15 @@ def select_rphi_sectors(dst     : DataFrame,
 
         return MSK
 
-    if verbose:
-        print(f' calling selection_mask')
+    logging.debug(f' --select_rphi_sectors:')
     MSK = selection_mask_rphi_sectors(dst, RPS, verbose)
 
-    if verbose:
-        print(f' selection_mask computed, filling RGES')
+    logging.debug(f' selection_mask computed, filling r-phi sectors')
 
     RGES = {}
     for i, msk in MSK.items():
-        if verbose:
-            print(f' defining kr_event for sector {i}')
+        logging.debug(f' defining kr_event for sector {i}')
         RGES[i] = [kr_event(dst, dt, E, Q, sel_mask = m) for m in msk]
-
-    if verbose:
-        print(f' RGES computed')
 
     return RGES
 
