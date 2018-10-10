@@ -12,11 +12,12 @@ from   invisible_cities.core.core_functions import in_range
 from   invisible_cities.evm  .ic_containers  import Measurement
 
 from . import fit_functions_ic as fitf
-from . fit_functions import   expo_seed, chi2, chi2f
+from . fit_functions   import   expo_seed, chi2, chi2f
 from . histo_functions import profile1d
-from . stat_functions import  mean_and_std
-from . core_functions import  value_from_measurement, uncertainty_from_measurement
-from . core_functions import  NN
+from . stat_functions  import  mean_and_std
+from . core_functions  import  value_from_measurement
+from . core_functions  import  uncertainty_from_measurement
+from . core_functions  import  NN
 
 from invisible_cities.core .stat_functions import poisson_sigma
 from invisible_cities.icaro. hst_functions import shift_to_bin_centers
@@ -26,7 +27,7 @@ from . kr_types import FitParTS
 from . kr_types import FitResult
 from . kr_types import HistoPar, HistoPar2
 from . kr_types import FitCollection, FitCollection2
-from . kr_types import PlotLabels
+
 
 from . kr_types import FitType, MapType
 from . kr_types import Number, Range
@@ -212,20 +213,20 @@ def pars_from_fcs(fcs : List[FitCollection])->Tuple[List[Measurement],
     return E, LT, np.array(C2)
 
 # Fitting maps
-def fit_map(selection_map : Dict[int, List[KrEvent]],
-            event_map     : DataFrame,
-            n_time_bins   : int,
-            time_diffs    : np.array,
-            nbins_z       : int,
-            nbins_e       : int,
-            range_z       : Tuple[float, float],
-            range_e       : Tuple[float, float],
-            range_chi2    : Tuple[float, float],
-            range_lt      : Tuple[float, float],
-            energy        : str                 = 'S2e',
-            fit           : FitType             = FitType.profile,
-            verbose       : bool                = False,
-            n_min         : int                 = 100)->Dict[int, List[FitParTS]]:
+def fit_map_rphi(selection_map : Dict[int, List[KrEvent]],
+                 event_map     : DataFrame,
+                 n_time_bins   : int,
+                 time_diffs    : np.array,
+                 nbins_z       : int,
+                 nbins_e       : int,
+                 range_z       : Tuple[float, float],
+                 range_e       : Tuple[float, float],
+                 range_chi2    : Tuple[float, float],
+                 range_lt      : Tuple[float, float],
+                 energy        : str                 = 'S2e',
+                 fit           : FitType             = FitType.profile,
+                 verbose       : bool                = False,
+                 n_min         : int                 = 100)->Dict[int, List[FitParTS]]:
 
     fMAP = {}
     nsectors = len(selection_map.keys())
