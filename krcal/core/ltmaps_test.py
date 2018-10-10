@@ -2,16 +2,21 @@ import os
 import pandas as pd
 import numpy as np
 
-from  invisible_cities.io.dst_io  import load_dsts
+from  invisible_cities.io.dst_io     import load_dsts
 from  krcal.core.core_functions      import time_delta_from_time
 from  krcal.core.analysis_functions  import kr_event
 from  krcal.core.analysis_functions  import event_map
 from  krcal.core.analysis_functions  import select_xy_sectors
+from  krcal.core.analysis_functions  import select_rphi_sectors
 
 from  krcal.core.fit_lt_functions    import get_time_series
 from  krcal.core.fit_lt_functions    import time_fcs
 from  krcal.core.fit_lt_functions    import fit_fcs_in_xy_bin
+from  krcal.core.fit_lt_functions    import fit_fcs_in_rphi_sectors
 from  krcal.core.fit_lt_functions    import fit_map_xy
+
+from  krcal.core.rphi_maps_functions       import rphi_sector_map_def
+from  krcal.core.rphi_maps_functions       import define_rphi_sectors
 
 from  krcal.core.kr_types            import FitType, KrSector, MapType
 
@@ -29,6 +34,7 @@ def DST(dst_filenames_path):
     kge           = kr_event(dst, DT, dst.S2e, dst.S2q)
     return dst, DT, kge
 
+
 @pytest.fixture(scope='session')
 def time_series(DST):
     nt = 10
@@ -40,7 +46,6 @@ def time_series(DST):
 @pytest.fixture(scope='session')
 def kBins():
     return np.array([-200., -120.,  -40.,   40.,  120.,  200.])
-
 
 
 def test_get_time_series(time_series, DST):
@@ -109,6 +114,43 @@ def test_fit_fcs_in_xy_bin(DST, kBins):
 
     np.allclose(fps_p.e0 / fps_u.e0, 1, rtol=1e-02)
     np.allclose(fps_p.lt / fps_u.lt, 1, rtol=1e-02)
+
+
+def test_fit_fcs_in_rphi_sectors(DST, kBins):
+    dst, DT, kge = DST
+    rpsmf = rphi_sector_map_def(nSectors =4, rmax =200, sphi =90)
+    rps   = define_rphi_sectors(rpsmf)
+    KRES = select_rphi_sectors(dst, DT, dst.S2e, dst.S2q, rps)
+    neM = event_map(KRES)
+
+    fcs_u = fit_fcs_in_rphi_sectors(sector = 0,
+                                    selection_map = KRES,
+                                    event_map     = neM,
+                                    n_time_bins   =1,
+                                    time_diffs    =DT,
+                                    nbins_z       = 25,
+                                    nbins_e       = 50,
+                                    range_z       =(50, 550),
+                                    range_e       = (5000, 13500),
+                                    energy        = 'S2e',
+                                    fit           = FitType.unbined,
+                                    n_min         = 100)
+
+    fcs_p = fit_fcs_in_rphi_sectors(sector = 0,
+                                    selection_map = KRES,
+                                    event_map     = neM,
+                                    n_time_bins   =1,
+                                    time_diffs    =DT,
+                                    nbins_z       = 25,
+                                    nbins_e       = 50,
+                                    range_z       =(50, 550),
+                                    range_e       = (5000, 13500),
+                                    energy        = 'S2e',
+                                    fit           = FitType.profile,
+                                    n_min         = 100)
+    for i in range(4):
+        np.allclose(fcs_u[i].e0 / fcs_p[i].e0, 1, rtol=1e-02)
+        np.allclose(fcs_u[i].lt / fcs_p[i].lt, 1, rtol=1e-02)
 
 def test_select_xy_sectors(DST, kBins):
     dst, DT, kge = DST
