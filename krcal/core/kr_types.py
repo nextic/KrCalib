@@ -53,7 +53,6 @@ class S1D:
     T  : Measurement
 
 
-
 @dataclass
 class S2D:
     """S2 description"""
@@ -197,7 +196,6 @@ class FitCollection2(FitCollection):
     fp2   : FitPar
 
 
-
 @dataclass
 class PlotLabels:
     x     : str
@@ -230,6 +228,11 @@ class FitParFB:            # Fit Parameters forward-backward
     ltb : Measurement
 
 
+@dataclass
+class RPhiMapDef:  # defines the values in (R,Phi) to compute RPHI maps
+    r   : Dict[int, Tuple[float, float]] # (rmin, rmax) in each radial sector
+    phi : Dict[int, List[Tuple[float, float]]] # (phi_0, ph_1... phi_s) per radial sector
+
 
 @dataclass
 class SectorMapTS:  # Map in chamber sector containing time series of pars
@@ -239,13 +242,6 @@ class SectorMapTS:  # Map in chamber sector containing time series of pars
     e0u   : Dict[int, List[np.array]]
     ltu   : Dict[int, List[np.array]]
 
-# @dataclass
-# class ASectorMap:  # Map in chamber sector containing average of pars
-#     chi2  : Dict[int, List[float]]
-#     e0    : Dict[int, List[float]]
-#     lt    : Dict[int, List[float]]
-#     e0u   : Dict[int, List[float]]
-#     ltu   : Dict[int, List[float]]
 
 @dataclass
 class ASectorMap:  # Map in chamber sector containing average of pars
@@ -254,6 +250,7 @@ class ASectorMap:  # Map in chamber sector containing average of pars
     lt    : DataFrame
     e0u   : DataFrame
     ltu   : DataFrame
+
 
 @dataclass
 class FitMapValue:  # A ser of values of a FitMap

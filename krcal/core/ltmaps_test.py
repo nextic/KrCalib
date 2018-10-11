@@ -2,18 +2,24 @@ import os
 import pandas as pd
 import numpy as np
 
-from  invisible_cities.io.dst_io  import load_dsts
-
-from  krcal.core.kr_types            import KrFileName
-from  krcal.core.io_functions        import filenames_from_list
+from  invisible_cities.io.dst_io     import load_dsts
 from  krcal.core.core_functions      import time_delta_from_time
 from  krcal.core.analysis_functions  import kr_event
-from  krcal.core.fit_lt_functions    import get_time_series
-from  krcal.core.fit_lt_functions    import time_fcs
-from  krcal.core.kr_types            import FitType, KrSector, MapType
 from  krcal.core.analysis_functions  import event_map
 from  krcal.core.analysis_functions  import select_xy_sectors
-from krcal.core.fit_lt_functions    import fit_map_xy
+from  krcal.core.analysis_functions  import select_rphi_sectors
+
+from  krcal.core.fit_lt_functions    import get_time_series
+from  krcal.core.fit_lt_functions    import time_fcs
+from  krcal.core.fit_lt_functions    import fit_fcs_in_xy_bin
+from  krcal.core.fit_lt_functions    import fit_fcs_in_rphi_sectors
+from  krcal.core.fit_lt_functions    import fit_map_xy
+
+from  krcal.core.rphi_maps_functions       import rphi_sector_map_def
+from  krcal.core.rphi_maps_functions       import define_rphi_sectors
+
+from  krcal.core.kr_types            import FitType, KrSector, MapType
+
 import warnings
 import pytest
 
@@ -28,6 +34,7 @@ def DST(dst_filenames_path):
     kge           = kr_event(dst, DT, dst.S2e, dst.S2q)
     return dst, DT, kge
 
+
 @pytest.fixture(scope='session')
 def time_series(DST):
     nt = 10
@@ -39,33 +46,6 @@ def time_series(DST):
 @pytest.fixture(scope='session')
 def kBins():
     return np.array([-200., -120.,  -40.,   40.,  120.,  200.])
-
-def test_filenames_from_list(DSTDIR, MAPSDIR, LDSTDIR,
-                             dst_filenames, ldst_filename, map_filename, map_filename_ts,
-                             dst_filenames_path, ldst_filename_path, map_filename_path,
-                             map_filename_ts_path):
-
-    krfn = KrFileName(dst_filenames, ldst_filename, map_filename, map_filename_ts, ' ')
-
-    fn =filenames_from_list(krfn, DSTDIR, LDSTDIR, MAPSDIR)
-    fn.input_file_names   == dst_filenames_path
-    fn.output_file_name   == ldst_filename_path
-    fn.map_file_name      == map_filename_path
-    fn.map_file_name_ts   == map_filename_path
-    fn.emap_file_name     == ' '
-
-
-# def test_load_dst(DSTDIR, MAPSDIR, LDSTDIR,
-#                   dst_filenames, ldst_filename, map_filename, map_filename_ts,
-#                   dst_filenames_path, ldst_filename_path, map_filename_path,
-#                   map_filename_ts_path):
-#
-#     krfn = KrFileName(dst_filenames, ldst_filename, map_filename, map_filename_ts, ' ')
-#     fn =filenames_from_list(krfn, DSTDIR, LDSTDIR, MAPSDIR)
-#     dst           = load_dsts(fn.input_file_names, "DST", "Events")
-#     unique_events = ~dst.event.duplicated()
-#     number_of_evts_full = np.count_nonzero(unique_events)
-#     assert number_of_evts_full == len(dst)
 
 
 def test_get_time_series(time_series, DST):
@@ -102,15 +82,84 @@ def test_time_fcs(time_series, DST):
     assert np.allclose(fps.lt, fpu.lt, rtol=1e-02)
 
 
+def test_fit_fcs_in_xy_bin(DST, kBins):
+    dst, DT, kge = DST
+    KRE = select_xy_sectors(dst, DT, dst.S2e.values, dst.S2q.values, kBins, kBins)
+    neM = event_map(KRE)
+    fps_p = fit_fcs_in_xy_bin (xybin          = (2,2),
+                               selection_map   = KRE,
+                               event_map       = neM,
+                               n_time_bins     = 1,
+                               time_diffs      = DT,
+                               nbins_z          = 25,
+                               nbins_e          = 50,
+                               range_z          =(50, 550),
+                               range_e          = (5000, 13500),
+                               energy           = 'S2e',
+                               fit              = FitType.profile,
+                               n_min            = 100)
+
+    fps_u = fit_fcs_in_xy_bin (xybin          = (2,2),
+                               selection_map   = KRE,
+                               event_map       = neM,
+                               n_time_bins     = 1,
+                               time_diffs      = DT,
+                               nbins_z          = 25,
+                               nbins_e          = 50,
+                               range_z          =(50, 550),
+                               range_e          = (5000, 13500),
+                               energy           = 'S2e',
+                               fit              = FitType.unbined,
+                               n_min            = 100)
+
+    np.allclose(fps_p.e0 / fps_u.e0, 1, rtol=1e-02)
+    np.allclose(fps_p.lt / fps_u.lt, 1, rtol=1e-02)
+
+
+def test_fit_fcs_in_rphi_sectors(DST, kBins):
+    dst, DT, kge = DST
+    rpsmf = rphi_sector_map_def(nSectors =4, rmax =200, sphi =90)
+    rps   = define_rphi_sectors(rpsmf)
+    KRES = select_rphi_sectors(dst, DT, dst.S2e, dst.S2q, rps)
+    neM = event_map(KRES)
+
+    fcs_u = fit_fcs_in_rphi_sectors(sector = 0,
+                                    selection_map = KRES,
+                                    event_map     = neM,
+                                    n_time_bins   =1,
+                                    time_diffs    =DT,
+                                    nbins_z       = 25,
+                                    nbins_e       = 50,
+                                    range_z       =(50, 550),
+                                    range_e       = (5000, 13500),
+                                    energy        = 'S2e',
+                                    fit           = FitType.unbined,
+                                    n_min         = 100)
+
+    fcs_p = fit_fcs_in_rphi_sectors(sector = 0,
+                                    selection_map = KRES,
+                                    event_map     = neM,
+                                    n_time_bins   =1,
+                                    time_diffs    =DT,
+                                    nbins_z       = 25,
+                                    nbins_e       = 50,
+                                    range_z       =(50, 550),
+                                    range_e       = (5000, 13500),
+                                    energy        = 'S2e',
+                                    fit           = FitType.profile,
+                                    n_min         = 100)
+    for i in range(4):
+        np.allclose(fcs_u[i].e0 / fcs_p[i].e0, 1, rtol=1e-02)
+        np.allclose(fcs_u[i].lt / fcs_p[i].lt, 1, rtol=1e-02)
+
 def test_select_xy_sectors(DST, kBins):
     dst, DT, kge = DST
-
     KRE = select_xy_sectors(dst, DT, dst.S2e.values, dst.S2q.values, kBins, kBins)
     neM = event_map(KRE)
     l = ((neM[0]/neM[4]).values > 0.8).all()
     r = ((neM[0]/neM[4]).values < 1.1).all()
     assert l & r
-    
+
 
 def test_fit_xy_map(DST, kBins):
     dst, DT, kge = DST

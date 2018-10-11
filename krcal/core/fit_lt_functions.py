@@ -12,23 +12,22 @@ from   invisible_cities.core.core_functions import in_range
 from   invisible_cities.evm  .ic_containers  import Measurement
 
 from . import fit_functions_ic as fitf
-from . fit_functions import   expo_seed, chi2, chi2f
+from . fit_functions   import   expo_seed, chi2, chi2f
 from . histo_functions import profile1d
-from . stat_functions import  mean_and_std
-from . core_functions import  value_from_measurement, uncertainty_from_measurement
-from . core_functions import  NN
+from . stat_functions  import  mean_and_std
+from . core_functions  import  value_from_measurement
+from . core_functions  import  uncertainty_from_measurement
+from . core_functions  import  NN
 
 from invisible_cities.core .stat_functions import poisson_sigma
 from invisible_cities.icaro. hst_functions import shift_to_bin_centers
 
-
-from . kr_types import GaussPar
 from . kr_types import FitPar
 from . kr_types import FitParTS
 from . kr_types import FitResult
 from . kr_types import HistoPar, HistoPar2
 from . kr_types import FitCollection, FitCollection2
-from . kr_types import PlotLabels
+
 
 from . kr_types import FitType, MapType
 from . kr_types import Number, Range
@@ -42,6 +41,7 @@ from numpy import sqrt, pi
 import sys
 import logging
 log = logging.getLogger()
+
 
 def fit_lifetime(z       : np.array,
                  e       : np.array,
@@ -192,68 +192,6 @@ def fit_lifetime_unbined(z       : np.array,
     return fp, fp2, fr
 
 
-def plot_fit_lifetime(fc : FitCollection):
-
-    if fc.fr.valid:
-        par  = fc.fr.par
-        err  = fc.fr.err
-
-        if fc.hp:
-            plt.hist2d(fc.hp.var,
-                        fc.hp.var2,
-                        bins = (fc.hp.nbins,fc.hp.nbins2),
-                        range= (fc.hp.range,fc.hp.range2))
-        x = fc.fp.x
-        y = fc.fp.y
-        xu = fc.fp.xu
-        yu = fc.fp.yu
-        f = fc.fp.f
-
-        plt.errorbar(x, y, yu, xu[0], fmt="kp", ms=7, lw=3)
-        plt.plot(x, f(x), "r-", lw=4)
-        plt.xlabel('Z')
-        plt.ylabel('E')
-        plt.title(f'Ez0 ={par[0]:7.2f}+-{err[0]:7.3f},   LT={par[1]:7.2f}+-{err[1]:7.3f}')
-    else:
-        warnings.warn(f' fit did not succeed, cannot plot ', UserWarning)
-
-
-def plot_fit_lifetime_chi2(fc : FitCollection):
-
-    if fc.fr.valid:
-        par  = fc.fr.par
-        err  = fc.fr.err
-        x = fc.fp2.x
-        y = fc.fp2.y
-        yu = fc.fp2.yu
-        xu = fc.fp2.xu
-        f = fc.fp2.f
-
-        lims = (x[0] - np.diff(x)[0] / 2, x[-1] + np.diff(x)[0] / 2)
-
-        plt.errorbar(x, (f(x) - y) / yu, 1, xu[0], fmt="p", c="k")
-        plt.plot(lims, (0, 0), "g--")
-        plt.xlim(*lims)
-        plt.ylim(-5, +5)
-        plt.xlabel("Z")
-
-        plt.title(f'chi2')
-    else:
-        warnings.warn(f' fit did not succeed, cannot plot ', UserWarning)
-
-
-def print_fit_lifetime(fc : FitCollection):
-
-    if fc.fr.valid:
-        par  = fc.fr.par
-        err  = fc.fr.err
-        print(f' Ez0     = {par[0]} +-{err[0]} ')
-        print(f' LT      = {par[1]} +-{err[1]} ')
-        print(f' chi2    = {fc.fr.chi2} ')
-    else:
-        warnings.warn(f' fit did not succeed, cannot print ', UserWarning)
-
-
 def pars_from_fcs(fcs : List[FitCollection])->Tuple[List[Measurement],
                                                     List[Measurement],
                                                     np.array]:
@@ -275,20 +213,20 @@ def pars_from_fcs(fcs : List[FitCollection])->Tuple[List[Measurement],
     return E, LT, np.array(C2)
 
 # Fitting maps
-def fit_map(selection_map : Dict[int, List[KrEvent]],
-            event_map     : DataFrame,
-            n_time_bins   : int,
-            time_diffs    : np.array,
-            nbins_z       : int,
-            nbins_e       : int,
-            range_z       : Tuple[float, float],
-            range_e       : Tuple[float, float],
-            range_chi2    : Tuple[float, float],
-            range_lt      : Tuple[float, float],
-            energy        : str                 = 'S2e',
-            fit           : FitType             = FitType.profile,
-            verbose       : bool                = False,
-            n_min         : int                 = 100)->Dict[int, List[FitParTS]]:
+def fit_map_rphi(selection_map : Dict[int, List[KrEvent]],
+                 event_map     : DataFrame,
+                 n_time_bins   : int,
+                 time_diffs    : np.array,
+                 nbins_z       : int,
+                 nbins_e       : int,
+                 range_z       : Tuple[float, float],
+                 range_e       : Tuple[float, float],
+                 range_chi2    : Tuple[float, float],
+                 range_lt      : Tuple[float, float],
+                 energy        : str                 = 'S2e',
+                 fit           : FitType             = FitType.profile,
+                 verbose       : bool                = False,
+                 n_min         : int                 = 100)->Dict[int, List[FitParTS]]:
 
     fMAP = {}
     nsectors = len(selection_map.keys())
@@ -365,28 +303,28 @@ def fit_fcs_in_xy_bin (xybin         : Tuple[int, int],
         return FitParTS(ts, dum, dum, dum, dum, dum)
 
 
-def fit_fcs_in_sectors(sector        : int,
-                       selection_map : Dict[int, List[KrEvent]],
-                       event_map     : DataFrame,
-                       n_time_bins   : int,
-                       time_diffs    : np.array,
-                       nbins_z       : int,
-                       nbins_e       : int,
-                       range_z       : Tuple[float, float],
-                       range_e       : Tuple[float, float],
-                       energy        : str                 = 'S2e',
-                       fit           : FitType             = FitType.profile,
-                       n_min         : int                 = 100)->List[FitParTS]:
-    """Returns fits in Rphi sectors specified by KRES"""
+def fit_fcs_in_rphi_sectors(sector        : int,
+                            selection_map : Dict[int, List[KrEvent]],
+                            event_map     : DataFrame,
+                            n_time_bins   : int,
+                            time_diffs    : np.array,
+                            nbins_z       : int,
+                            nbins_e       : int,
+                            range_z       : Tuple[float, float],
+                            range_e       : Tuple[float, float],
+                            energy        : str                 = 'S2e',
+                            fit           : FitType             = FitType.profile,
+                            n_min         : int                 = 100)->List[FitParTS]:
+    """Returns fits in phi wedges for a given radial sector"""
 
     wedges    =[len(kre) for kre in selection_map.values() ]  # number of wedges per sector
-    tlast     = time_difs[-1]
-    ts, masks =  get_time_series(n_time_bins, tlast, selection_map)
+    tlast     = time_diffs[-1]
 
     fps =[]
     for i in range(wedges[sector]):
         if event_map[sector][i] > n_min:
             logging.debug(f'fitting sector/wedge ({sector},{i}) with {event_map[sector][i]} events')
+            ts, masks =  get_time_series(n_time_bins, tlast, selection_map[sector][i])
 
             fp  = time_fcs(ts, masks, selection_map[sector][i],
                            nbins_z, nbins_e, range_z, range_e, energy, fit)
@@ -527,14 +465,3 @@ def lt_params_from_fcs(fcs : Iterable[FitCollection])->Iterable[float]:
     ults  = np.array([fc.fr.err[1] for fc in fcs])
     chi2s = np.array([fc.fr.chi2   for fc in fcs])
     return e0s, ue0s, lts, ults, chi2s
-
-
-def plot_fit_lifetime_and_chi2(fc : FitCollection, figsize=(10,10)):
-    fig = plt.figure(figsize=figsize)
-    ax      = fig.add_subplot(1, 2, 1)
-    plot_fit_lifetime(fc)
-
-    ax      = fig.add_subplot(1, 2, 2)
-    plot_fit_lifetime_chi2(fc)
-
-    plt.tight_layout()

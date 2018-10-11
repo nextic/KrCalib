@@ -9,9 +9,77 @@ from . histo_functions import plot_histo
 from . core_functions  import value_from_measurement
 from . kr_types        import PlotLabels
 from . kr_types        import FitParTS, FitParFB
+from . kr_types        import FitCollection
 from   invisible_cities.evm.ic_containers  import Measurement
 from typing  import Dict, List, Tuple, Sequence, Iterable
 
+def plot_fit_lifetime(fc : FitCollection):
+    if fc.fr.valid:
+        par  = fc.fr.par
+        err  = fc.fr.err
+
+        if fc.hp:
+            plt.hist2d(fc.hp.var,
+                        fc.hp.var2,
+                        bins = (fc.hp.nbins,fc.hp.nbins2),
+                        range= (fc.hp.range,fc.hp.range2))
+        x = fc.fp.x
+        y = fc.fp.y
+        xu = fc.fp.xu
+        yu = fc.fp.yu
+        f = fc.fp.f
+
+        plt.errorbar(x, y, yu, xu[0], fmt="kp", ms=7, lw=3)
+        plt.plot(x, f(x), "r-", lw=4)
+        plt.xlabel('Z')
+        plt.ylabel('E')
+        plt.title(f'Ez0 ={par[0]:7.2f}+-{err[0]:7.3f},   LT={par[1]:7.2f}+-{err[1]:7.3f}')
+    else:
+        warnings.warn(f' fit did not succeed, cannot plot ', UserWarning)
+
+
+def plot_fit_lifetime_chi2(fc : FitCollection):
+    if fc.fr.valid:
+        par  = fc.fr.par
+        err  = fc.fr.err
+        x = fc.fp2.x
+        y = fc.fp2.y
+        yu = fc.fp2.yu
+        xu = fc.fp2.xu
+        f = fc.fp2.f
+
+        lims = (x[0] - np.diff(x)[0] / 2, x[-1] + np.diff(x)[0] / 2)
+
+        plt.errorbar(x, (f(x) - y) / yu, 1, xu[0], fmt="p", c="k")
+        plt.plot(lims, (0, 0), "g--")
+        plt.xlim(*lims)
+        plt.ylim(-5, +5)
+        plt.xlabel("Z")
+
+        plt.title(f'chi2')
+    else:
+        warnings.warn(f' fit did not succeed, cannot plot ', UserWarning)
+
+
+def print_fit_lifetime(fc : FitCollection):
+    if fc.fr.valid:
+        par  = fc.fr.par
+        err  = fc.fr.err
+        print(f' Ez0     = {par[0]} +-{err[0]} ')
+        print(f' LT      = {par[1]} +-{err[1]} ')
+        print(f' chi2    = {fc.fr.chi2} ')
+    else:
+        warnings.warn(f' fit did not succeed, cannot print ', UserWarning)
+
+
+def plot_fit_lifetime_and_chi2(fc : FitCollection, figsize=(10,10)):
+    fig = plt.figure(figsize=figsize)
+    ax      = fig.add_subplot(1, 2, 1)
+    plot_fit_lifetime(fc)
+    ax      = fig.add_subplot(1, 2, 2)
+    plot_fit_lifetime_chi2(fc)
+    plt.tight_layout()
+    
 
 def histo_lt_params_and_pulls(e0, lt, e0s, ue0s, lts, ults,
                               bin_e0s    = 50,
