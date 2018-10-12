@@ -231,7 +231,7 @@ def add_map_values_to_axis_(W       :  Dict[int, List[KrSector]],
     return p
 
 
-def draw_maps_rphi(W       : Dict[int, List[KrSector]],
+def draw_rphi_maps(W       : Dict[int, List[KrSector]],
                    aMap    : ASectorMap,
                    e0lims   : Optional[Tuple[float, float]] = None,
                    ltlims   : Optional[Tuple[float, float]] = None,
