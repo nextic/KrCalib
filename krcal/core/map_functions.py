@@ -347,13 +347,12 @@ def relative_errors(am : ASectorMap)->ASectorMap:
 
 def regularize_maps(amap    : ASectorMap,
                     erange  : Tuple[float, float] = (2000, 14000),
-                    ltrange : Tuple[float, float] = (500,5000),
-                    debug   : bool = False)->ASectorMap:
+                    ltrange : Tuple[float, float] = (500,5000))->ASectorMap:
 
-    OL   = find_outliers(amap.e0, xr=erange, debug=debug)
+    OL   = find_outliers(amap.e0, xr=erange)
     me0  = set_outliers_to_nan(amap.e0, OL)
     me0u = set_outliers_to_nan(amap.e0u, OL)
-    OL   = find_outliers(amap.lt, xr=ltrange, debug=debug)
+    OL   = find_outliers(amap.lt, xr=ltrange)
     mlt  = set_outliers_to_nan(amap.lt, OL)
     mltu = set_outliers_to_nan(amap.ltu, OL)
     return ASectorMap(chi2  = amap.chi2,
@@ -372,12 +371,10 @@ def set_outliers_to_nan(dfmap : DataFrame, OL : Dict[int, List[int]])->DataFrame
 
 
 def find_outliers(dfmap : DataFrame,
-                  xr    : Tuple[float,float],
-                  debug : bool  = False)->Dict[int, List[int]]:
+                  xr    : Tuple[float,float])->Dict[int, List[int]]:
     OL = {}
     v = (xr[1] + xr[0]) / 2
-    if debug:
-        print(f' set nans to average value of interval = {v}')
+    logging.info(f' set nans to average value of interval = {v}')
     newmap = (dfmap.copy()).fillna(v)
     for i in newmap.columns:
         ltc = newmap[i]
@@ -385,9 +382,7 @@ def find_outliers(dfmap : DataFrame,
         lst = list(gltc[gltc==False].index)
         if len(lst) > 0:
             OL[i] = lst
-            if debug:
-                print(f'column {i}')
+            logging.debug(f'column {i}')
             for il in lst:
-                if debug:
-                    print(f'outlier found, index = {il}, value ={ltc[il]}')
+                logging.debug(f'outlier found, index = {il}, value ={ltc[il]}')
     return OL
