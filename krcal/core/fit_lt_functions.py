@@ -220,23 +220,21 @@ def fit_map_rphi(selection_map : Dict[int, List[KrEvent]],
                  nbins_z       : int,
                  nbins_e       : int,
                  range_z       : Tuple[float, float],
-                 range_e       : Tuple[float, float],
-                 range_chi2    : Tuple[float, float],
-                 range_lt      : Tuple[float, float],
+                 range_e      : Tuple[float, float],
                  energy        : str                 = 'S2e',
                  fit           : FitType             = FitType.profile,
-                 verbose       : bool                = False,
                  n_min         : int                 = 100)->Dict[int, List[FitParTS]]:
 
+    logging.debug(f'function: fit_map_rphi')
     fMAP = {}
     nsectors = len(selection_map.keys())
     for sector in range(nsectors):
         logging.debug(f'Fitting sector {sector}')
 
-        fps = fit_fcs_in_sectors(sector, selection_map, event_map, n_time_bins, time_diffs,
+        fps = fit_fcs_in_rphi_sectors(sector, selection_map, event_map, n_time_bins, time_diffs,
                                  nbins_z, nbins_e, range_z, range_e, energy, fit, n_min)
-        if verbose:
-            logging.debug(f' number of wedges fitted in sector {len(fps)}')
+
+        logging.debug(f' number of wedges fitted in sector {len(fps)}')
 
         fMAP[sector] = fps
 
