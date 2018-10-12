@@ -289,7 +289,7 @@ def draw_rphi_maps(W       : Dict[int, List[KrSector]],
     plt.show()
 
 
-def draw_map_rphi(W       : Dict[int, List[KrSector]],
+def draw_rphi_map(W       : Dict[int, List[KrSector]],
                   aMap    : DataFrame,
                   alims   : Optional[Tuple[float, float]] = None,
                   title   : str                           = 'E',
@@ -315,7 +315,7 @@ def draw_map_rphi(W       : Dict[int, List[KrSector]],
     plt.show()
 
 
-def draw_maps_rphi_ts(W       : Dict[int, List[KrSector]],
+def draw_rphi_maps_ts(W       : Dict[int, List[KrSector]],
                      aMaps   : List[ASectorMap],
                      wmap    : MapType                       = MapType.LT,
                      ltlims  : Optional[Tuple[float, float]] = None,
