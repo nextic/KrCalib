@@ -103,8 +103,8 @@ def draw_xy_map(aMap    : ASectorMap,
                 wmap    : MapType,
                 norm    : float                         = 1,
                 alims   : Optional[Tuple[float, float]] = None,
-                cmap    :  Colormap                      = matplotlib.cm.viridis,
-                figsize : Tuple[float, float]            = (14,10)):
+                cmap    : Optional[Colormap]            = None,
+                figsize : Tuple[float, float]           = (14,10)):
     """
     draw a specific map defined by parameter wmap.
 
