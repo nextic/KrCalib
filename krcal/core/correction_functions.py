@@ -176,8 +176,6 @@ def lt_correction(E    : np.array,
     return E * np.exp(Z / LT)
 
 
-
-
 def lt_correction_ts(kh     : KrEvent,
                      tts    : Series,
                      tsMaps : Dict[int, ASectorMap],
@@ -216,10 +214,6 @@ def lt_correction_ts(kh     : KrEvent,
 
         CLT = CLTs[j]
         I = get_rphi_indexes(kct.R, kct.Phi, fr, fphi)
-        #print(j)
-        #print(CLT)
-
-
         LT = np.array([CLT[i[0]][i[1]] for i in I])
 
         #print(kct.E[0:10])
@@ -292,16 +286,12 @@ def e0_correction_ts(kh     : KrEvent,
     #print(f'len(kcts) ={len(kcts)}, len(CLTs) = {len(CLTs)}')
     EE = []
     for j, kct in enumerate(kcts):
-        print(f'time sector {j}')
+        logging.debug(f'time sector {j}')
 
         CLT = CLTs[j]
         mu = (CLT.mean()).mean()
         CE = CLT / mu
         I = get_rphi_indexes(kct.R, kct.Phi, fr, fphi)
-        #print(j)
-        #print(CLT)
-
-
         ce = np.array([CE[i[0]][i[1]] for i in I])
 
         #print(kct.E[0:10])
