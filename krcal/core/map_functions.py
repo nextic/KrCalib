@@ -1,28 +1,30 @@
-import matplotlib.pyplot as plt
+"""Module map_functions.
+This module includes functions to manipulate maps.
 
-from matplotlib.patches      import Circle, Wedge, Polygon
-from matplotlib.collections  import PatchCollection
-from matplotlib.colors       import Colormap
-from matplotlib.axes         import Axes
+Notes
+-----
+    KrCalib code depends on the IC library.
+    Public functions are documented using numpy style convention
+
+Documentation
+-------------
+    Insert documentation https
+"""
+
+import matplotlib.pyplot as plt
 
 import numpy as np
 import pandas as pd
-import seaborn as sns
-import matplotlib
 
 from pandas import DataFrame
-
-from   invisible_cities.evm.ic_containers  import Measurement
 
 from . stat_functions import  mean_and_std
 from . core_functions import  NN
 
-from . kr_types        import RPhiMapDef
-from . kr_types        import PlotLabels
-from . kr_types        import KrSector, KrEvent
-from . kr_types        import FitType, MapType
 from . kr_types        import FitParTS
-from . kr_types        import ASectorMap, SectorMapTS, FitMapValue
+from . kr_types        import ASectorMap
+from . kr_types        import SectorMapTS
+from . kr_types        import FitMapValue
 
 from typing            import List, Tuple, Dict, Sequence, Iterable
 from typing            import Optional
@@ -32,10 +34,42 @@ import logging
 log = logging.getLogger()
 
 
-def tsmap_from_fmap(fMap    : Dict[int, List[FitParTS]]) ->SectorMapTS:
+def tsmap_from_fmap(fMap : Dict[int, List[FitParTS]])->SectorMapTS:
+    """
+    Obtain a time-series of maps (tsmap) from a fit-map (fmap).
 
+    Parameters
+    ----------
+    fMap
+        A Dictionary (key = R sector for Rphi maps, X for XYmaps) containing a list of FitParTS
+        (list runs over Phi wedges for RPhi maps, Y for Ymaps)
+        class ASectorMap:
+            chi2  : DataFrame
+            e0    : DataFrame
+            lt    : DataFrame
+            e0u   : DataFrame
+            ltu   : DataFrame
+
+            class FitParTS:
+                ts   : np.array -> contains the time series (integers expressing time differences)
+                e0   : np.array ->e0 fitted in time series
+                lt   : np.array
+                c2   : np.array
+                e0u  : np.array
+                ltu  : np.array
+
+    Returns
+    -------
+    SectorMapTS : Maps in chamber sector containing time series of parameters
+        class SectorMapTS:
+            chi2  : Dict[int, List[np.array]]
+            e0    : Dict[int, List[np.array]]
+            lt    : Dict[int, List[np.array]]
+            e0u   : Dict[int, List[np.array]]
+            ltu   : Dict[int, List[np.array]]
+
+    """
     logging.debug(f' --tsmap_from_fmap')
-
     tmChi2  = {}
     tmE0    = {}
     tmLT    = {}
@@ -65,33 +99,58 @@ def tsmap_from_fmap(fMap    : Dict[int, List[FitParTS]]) ->SectorMapTS:
 
 
 def amap_from_tsmap(tsMap      : SectorMapTS,
-                    ts         : int  = 0,       # if negative take the average
+                    ts         : int  = 0,
                     range_e    : Tuple[float, float] = (5000, 13000),
                     range_chi2 : Tuple[float, float] = (0,3),
                     range_lt   : Tuple[float, float] = (1800, 3000)) ->ASectorMap:
+    """
+    Obtain the correction maps for time bin ts.
+
+    Parameters
+    ----------
+    tsMap
+        A SectorMapTS : Maps in chamber sector containing time series of parameters
+        class SectorMapTS:
+            chi2  : Dict[int, List[np.array]]
+            e0    : Dict[int, List[np.array]]
+            lt    : Dict[int, List[np.array]]
+            e0u   : Dict[int, List[np.array]]
+            ltu   : Dict[int, List[np.array]]
+    ts
+        time bin (an integer starting at 0: if -1 take the average of the series).
+    range_e
+        Defines the range of e in pes (e.g, (8000,14000)).
+    range_chi2
+        Defines the range of chi2
+    range_lt
+        Defines the range of lt in mus.
+
+    Returns
+    -------
+    A container of maps ASectorMap
+        class ASectorMap:
+            chi2  : DataFrame
+            e0    : DataFrame
+            lt    : DataFrame
+            e0u   : DataFrame
+            ltu   : DataFrame
+
+    """
 
     def fill_map_ts(tsm : Dict[int, List[float]], ts : int):
         M = {}
         for sector, w in tsm.items():
             M[sector] = [v[ts] for v in w]
-
         return M
 
     def fill_maps_av(tsm : Dict[int, List[float]], range_v : Tuple[float, float]):
         M  = {}
         Mu = {}
         for sector, w in tsm.items():
-            #print(f'sector = {sector}')
-            #print(f'w = {w}')
             T = [mean_and_std(v, range_v) for v in w]
             P = list(zip(*T))
-            #print(f'T = {T}')
-            #print(f'P = {P}')
-
-            #print(P[0])
             M[sector] = P[0]
             Mu[sector] = P[1]
-
         return M, Mu
 
     if ts >=0:
@@ -113,6 +172,25 @@ def amap_from_tsmap(tsMap      : SectorMapTS,
 
 
 def map_average(aMaps : List[ASectorMap])->ASectorMap:
+    """
+    Compute average maps from a list of maps.
+
+    Parameters
+    ----------
+    aMaps
+        A list of containers of maps (a list of ASectorMap)
+    class ASectorMap:
+        chi2  : DataFrame
+        e0    : DataFrame
+        lt    : DataFrame
+        e0u   : DataFrame
+        ltu   : DataFrame
+
+    Returns
+    -------
+    The average ASectorMap
+
+    """
     mapAV = aMaps[0]
     chi2 = mapAV.chi2
     e0   = mapAV.e0
@@ -134,14 +212,44 @@ def map_average(aMaps : List[ASectorMap])->ASectorMap:
                        ltu/ len(aMaps))
 
 
-def get_maps_from_tsmap(tsm     : Dict[int, List[float]],
+def get_maps_from_tsmap(tsm     : SectorMapTS,
                         times   : np.array,
                         erange  : Tuple[float, float] = (2000, 14000),
                         ltrange : Tuple[float, float] = (500,5000),
-                        c2range : Tuple[float, float] = (0,3),
-                        debug   : bool                = False)->List[ASectorMap]:
-    """Extracts maps for each time tranch, regularizes the maps and sets relative errors"""
+                        c2range : Tuple[float, float] = (0,3))->List[ASectorMap]:
+    """
+    Obtain the correction maps for each time tranch, regularizes the maps and sets relative errors.
 
+    Parameters
+    ----------
+    tsm
+        A SectorMapTS : Maps in chamber sector containing time series of parameters
+        class SectorMapTS:
+            chi2  : Dict[int, List[np.array]]
+            e0    : Dict[int, List[np.array]]
+            lt    : Dict[int, List[np.array]]
+            e0u   : Dict[int, List[np.array]]
+            ltu   : Dict[int, List[np.array]]
+    times
+        an np.array describing the time series.
+    erange
+        Defines the range of e in pes (e.g, (8000,14000)).
+    c2range
+        Defines the range of chi2
+    ltrange
+        Defines the range of lt in mus.
+
+    Returns
+    -------
+    A list of ASectorMap
+        class ASectorMap:
+            chi2  : DataFrame
+            e0    : DataFrame
+            lt    : DataFrame
+            e0u   : DataFrame
+            ltu   : DataFrame
+
+    """
     aMaps = []
     for i, _ in enumerate(times):
         am = amap_from_tsmap(tsm,
@@ -210,7 +318,6 @@ def amap_replace_nan_by_zero(amap : ASectorMap)->ASectorMap:
                       lt    = amap.lt.copy().fillna(0),
                       e0u   = amap.e0u.copy().fillna(0),
                       ltu   = amap.ltu.copy().fillna(0))
-
 
 
 def amap_valid_fraction(vmask: ASectorMap)->FitMapValue:
