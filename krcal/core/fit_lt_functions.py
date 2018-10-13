@@ -6,7 +6,7 @@ import warnings
 
 from   pandas.core.frame import DataFrame
 from typing  import Dict, List, Tuple, Sequence, Iterable, Optional
-
+from numpy.linalg import LinAlgError
 
 from   invisible_cities.core.core_functions import in_range
 from   invisible_cities.evm  .ic_containers  import Measurement
@@ -180,9 +180,16 @@ def fit_lifetime_unbined(z       : np.array,
         fp2 = FitPar(x  = xs, y  = ys, xu = xus, yu = yus, f  = lambda z: a * xs + b)
 
     except ValueError:
-        print(f'Value Error found in fit_lifetime_unbined')
+        logging.warn(f'Value Error found in fit_lifetime_unbined: not enough events for fit')
         valid = False
 
+    except TypeError:
+        logging.warn(f'Type error found in fit_lifetime_unbined: not enough events for fit')
+        valid = False
+
+    except LinAlgError:
+        logging.warn(f'LinAlgError error found in fit_lifetime_unbined: not enough events for fit')
+        valid = False
 
     fr = FitResult(par = par,
                    err = err,
@@ -400,13 +407,16 @@ def time_fcs(ts      : np.array,
                    for i, mask in enumerate(masks)]
 
     if energy == 'S2e':
+        #print('S2e')
         fcs =[fit_lifetime(kct.Z, kct.S2e,
                            nbins_z, nbins_e, range_z, range_e, fit) for kct in kcts]
     else:
+        #print('E')
         fcs =[fit_lifetime(kct.Z, kct.E,
                            nbins_z, nbins_e, range_z, range_e, fit) for kct in kcts]
 
     e0s, lts, c2s = pars_from_fcs(fcs)
+    #print(value_from_measurement(e0s))
     return FitParTS(ts  = np.array(ts),
                     e0  = value_from_measurement(e0s),
                     lt  = value_from_measurement(lts),
