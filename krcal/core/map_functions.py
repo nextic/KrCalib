@@ -1,28 +1,30 @@
-import matplotlib.pyplot as plt
+"""Module map_functions.
+This module includes functions to manipulate maps.
 
-from matplotlib.patches      import Circle, Wedge, Polygon
-from matplotlib.collections  import PatchCollection
-from matplotlib.colors       import Colormap
-from matplotlib.axes         import Axes
+Notes
+-----
+    KrCalib code depends on the IC library.
+    Public functions are documented using numpy style convention
+
+Documentation
+-------------
+    Insert documentation https
+"""
+
+import matplotlib.pyplot as plt
 
 import numpy as np
 import pandas as pd
-import seaborn as sns
-import matplotlib
 
 from pandas import DataFrame
-
-from   invisible_cities.evm.ic_containers  import Measurement
 
 from . stat_functions import  mean_and_std
 from . core_functions import  NN
 
-from . kr_types        import RPhiMapDef
-from . kr_types        import PlotLabels
-from . kr_types        import KrSector, KrEvent
-from . kr_types        import FitType, MapType
 from . kr_types        import FitParTS
-from . kr_types        import ASectorMap, SectorMapTS, FitMapValue
+from . kr_types        import ASectorMap
+from . kr_types        import SectorMapTS
+from . kr_types        import FitMapValue
 
 from typing            import List, Tuple, Dict, Sequence, Iterable
 from typing            import Optional
@@ -32,10 +34,42 @@ import logging
 log = logging.getLogger()
 
 
-def tsmap_from_fmap(fMap    : Dict[int, List[FitParTS]]) ->SectorMapTS:
+def tsmap_from_fmap(fMap : Dict[int, List[FitParTS]])->SectorMapTS:
+    """
+    Obtain a time-series of maps (tsmap) from a fit-map (fmap).
 
+    Parameters
+    ----------
+    fMap
+        A Dictionary (key = R sector for Rphi maps, X for XYmaps) containing a list of FitParTS
+        (list runs over Phi wedges for RPhi maps, Y for Ymaps)
+        class ASectorMap:
+            chi2  : DataFrame
+            e0    : DataFrame
+            lt    : DataFrame
+            e0u   : DataFrame
+            ltu   : DataFrame
+
+            class FitParTS:
+                ts   : np.array -> contains the time series (integers expressing time differences)
+                e0   : np.array ->e0 fitted in time series
+                lt   : np.array
+                c2   : np.array
+                e0u  : np.array
+                ltu  : np.array
+
+    Returns
+    -------
+    SectorMapTS : Maps in chamber sector containing time series of parameters
+        class SectorMapTS:
+            chi2  : Dict[int, List[np.array]]
+            e0    : Dict[int, List[np.array]]
+            lt    : Dict[int, List[np.array]]
+            e0u   : Dict[int, List[np.array]]
+            ltu   : Dict[int, List[np.array]]
+
+    """
     logging.debug(f' --tsmap_from_fmap')
-
     tmChi2  = {}
     tmE0    = {}
     tmLT    = {}
@@ -65,33 +99,58 @@ def tsmap_from_fmap(fMap    : Dict[int, List[FitParTS]]) ->SectorMapTS:
 
 
 def amap_from_tsmap(tsMap      : SectorMapTS,
-                    ts         : int  = 0,       # if negative take the average
+                    ts         : int  = 0,
                     range_e    : Tuple[float, float] = (5000, 13000),
                     range_chi2 : Tuple[float, float] = (0,3),
                     range_lt   : Tuple[float, float] = (1800, 3000)) ->ASectorMap:
+    """
+    Obtain the correction maps for time bin ts.
+
+    Parameters
+    ----------
+    tsMap
+        A SectorMapTS : Maps in chamber sector containing time series of parameters
+        class SectorMapTS:
+            chi2  : Dict[int, List[np.array]]
+            e0    : Dict[int, List[np.array]]
+            lt    : Dict[int, List[np.array]]
+            e0u   : Dict[int, List[np.array]]
+            ltu   : Dict[int, List[np.array]]
+    ts
+        time bin (an integer starting at 0: if -1 take the average of the series).
+    range_e
+        Defines the range of e in pes (e.g, (8000,14000)).
+    range_chi2
+        Defines the range of chi2
+    range_lt
+        Defines the range of lt in mus.
+
+    Returns
+    -------
+    A container of maps ASectorMap
+        class ASectorMap:
+            chi2  : DataFrame
+            e0    : DataFrame
+            lt    : DataFrame
+            e0u   : DataFrame
+            ltu   : DataFrame
+
+    """
 
     def fill_map_ts(tsm : Dict[int, List[float]], ts : int):
         M = {}
         for sector, w in tsm.items():
             M[sector] = [v[ts] for v in w]
-
         return M
 
     def fill_maps_av(tsm : Dict[int, List[float]], range_v : Tuple[float, float]):
         M  = {}
         Mu = {}
         for sector, w in tsm.items():
-            #print(f'sector = {sector}')
-            #print(f'w = {w}')
             T = [mean_and_std(v, range_v) for v in w]
             P = list(zip(*T))
-            #print(f'T = {T}')
-            #print(f'P = {P}')
-
-            #print(P[0])
             M[sector] = P[0]
             Mu[sector] = P[1]
-
         return M, Mu
 
     if ts >=0:
@@ -113,6 +172,25 @@ def amap_from_tsmap(tsMap      : SectorMapTS,
 
 
 def map_average(aMaps : List[ASectorMap])->ASectorMap:
+    """
+    Compute average maps from a list of maps.
+
+    Parameters
+    ----------
+    aMaps
+        A list of containers of maps (a list of ASectorMap)
+    class ASectorMap:
+        chi2  : DataFrame
+        e0    : DataFrame
+        lt    : DataFrame
+        e0u   : DataFrame
+        ltu   : DataFrame
+
+    Returns
+    -------
+    The average ASectorMap
+
+    """
     mapAV = aMaps[0]
     chi2 = mapAV.chi2
     e0   = mapAV.e0
@@ -134,14 +212,44 @@ def map_average(aMaps : List[ASectorMap])->ASectorMap:
                        ltu/ len(aMaps))
 
 
-def get_maps_from_tsmap(tsm     : Dict[int, List[float]],
+def get_maps_from_tsmap(tsm     : SectorMapTS,
                         times   : np.array,
                         erange  : Tuple[float, float] = (2000, 14000),
                         ltrange : Tuple[float, float] = (500,5000),
-                        c2range : Tuple[float, float] = (0,3),
-                        debug   : bool                = False)->List[ASectorMap]:
-    """Extracts maps for each time tranch, regularizes the maps and sets relative errors"""
+                        c2range : Tuple[float, float] = (0,3))->List[ASectorMap]:
+    """
+    Obtain the correction maps for each time tranch, regularizes the maps and sets relative errors.
 
+    Parameters
+    ----------
+    tsm
+        A SectorMapTS : Maps in chamber sector containing time series of parameters
+        class SectorMapTS:
+            chi2  : Dict[int, List[np.array]]
+            e0    : Dict[int, List[np.array]]
+            lt    : Dict[int, List[np.array]]
+            e0u   : Dict[int, List[np.array]]
+            ltu   : Dict[int, List[np.array]]
+    times
+        an np.array describing the time series.
+    erange
+        Defines the range of e in pes (e.g, (8000,14000)).
+    c2range
+        Defines the range of chi2
+    ltrange
+        Defines the range of lt in mus.
+
+    Returns
+    -------
+    A list of ASectorMap
+        class ASectorMap:
+            chi2  : DataFrame
+            e0    : DataFrame
+            lt    : DataFrame
+            e0u   : DataFrame
+            ltu   : DataFrame
+
+    """
     aMaps = []
     for i, _ in enumerate(times):
         am = amap_from_tsmap(tsm,
@@ -212,7 +320,6 @@ def amap_replace_nan_by_zero(amap : ASectorMap)->ASectorMap:
                       ltu   = amap.ltu.copy().fillna(0))
 
 
-
 def amap_valid_fraction(vmask: ASectorMap)->FitMapValue:
 
     def count_valid(df):
@@ -240,13 +347,12 @@ def relative_errors(am : ASectorMap)->ASectorMap:
 
 def regularize_maps(amap    : ASectorMap,
                     erange  : Tuple[float, float] = (2000, 14000),
-                    ltrange : Tuple[float, float] = (500,5000),
-                    debug   : bool = False)->ASectorMap:
+                    ltrange : Tuple[float, float] = (500,5000))->ASectorMap:
 
-    OL   = find_outliers(amap.e0, xr=erange, debug=debug)
+    OL   = find_outliers(amap.e0, xr=erange)
     me0  = set_outliers_to_nan(amap.e0, OL)
     me0u = set_outliers_to_nan(amap.e0u, OL)
-    OL   = find_outliers(amap.lt, xr=ltrange, debug=debug)
+    OL   = find_outliers(amap.lt, xr=ltrange)
     mlt  = set_outliers_to_nan(amap.lt, OL)
     mltu = set_outliers_to_nan(amap.ltu, OL)
     return ASectorMap(chi2  = amap.chi2,
@@ -265,12 +371,10 @@ def set_outliers_to_nan(dfmap : DataFrame, OL : Dict[int, List[int]])->DataFrame
 
 
 def find_outliers(dfmap : DataFrame,
-                  xr    : Tuple[float,float],
-                  debug : bool  = False)->Dict[int, List[int]]:
+                  xr    : Tuple[float,float])->Dict[int, List[int]]:
     OL = {}
     v = (xr[1] + xr[0]) / 2
-    if debug:
-        print(f' set nans to average value of interval = {v}')
+    logging.info(f' set nans to average value of interval = {v}')
     newmap = (dfmap.copy()).fillna(v)
     for i in newmap.columns:
         ltc = newmap[i]
@@ -278,306 +382,7 @@ def find_outliers(dfmap : DataFrame,
         lst = list(gltc[gltc==False].index)
         if len(lst) > 0:
             OL[i] = lst
-            if debug:
-                print(f'column {i}')
+            logging.debug(f'column {i}')
             for il in lst:
-                if debug:
-                    print(f'outlier found, index = {il}, value ={ltc[il]}')
+                logging.debug(f'outlier found, index = {il}, value ={ltc[il]}')
     return OL
-
-
-def energy_map(KRES : Dict[int, List[KrEvent]])->DataFrame:
-
-    wedges =[len(kre) for kre in KRES.values() ]  # number of wedges per sector
-    eMap = {}
-
-    for sector in KRES.keys():
-        eMap[sector] = [np.mean(KRES[sector][i].E) for i in range(wedges[sector])]
-    return pd.DataFrame.from_dict(eMap)
-
-
-def add_map_values_to_axis(W       :  Dict[int, List[KrSector]],
-                           M       :  Dict[int, List[float]],
-                           ax      :  Axes,
-                           cmap    :  Colormap,
-                           alpha   :  float,
-                           rmax    :  float,
-                           scale   :  float,
-                           clims   :  Tuple[float, float])->PatchCollection:
-
-    for sector, krws in W.items():
-        wedges = [wedge_from_sector(krw, rmax=rmax, scale=scale) for krw in krws]
-        colors = [M[sector][i] for i in range(len(wedges)) ]
-        #print(colors)
-        p = PatchCollection(wedges, cmap=cmap, alpha=alpha)
-        p.set_array(np.array(colors))
-        ax.add_collection(p)
-        p.set_clim(clims)
-    return p
-
-
-
-def draw_maps(W       : Dict[int, List[KrSector]],
-              aMap    : ASectorMap,
-              e0lims   : Optional[Tuple[float, float]] = None,
-              ltlims   : Optional[Tuple[float, float]] = None,
-              eulims   : Optional[Tuple[float, float]] = None,
-              lulims   : Optional[Tuple[float, float]] = None,
-              cmap    :  Colormap                      = matplotlib.cm.viridis,
-              alpha   : float                          = 1.0,  # level of transparency
-              rmax    : float                          = 200,  # the largest radius
-              scale   : float                          = 0.5,  # needed to fit the map
-              figsize : Tuple[float, float]            = (14,10)):
-
-    def map_minmax(LTM):
-        e0M = LTM.max().max()
-        e0m = LTM.min().min()
-        return e0m, e0M
-
-
-    fig = plt.figure(figsize=figsize) # give plots a rectangular frame
-
-    ax = fig.add_subplot(2,2,1)
-
-
-    if e0lims == None:
-        e0m, e0M = map_minmax(aMap.e0)
-    else:
-        e0m, e0M = e0lims[0], e0lims[1]
-    p = add_map_values_to_axis(W, aMap.e0, ax, cmap, alpha, rmax, scale, clims=(e0m, e0M))
-    fig.colorbar(p, ax=ax)
-    plt.title('e0')
-
-    ax = fig.add_subplot(2,2,2)
-    if eulims == None:
-        e0um, e0uM = map_minmax(aMap.e0u)
-    else:
-        e0um, e0uM = eulims[0], eulims[1]
-    p = add_map_values_to_axis(W, aMap.e0u, ax, cmap, alpha, rmax, scale, clims=(e0um, e0uM))
-    fig.colorbar(p, ax=ax)
-    plt.title('e0u')
-
-    ax = fig.add_subplot(2,2,3)
-    if ltlims == None:
-        ltm, ltM = map_minmax(aMap.lt)
-    else:
-        ltm, ltM = ltlims[0], ltlims[1]
-
-    p = add_map_values_to_axis(W, aMap.lt, ax, cmap, alpha, rmax, scale, clims=(ltm, ltM))
-    fig.colorbar(p, ax=ax)
-    plt.title('LT')
-
-    ax = fig.add_subplot(2,2,4)
-
-    if lulims == None:
-        ltum, ltuM = map_minmax(aMap.ltu)
-    else:
-        ltum, ltuM = lulims[0], lulims[1]
-    p = add_map_values_to_axis(W, aMap.ltu, ax, cmap, alpha, rmax, scale, clims=(ltum, ltuM))
-    fig.colorbar(p, ax=ax)
-    plt.title('LTu')
-    plt.show()
-
-
-def draw_map(W       : Dict[int, List[KrSector]],
-             aMap    : DataFrame,
-             alims   : Optional[Tuple[float, float]] = None,
-             title   : str                           = 'E',
-             cmap    :  Colormap                      = matplotlib.cm.viridis,
-             alpha   : float                          = 1.0,  # level of transparency
-             rmax    : float                          = 200,  # the largest radius
-             scale   : float                          = 0.5,  # needed to fit the map
-             figsize : Tuple[float, float]            = (14,10)):
-
-
-    fig = plt.figure(figsize=figsize) # give plots a rectangular frame
-
-    ax = fig.add_subplot(1,1,1)
-    if alims == None:
-        e0M = aMap.max().max()
-        e0m = aMap.min().min()
-    else:
-        e0m, e0M = alims[0], alims[1]
-    p = add_map_values_to_axis(W, aMap, ax, cmap, alpha, rmax, scale, clims=(e0m, e0M))
-    fig.colorbar(p, ax=ax)
-    plt.title(title)
-    plt.tight_layout()
-    plt.show()
-
-
-def draw_maps_ts(W       : Dict[int, List[KrSector]],
-                 aMaps   : List[ASectorMap],
-                 wmap    : MapType                       = MapType.LT,
-                 ltlims  : Optional[Tuple[float, float]] = None,
-                 ixy     : Optional[Tuple[float, float]] = None,
-                 cmap    :  Colormap                      = matplotlib.cm.viridis,
-                 alpha   : float                          = 1.0,  # level of transparency
-                 rmax    : float                          = 200,  # the largest radius
-                 scale   : float                          = 0.5,  # needed to fit the map
-                 figsize : Tuple[float, float]            = (14,10)):
-
-    fig = plt.figure(figsize=figsize)
-    if ixy == None:
-        if len(aMaps)%2 == 0:
-            ix = len(aMaps) / 2
-            iy = len(aMaps) / 2
-        else:
-            ix = len(aMaps) + 1 / 2
-            iy = len(aMaps) + 1 / 2
-    else:
-        ix = ixy[0]
-        iy = ixy[1]
-    for i, aMap in enumerate(aMaps):
-        ax = fig.add_subplot(ix,iy,i+1)
-        ltmap, title = which_map(aMap, wmap, index = i)
-
-        # if wmap == MapType.LT:
-        #     title = f'LT : ts = {i}'
-        #     ltmap = aMap.lt
-        # elif wmap == MapType.LTu:
-        #     title = f'LTu : ts = {i}'
-        #     ltmap = aMap.ltu
-        # elif wmap == MapType.E0:
-        #     title = f'E0 : ts = {i}'
-        #     ltmap = aMap.e0
-        # elif wmap == MapType.E0u:
-        #     title = f'E0u : ts = {i}'
-        #     ltmap = aMap.E0u
-        # else:
-        #     title = f'Chi2 : ts = {i}'
-        #     ltmap = aMap.chi2
-
-        if ltlims == None:
-            e0M = ltmap.max().max()
-            e0m = ltmap.min().min()
-        else:
-            e0m, e0M = ltlims[0], ltlims[1]
-        p = add_map_values_to_axis(W, ltmap, ax, cmap, alpha, rmax, scale, clims=(e0m, e0M))
-        fig.colorbar(p, ax=ax)
-        plt.title(title)
-    plt.tight_layout()
-    plt.show()
-
-
-def draw_xy_maps(aMap    : ASectorMap,
-                e0lims   : Optional[Tuple[float, float]] = None,
-                ltlims   : Optional[Tuple[float, float]] = None,
-                eulims   : Optional[Tuple[float, float]] = None,
-                lulims   : Optional[Tuple[float, float]] = None,
-                cmap    :  Optional[Colormap]            = None,
-                figsize : Tuple[float, float]            = (14,10)):
-
-    def vmin_max(lims):
-        if lims == None:
-            vmin = None
-            vmax = None
-        else:
-            vmin=lims[0]
-            vmax=lims[1]
-        return vmin, vmax
-
-    fig = plt.figure(figsize=figsize)
-
-
-    ax = fig.add_subplot(2,2,1)
-    vmin, vmax = vmin_max(e0lims)
-    sns.heatmap(aMap.e0.fillna(0), vmin=vmin, vmax=vmax, cmap=cmap, square=True)
-
-    ax = fig.add_subplot(2,2,2)
-    vmin, vmax = vmin_max(eulims)
-    sns.heatmap(aMap.e0u.fillna(0), vmin=vmin, vmax=vmax, cmap=cmap, square=True)
-
-    ax = fig.add_subplot(2,2,3)
-    vmin, vmax = vmin_max(ltlims)
-    sns.heatmap(aMap.lt.fillna(0), vmin=vmin, vmax=vmax, cmap=cmap, square=True)
-
-    ax = fig.add_subplot(2,2,4)
-    vmin, vmax = vmin_max(lulims)
-    sns.heatmap(aMap.ltu.fillna(0), vmin=vmin, vmax=vmax, cmap=cmap, square=True)
-    plt.tight_layout()
-    plt.show()
-
-def draw_xy_map(aMap    : ASectorMap,
-                wmap    : MapType,
-                norm    : float                         = 1,
-                alims   : Optional[Tuple[float, float]] = None,
-                cmap    :  Colormap                      = matplotlib.cm.viridis,
-                figsize : Tuple[float, float]            = (14,10)):
-
-    vmin, vmax = get_limits(alims)
-    ltmap, title = which_map(aMap, wmap, index = None)
-
-    fig = plt.figure(figsize=figsize)
-    ax = fig.add_subplot(1,1,1)
-    sns.heatmap(ltmap.fillna(0) /norm, vmin=vmin, vmax=vmax, cmap=cmap, square=True)
-
-    plt.title(title)
-    plt.tight_layout()
-    plt.show()
-
-def draw_xy_maps_ts(aMaps   : List[ASectorMap],
-                    wmap    : MapType                       = MapType.LT,
-                    ltlims  : Optional[Tuple[float, float]] = None,
-                    ixy     : Optional[Tuple[float, float]] = None,
-                    cmap    : Optional[Colormap]            = None,
-                    figsize : Tuple[float, float]            = (14,10)):
-
-
-    fig = plt.figure(figsize=figsize)
-    ix, iy = get_plt_indexes(aMaps, ixy)
-
-    for i,  _ in enumerate(aMaps):
-        ax = fig.add_subplot(ix, iy, i+1)
-        ltmap, title = which_map(aMaps[i], wmap, index = i)
-        vmin, vmax = get_limits(ltlims)
-        sns.heatmap(ltmap.fillna(0), vmin=vmin, vmax=vmax, cmap=cmap, square=True)
-        plt.title(title)
-    plt.tight_layout()
-    plt.show()
-
-
-def get_limits(alims   : Optional[Tuple[float, float]] = None)->Tuple[float,float]:
-    if alims == None:
-        vmin = None
-        vmax = None
-    else:
-        vmin=alims[0]
-        vmax=alims[1]
-    return vmin, vmax
-
-
-def get_plt_indexes(aMaps :List[ASectorMap], ixy : Optional[Tuple[int,int]])->Tuple[int, int]:
-
-    if ixy == None:
-        if len(aMaps)%2 == 0:
-            ix = len(aMaps) / 2
-            iy = len(aMaps) / 2
-        else:
-            ix = (len(aMaps) + 1) / 2
-            iy = (len(aMaps) + 1) / 2
-    else:
-        ix = ixy[0]
-        iy = ixy[1]
-    return ix, iy
-
-
-def which_map(aMap: ASectorMap,
-              wmap : MapType,
-              index : Optional[int] = None)->Tuple[str, DataFrame]:
-
-    if index == None:
-        title = wmap.name
-    else:
-        title = f'{wmap.name} : ts = {index}'
-
-    if wmap.name == 'LT':
-        ltmap = aMap.lt
-    elif wmap.name == 'LTu':
-        ltmap = aMap.ltu
-    elif wmap.name == 'E0':
-        ltmap = aMap.e0
-    elif wmap.name == 'E0u':
-        ltmap = aMap.E0u
-    else:
-        ltmap = aMap.chi2
-    return ltmap, title

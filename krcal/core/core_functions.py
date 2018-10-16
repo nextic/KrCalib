@@ -1,11 +1,24 @@
+import time
+from   datetime import datetime
 import numpy as np
-from datetime import datetime
 from   typing      import Tuple, List, Iterable
 from . kr_types    import Number
-from numpy import pi
+from   numpy      import pi
 from   invisible_cities.evm.ic_containers  import Measurement
 
 NN = np.nan
+
+def timeit(f):
+    """
+    Decorator for function timing.
+    """
+    def time_f(*args, **kwargs):
+        t0 = time.time()
+        output = f(*args, **kwargs)
+        print("Time spent in {}: {} s".format(f.__name__,
+                                              time.time() - t0))
+        return output
+    return time_f
 
 def in_range(data, minval=-np.inf, maxval=np.inf):
     """

@@ -306,22 +306,42 @@ def plot_resolution_r_z(Ri : Iterable[float],
                         Zi : Iterable[float],
                         FC : DataFrame,
                         FCE : DataFrame,
+                        r_range: Tuple[float,float] = (3.5, 4.5),
                         figsize = (14,10)):
+
+    def extrapolate_to_qbb(es : float)->float:
+        return np.sqrt(41 / 2458) * es
+
+    def np_extrapolate_to_qbb(es : np.array)->np.array:
+        return np.sqrt(41 / 2458) * es
+
+
 
     fig       = plt.figure(figsize=figsize)
     ax  = fig.add_subplot(1, 1, 1)
+    ax2 = ax.twinx()
     Zcenters =np.array(list(Zi))
     for i in FC.columns:
         label = f'0 < R < {Ri[i]:2.0f}'
 
         es = FC[i].values
         eus = FCE[i].values
-        plt.errorbar(Zcenters, es, eus,
-                     label = label,
-                     fmt='o', markersize=10., elinewidth=10.)
+        qes = extrapolate_to_qbb(es)
+        qeus = extrapolate_to_qbb(eus)
+        ax.errorbar(Zcenters, es, eus,
+                    label = label,
+                    fmt='o', markersize=10., elinewidth=10.)
+        ax2.errorbar(Zcenters, qes, qeus,
+                    label = label,
+                    fmt='o', markersize=10., elinewidth=10.)
     plt.grid(True)
-    plt.xlabel(' z (mm)')
-    plt.ylabel('resolution FWHM (%)')
+    ax.set_ylim(r_range)
+    ax2.set_ylim(np_extrapolate_to_qbb(np.array(r_range)))
+
+    ax.set_xlabel(' z (mm)')
+    ax.set_ylabel('resolution FWHM (%)')
+    ax2.set_ylabel('resolution Qbb FWHM (%)')
+
     plt.legend()
     plt.show()
 
