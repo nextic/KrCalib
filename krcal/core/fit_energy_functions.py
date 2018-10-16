@@ -306,9 +306,13 @@ def plot_resolution_r_z(Ri : Iterable[float],
                         Zi : Iterable[float],
                         FC : DataFrame,
                         FCE : DataFrame,
+                        r_range: Tuple[float,float] = (3.5, 4.5),
                         figsize = (14,10)):
 
     def extrapolate_to_qbb(es : float)->float:
+        return np.sqrt(41 / 2458) * es
+
+    def np_extrapolate_to_qbb(es : np.array)->np.array:
         return np.sqrt(41 / 2458) * es
 
 
@@ -331,6 +335,9 @@ def plot_resolution_r_z(Ri : Iterable[float],
                     label = label,
                     fmt='o', markersize=10., elinewidth=10.)
     plt.grid(True)
+    ax.set_ylim(r_range)
+    ax2.set_ylim(np_extrapolate_to_qbb(np.array(r_range)))
+
     ax.set_xlabel(' z (mm)')
     ax.set_ylabel('resolution FWHM (%)')
     ax2.set_ylabel('resolution Qbb FWHM (%)')
