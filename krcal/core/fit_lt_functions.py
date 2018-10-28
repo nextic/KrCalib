@@ -529,8 +529,9 @@ def fit_fcs_in_xy_bin (xybin         : Tuple[int, int],
     j = xybin[1]
     nevt = event_map[i][j]
     tlast = time_diffs[-1]
+    tfrst = time_diffs[0]
     KRE = selection_map
-    ts, masks =  get_time_series(n_time_bins, tlast, selection_map[i][j]) # pass one KRE for tsel
+    ts, masks =  get_time_series(n_time_bins, (tfrst, tlast), selection_map[i][j]) # pass one KRE for tsel
 
     logging.debug(f' --fit_fcs_in_xy_bin called: xy bin = ({i},{j}), with events ={nevt}')
 
@@ -561,13 +562,14 @@ def fit_fcs_in_rphi_sectors(sector        : int,
     """Returns fits in phi wedges for a given radial sector"""
 
     wedges    =[len(kre) for kre in selection_map.values() ]  # number of wedges per sector
+    tfrst     = time_diffs[0]
     tlast     = time_diffs[-1]
 
     fps =[]
     for i in range(wedges[sector]):
         if event_map[sector][i] > n_min:
             logging.debug(f'fitting sector/wedge ({sector},{i}) with {event_map[sector][i]} events')
-            ts, masks =  get_time_series(n_time_bins, tlast, selection_map[sector][i])
+            ts, masks =  get_time_series(n_time_bins, (tfrst, tlast), selection_map[sector][i])
 
             fp  = time_fcs(ts, masks, selection_map[sector][i],
                            nbins_z, nbins_e, range_z, range_e, energy, fit)
@@ -596,8 +598,9 @@ def fb_fits(n_time_bins : int,
             fit         : FitType             = FitType.profile)->Iterable[FitParTS]:
     """Returns fits to full/forward/backward chamber"""
 
+    tfrst     = time_difs[0]
     tlast     = time_difs[-1]
-    ts, masks = get_time_series(n_time_bins, tlast, selection_map)
+    ts, masks = get_time_series(n_time_bins, (tfrst, tlast), selection_map)
 
     fp        = time_fcs(masks, kre, nbins_z, nbins_e, range_z, range_e, energy, fit)
     fpf       = time_fcs(masks, kre,  nbins_z, nbins_e, range_zf, range_e, energy, fit)
