@@ -39,7 +39,7 @@ def DST(dst_filenames_path):
 def time_series(DST):
     nt = 10
     dst, DT, kge = DST
-    ts, masks = get_time_series(nt, DT[-1], kge)
+    ts, masks = get_time_series(nt, (DT[0],DT[-1]), kge)
     return nt, ts, masks
 
 
