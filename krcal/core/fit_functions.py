@@ -1,3 +1,15 @@
+"""Module fit_functions.
+This module includes general fit functions 
+
+Notes
+-----
+    KrCalib code depends on the IC library.
+    Public functions are documented using numpy style convention
+
+Documentation
+-------------
+    Insert documentation https
+"""
 import numpy as np
 import warnings
 from typing      import List, Tuple, Sequence, Iterable, Callable
