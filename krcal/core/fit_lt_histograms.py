@@ -79,7 +79,7 @@ def plot_fit_lifetime_and_chi2(fc : FitCollection, figsize=(10,10)):
     ax      = fig.add_subplot(1, 2, 2)
     plot_fit_lifetime_chi2(fc)
     plt.tight_layout()
-    
+
 
 def histo_lt_params_and_pulls(e0, lt, e0s, ue0s, lts, ults,
                               bin_e0s    = 50,
@@ -300,12 +300,18 @@ def plot_time_fcs(fps        : Optional[FitParTS],
     ax  = fig.add_subplot(1, 3, 1)
     (_) = plt.errorbar(fps.ts, fps.e0, fps.e0u, fmt="p")
     plt.ylim(range_e0)
+    plt.xlabel('time (s)')
+    plt.ylabel('e0 (pes)')
     ax  = fig.add_subplot(1, 3, 2)
     (_) = plt.errorbar(fps.ts, fps.lt, fps.ltu, fmt="p")
     plt.ylim(range_lt)
+    plt.xlabel('time (s)')
+    plt.ylabel('lt (mus)')
     ax  = fig.add_subplot(1, 3, 3)
     (_) = plt.errorbar(fps.ts, fps.c2, np.sqrt(fps.c2), fmt="p")
     plt.ylim(range_chi2)
+    plt.xlabel('time (s)')
+    plt.ylabel('chi2')
     plt.tight_layout()
 
 def print_fit_sectors_pars(fpts : FitParTS) :
