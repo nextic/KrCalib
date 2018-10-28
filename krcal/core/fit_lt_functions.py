@@ -436,6 +436,7 @@ def get_time_series(time_bins    : Number,
     masks = [in_range(kre.DT, indx[i][0], indx[i][1]) for i in range(len(indx))]
 
     return np.array(ts), masks
+    
 
 def pars_from_fcs(fcs : List[FitCollection])->Tuple[List[Measurement],
                                                     List[Measurement],
