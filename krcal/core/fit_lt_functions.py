@@ -1,3 +1,15 @@
+"""Module correction_functions.
+This module includes the fit functions for the lifetime.
+
+Notes
+-----
+    KrCalib code depends on the IC library.
+    Public functions are documented using numpy style convention
+
+Documentation
+-------------
+    Insert documentation https
+"""
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -53,6 +65,40 @@ def fit_lifetime(z       : np.array,
     """
     Fits the lifetime using a profile (FitType.profile) or an unbined
     fit (FitType.unbined).
+
+    Parameters
+    ----------
+        z
+            Array of z values.
+        e
+            Array of energy values.
+        nbins_z
+            Number of bins in Z for the profile fit.
+        nbins_e
+            Number of bins in energy.
+        range_z
+            Range in Z for fit.
+        range_e
+            Range in energy.
+        fit
+            Selects fit type.
+
+
+    Returns
+    -------
+        A FitCollection2, which allows passing two fit parameters, histo parameters and fitResult.
+
+    @dataclass
+    class FitCollection:
+        fp   : FitPar
+        hp   : HistoPar
+        fr   : FitResult
+
+
+    @dataclass
+    class FitCollection2(FitCollection):
+        fp2   : FitPar
+
     """
     logging.debug(' fit_liftime ')
     logging.debug(f' len (z) ={len(z)}, len (e) ={len(e)} ')
@@ -80,6 +126,43 @@ def fit_lifetime_profile(z : np.array,
     """
     Make a profile of the input data and fit it to an exponential
     function.
+    Parameters
+    ----------
+        z
+            Array of z values.
+        e
+            Array of energy values.
+        nbins_z
+            Number of bins in Z for the profile fit.
+        range_z
+            Range in Z for fit.
+
+
+    Returns
+    -------
+        A Tuple with:
+            FitPar : Fit parameters (arrays of fitted values and errors, fit function)
+            FitPar : Fit parameters (duplicated to make it compatible with fit_liftime_unbined)
+            FirResults: Fit results (lt, e0, errors, chi2)
+
+    @dataclass
+    class ProfilePar:
+        x  : np.array
+        y  : np.array
+        xu : np.array
+        yu : np.array
+
+    @dataclass
+    class FitPar(ProfilePar):
+        f     : FitFunction
+
+    @dataclass
+    class FitResult:
+        par  : np.array
+        err  : np.array
+        chi2 : float
+        valid : bool
+
     """
 
     logging.debug(' fit_liftime_profile')
@@ -137,6 +220,25 @@ def fit_lifetime_unbined(z       : np.array,
 
     E = E0 exp(-z/lt)
     y = -log(E) = (z/lt) - log(E)
+
+    Parameters
+    ----------
+        z
+            Array of z values.
+        e
+            Array of energy values.
+        nbins_z
+            Number of bins in Z for the profile fit.
+        range_z
+            Range in Z for fit.
+
+
+    Returns
+    -------
+        A Tuple with:
+            FitPar : Fit parameters (arrays of fitted values and errors, fit function)
+            FitPar : Fit parameters
+            FirResults: Fit results (lt, e0, errors, chi2)
 
     """
 
@@ -198,6 +300,142 @@ def fit_lifetime_unbined(z       : np.array,
 
     return fp, fp2, fr
 
+
+def time_fcs(ts      : np.array,
+             masks   : List[np.array],
+             kre     : KrEvent,
+             nbins_z : int,
+             nbins_e : int,
+             range_z : Tuple[float, float],
+             range_e : Tuple[float, float],
+             energy  : str                 = 'S2e',
+             fit     : FitType             = FitType.profile)->FitParTS:
+    """
+    Fit lifetime of a time series.
+
+    Parameters
+    ----------
+        ts
+            A vector of floats with the (central) values of the time series.
+        masks
+            A list of boolean vectors specifying the selection masks that define the time series.
+        kre
+            A kr_event (a subset of dst).
+        range_z
+            Range in Z for fit.
+        nbins_z
+            Number of bins in Z for the fit.
+        nbins_e
+            Number of bins in energy.
+        range_z
+            Range in Z for fit.
+        range_e
+            Range in energy.
+        energy:
+            Takes two values: S2e (uses S2e field in kre) or E (used E field on kre).
+            This field allows to select fits over uncorrected (S2e) or corrected (E) energies.
+        fit
+            Selects fit type.
+
+
+    Returns
+    -------
+        A FitParTs:
+
+    @dataclass
+    class FitParTS:             # Fit parameters Time Series
+        ts   : np.array          # contains the time series (integers expressing time differences)
+        e0   : np.array          # e0 fitted in time series
+        lt   : np.array
+        c2   : np.array
+        e0u  : np.array          # e0 error fitted in time series
+        ltu  : np.array
+
+    """
+
+    kcts = [KrEvent(X   = kre.X[sel_mask],
+                    Y   = kre.Y[sel_mask],
+                    Z   = kre.Z[sel_mask],
+                    R   = kre.R[sel_mask],
+                    Phi = kre.Phi[sel_mask],
+                    T   = kre.T[sel_mask],
+                    DT  = kre.DT[sel_mask],
+                    S2e = kre.S2e[sel_mask],
+                    S1e = kre.S1e[sel_mask],
+                    S2q = kre.S2q[sel_mask],
+                    E   = kre.E[sel_mask],
+                    Q   = kre.Q[sel_mask]) for sel_mask in masks]
+
+    logging.debug('function:time_fcs ')
+    logging.debug(f' list of kre_event has length {len(kcts)}')
+    [logging.debug(f' mask {i} has length {len(mask)}') for i, mask in enumerate(masks)]
+    [logging.debug(f' mask {i} has {np.count_nonzero(mask)} True elements')
+                   for i, mask in enumerate(masks)]
+
+    if energy == 'S2e':
+        #print('S2e')
+        fcs =[fit_lifetime(kct.Z, kct.S2e,
+                           nbins_z, nbins_e, range_z, range_e, fit) for kct in kcts]
+    else:
+        #print('E')
+        fcs =[fit_lifetime(kct.Z, kct.E,
+                           nbins_z, nbins_e, range_z, range_e, fit) for kct in kcts]
+
+    e0s, lts, c2s = pars_from_fcs(fcs)
+    #print(value_from_measurement(e0s))
+    return FitParTS(ts  = np.array(ts),
+                    e0  = value_from_measurement(e0s),
+                    lt  = value_from_measurement(lts),
+                    c2  = c2s,
+                    e0u = uncertainty_from_measurement(e0s),
+                    ltu = uncertainty_from_measurement(lts))
+
+
+def get_time_series(time_bins    : Number,
+                    time_range   : Tuple[float, float],
+                    kre          : KrEvent)->Tuple[np.array, List[np.array]]:
+    """
+
+    Returns a time series (ts) and a list of masks which are used to divide
+    the event in time tranches.
+
+        Parameters
+        ----------
+            time_bins
+                Number of time bines.
+            time_range
+                Time range.
+            kre
+                A kr_event (a subset of dst).
+
+        Returns
+        -------
+            A Tuple with:
+            np.array       : This is the ts vector
+            List[np.array] : This are the list of masks defining the events in the time series.
+
+    """
+
+    logging.debug(f'function: get_time_series')
+    nt = time_bins
+    x = int((time_range[-1] -  time_range[0]) / nt)
+    tfirst = int(time_range[0])
+    tlast  = int(time_range[-1])
+    if x == 1:
+        indx = [(tfirst, tlast)]
+    else:
+        indx = [(i, i + x) for i in range(tfirst, int(tlast - x), x) ]
+        indx.append((x * (nt -1), tlast))
+
+    ts = [(indx[i][0] + indx[i][1]) / 2 for i in range(len(indx))]
+
+    logging.debug(f' number of time bins = {nt}, t_first = {tfirst} t_last = {tlast}')
+    logging.debug(f'indx = {indx}')
+    logging.debug(f'ts = {ts}')
+
+    masks = [in_range(kre.DT, indx[i][0], indx[i][1]) for i in range(len(indx))]
+
+    return np.array(ts), masks
 
 def pars_from_fcs(fcs : List[FitCollection])->Tuple[List[Measurement],
                                                     List[Measurement],
