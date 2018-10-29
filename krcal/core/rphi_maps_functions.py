@@ -1,3 +1,15 @@
+"""Module rphi_map_functions.
+This module includes the functions related with the construction of RPHI lifetime maps.
+
+Notes
+-----
+    KrCalib code depends on the IC library.
+    Public functions are documented using numpy style convention
+
+Documentation
+-------------
+    Insert documentation https
+"""
 import matplotlib.pyplot as plt
 
 from matplotlib.patches      import Circle, Wedge, Polygon
@@ -26,71 +38,33 @@ import logging
 log = logging.getLogger()
 
 
-def rphi_sector_equal_area_map(rmin : float  =  18,
-                               rmax : float  = 180,
-                               sphi : float =45)->Tuple[Dict[int, Tuple[float, float]],
-                                     Dict[int, List[Tuple[float, float]]]]:
-    # PHI = {0 : [(0, 360)],
-    #        1 : [(0,180), (180,360)],
-    #        2 : [(i, i+90) for i in range(0, 360, 90) ]
-    #        }
-    nSectors = int((rmax / rmin)**2)
-    print(f'nSectors = {nSectors}')
-    R = {}
-    PHI = {}
-    ri =[np.sqrt(i) * rmin for i in range(nSectors + 1)]
-
-    for ns in range(nSectors):
-
-        R[ns] = (ri[ns], ri[ns+1])
-
-    for ns in range(0, nSectors):
-        PHI[ns] = [(i, i+sphi) for i in range(0, 360, sphi)]
-
-    return R, PHI
-
-
-def rphi_sector_alpha_map(rmin : float  =  20,
-                          rmax : float  = 200,
-                          alpha: float  = 0.4,
-                          sphi : float  = 5)->Tuple[Dict[int, Tuple[float, float]],
-                                                    Dict[int, List[Tuple[float, float]]]]:
-    def ns(alpha, rmin, rmax):
-        return (rmax/rmin)**2 * (1 - alpha) + alpha
-
-    def rn(n, alpha, rmin):
-        if n == 0:
-            return 0
-        else:
-            return rmin * sqrt((n - alpha)/(1 - alpha))
-
-    nSectors = int(ns(alpha, rmin, rmax))
-    print(f'rmin = {rmin}, rmax = {rmax}, alpha ={alpha}, nSectors = {nSectors}')
-
-    R = {}
-    PHI = {}
-    ri =[rn(i, alpha, rmin)  for i in range(nSectors + 1)]
-    #print(ri)
-
-    for ns in range(nSectors):
-
-        R[ns] = (ri[ns], ri[ns+1])
-        #print(f'R[{ns}] =({ri[ns]},{ri[ns+1]})')
-
-    for ns in range(0, nSectors):
-        PHI[ns] = [(i, i+sphi) for i in range(0, 360, sphi)]
-
-    return R, PHI
-
 
 def rphi_sector_map_def(nSectors : int   =10,
                         rmax     : float =200,
                         sphi     : float =45)->RPhiMapDef:
-    """Returns a RPhiMapDef, which defines the values in (R,Phi) to compute RPHI maps
+    """
 
-    class RPhiMapDef:
-        r   : Dict[int, Tuple[float, float] -> (rmin, rmax) in each radial sector
-        phi : Dict[int, List[Tuple[float, float] -> (phi_0, ph_1... phi_s) per radial sector
+    Defines the values in (R,Phi) to compute RPHI maps
+
+    Parameters
+    ----------
+        nSectors:
+        Number of radial sectors.
+
+        rmax:
+        Maximum radius of map.
+
+        sphi:
+        Size of PHI wedge in degrees.
+
+    Returns
+    -------
+        RPhiMapDef
+
+    @dataclass
+    class RPhiMapDef:  # defines the values in (R,Phi) to compute RPHI maps
+        r   : Dict[int, Tuple[float, float]] # (rmin, rmax) in each radial sector
+        phi : Dict[int, List[Tuple[float, float]]] # (phi_0, ph_1... phi_s) per radial sector
 
     """
 
@@ -110,13 +84,25 @@ def rphi_sector_map_def(nSectors : int   =10,
 
 
 def define_rphi_sectors(rpmf : RPhiMapDef)-> Dict[int, List[KrSector]]:
-    """For each radial sector (key of the Dict[int, List[KrSector]])
-       returns a list of KrSector
-       class KrSector:
-           rmin    : float
-           rmax    : float
-           phimin  : float
-           phimax  : float
+    """
+    Compute a map (defined as a Dict[int, List[]]) of KrSectors.
+
+    Parameters
+    ----------
+            rpmf:
+            An object of type RPhiMapDef defining the radial and PHI sectors.
+
+    Returns
+    -------
+            Dict[int, List[KrSector]]
+
+    @dataclass
+    class KrSector:
+        rmin    : float
+        rmax    : float
+        phimin  : float
+        phimax  : float
+
     """
 
     def rps_sector(sector_number : int  ,
@@ -351,3 +337,60 @@ def draw_rphi_maps_ts(W       : Dict[int, List[KrSector]],
         plt.title(title)
     plt.tight_layout()
     plt.show()
+
+
+def rphi_sector_equal_area_map_(rmin : float  =  18,
+                               rmax : float  = 180,
+                               sphi : float =45)->Tuple[Dict[int, Tuple[float, float]],
+                                     Dict[int, List[Tuple[float, float]]]]:
+    # PHI = {0 : [(0, 360)],
+    #        1 : [(0,180), (180,360)],
+    #        2 : [(i, i+90) for i in range(0, 360, 90) ]
+    #        }
+    nSectors = int((rmax / rmin)**2)
+    print(f'nSectors = {nSectors}')
+    R = {}
+    PHI = {}
+    ri =[np.sqrt(i) * rmin for i in range(nSectors + 1)]
+
+    for ns in range(nSectors):
+
+        R[ns] = (ri[ns], ri[ns+1])
+
+    for ns in range(0, nSectors):
+        PHI[ns] = [(i, i+sphi) for i in range(0, 360, sphi)]
+
+    return R, PHI
+
+
+def rphi_sector_alpha_map_(rmin : float  =  20,
+                          rmax : float  = 200,
+                          alpha: float  = 0.4,
+                          sphi : float  = 5)->Tuple[Dict[int, Tuple[float, float]],
+                                                    Dict[int, List[Tuple[float, float]]]]:
+    def ns(alpha, rmin, rmax):
+        return (rmax/rmin)**2 * (1 - alpha) + alpha
+
+    def rn(n, alpha, rmin):
+        if n == 0:
+            return 0
+        else:
+            return rmin * sqrt((n - alpha)/(1 - alpha))
+
+    nSectors = int(ns(alpha, rmin, rmax))
+    print(f'rmin = {rmin}, rmax = {rmax}, alpha ={alpha}, nSectors = {nSectors}')
+
+    R = {}
+    PHI = {}
+    ri =[rn(i, alpha, rmin)  for i in range(nSectors + 1)]
+    #print(ri)
+
+    for ns in range(nSectors):
+
+        R[ns] = (ri[ns], ri[ns+1])
+        #print(f'R[{ns}] =({ri[ns]},{ri[ns+1]})')
+
+    for ns in range(0, nSectors):
+        PHI[ns] = [(i, i+sphi) for i in range(0, 360, sphi)]
+
+    return R, PHI
