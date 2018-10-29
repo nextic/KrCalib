@@ -1,3 +1,15 @@
+"""Module analysis_functions.
+This module includes the functions related with selection of events.
+
+Notes
+-----
+    KrCalib code depends on the IC library.
+    Public functions are documented using numpy style convention
+
+Documentation
+-------------
+    Insert documentation https
+"""
 import numpy as np
 import pandas as pd
 import datetime
