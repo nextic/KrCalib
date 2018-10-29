@@ -1,3 +1,15 @@
+"""Module fit_energy_functions.
+This module includes the fit functions for the energy.
+
+Notes
+-----
+    KrCalib code depends on the IC library.
+    Public functions are documented using numpy style convention
+
+Documentation
+-------------
+    Insert documentation https
+"""
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
