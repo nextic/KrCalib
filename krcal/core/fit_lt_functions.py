@@ -1,4 +1,4 @@
-"""Module correction_functions.
+"""Module fit_lt_functions.
 This module includes the fit functions for the lifetime.
 
 Notes
@@ -436,7 +436,7 @@ def get_time_series(time_bins    : Number,
     masks = [in_range(kre.DT, indx[i][0], indx[i][1]) for i in range(len(indx))]
 
     return np.array(ts), masks
-    
+
 
 def pars_from_fcs(fcs : List[FitCollection])->Tuple[List[Measurement],
                                                     List[Measurement],
@@ -498,6 +498,49 @@ def fit_map_xy(selection_map : Dict[int, List[KrEvent]],
                energy        : str                 = 'S2e',
                fit           : FitType             = FitType.profile,
                n_min         : int                 = 100)->Dict[int, List[FitParTS]]:
+    """
+    Produce a XY map of fits (in time series).
+
+    Parameters
+    ----------
+        selection_map
+            A Dict[int, List[KrEvent]], defining a selection of events.
+        event_map
+            A DataFrame, containing the events in each XY bin.
+        n_time_bins
+            Number of time bins for the time series.
+        time_diffs
+            Vector of time differences for the time series.
+        nbins_z
+            Number of bins in Z for the fit.
+        nbins_e
+            Number of bins in energy.
+        range_z
+            Range in Z for fit.
+        range_e
+            Range in energy.
+        energy:
+            Takes two values: S2e (uses S2e field in kre) or E (used E field on kre).
+            This field allows to select fits over uncorrected (S2e) or corrected (E) energies.
+        fit
+            Selects fit type.
+        n_min
+            Minimum number of events for fit.
+
+
+    Returns
+    -------
+        A Dict[int, List[FitParTS]]
+        @dataclass
+        class FitParTS:             # Fit parameters Time Series
+            ts   : np.array          # contains the time series (integers expressing time differences)
+            e0   : np.array          # e0 fitted in time series
+            lt   : np.array
+            c2   : np.array
+            e0u  : np.array          # e0 error fitted in time series
+            ltu  : np.array
+
+    """
 
     logging.debug(f'function: fit_map_xy')
     fMAP = {}
@@ -560,7 +603,51 @@ def fit_fcs_in_rphi_sectors(sector        : int,
                             energy        : str                 = 'S2e',
                             fit           : FitType             = FitType.profile,
                             n_min         : int                 = 100)->List[FitParTS]:
-    """Returns fits in phi wedges for a given radial sector"""
+    """
+    Returns fits to a (radial) sector of a RPHI-time series map
+
+        Parameters
+        ----------
+            sector
+                Radial sector where the fit is performed.
+            selection_map
+                A map of selected events defined as Dict[int, List[KrEvent]]
+            event_map
+                An event map defined as a DataFrame
+            n_time_bins
+                Number of time bins for the time series.
+            time_diffs
+                Vector of time differences for the time series.
+            nbins_z
+                Number of bins in Z for the fit.
+            nbins_e
+                Number of bins in energy.
+            range_z
+                Range in Z for fit.
+            range_e
+                Range in energy.
+            energy:
+                Takes two values: S2e (uses S2e field in kre) or E (used E field on kre).
+                This field allows to select fits over uncorrected (S2e) or corrected (E) energies.
+            fit
+                Selects fit type.
+            n_min
+                Minimum number of events for fit.
+
+        Returns
+        -------
+            A List[FitParTS], one FitParTs per PHI sector.
+
+        @dataclass
+        class FitParTS:             # Fit parameters Time Series
+            ts   : np.array          # contains the time series (integers expressing time differences)
+            e0   : np.array          # e0 fitted in time series
+            lt   : np.array
+            c2   : np.array
+            e0u  : np.array          # e0 error fitted in time series
+            ltu  : np.array
+
+    """
 
     wedges    =[len(kre) for kre in selection_map.values() ]  # number of wedges per sector
     tfrst     = time_diffs[0]
