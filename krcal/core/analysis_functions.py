@@ -29,6 +29,131 @@ import sys
 import logging
 log = logging.getLogger()
 
+def kr_event(dst      : DataFrame,
+             DT       : Array      = [],
+             E        : Array      = [],
+             Q        : Array      = [],
+             sel_mask : Array      = [])->KrEvent:
+    """
+    Defines a  KrEvent (a subset of a DST)
+    Parameters
+    ----------
+    dst:
+        A DataFrame dst.
+    DT:
+        A vector of time differences.
+    E:
+        A vector of energies (often but not neccessary corrected energy).
+    Q:
+        A vector of energies (often but not neccessary corrected SiPM Q).
+
+    sel_mask:
+        A selection mask.
+
+    Returns
+    -------
+        KrEvent
+
+    @dataclass
+    class CPoint:
+        X   : np.array
+        Y   : np.array
+        Z   : np.array
+
+
+    @dataclass
+    class Point(CPoint):
+        R   : np.array
+        Phi : np.array
+
+    @dataclass
+    class KrEvent(Point):
+        S2e  : Array
+        S1e  : Array
+        S2q  : Array
+        T    : Array  # time
+        DT   : Array  # time difference in seconds
+        E    : Array
+        Q    : Array
+
+    """
+
+    if len(DT) == 0:
+        DT = np.zeros(len(dst))
+    else:
+        assert len(DT) == len(dst)
+
+    if len(E) == 0:
+        E = np.zeros(len(dst))
+    else:
+        assert len(E) == len(dst)
+
+    if len(Q) == 0:
+        Q = np.zeros(len(dst))
+    else:
+        assert len(Q) == len(dst)
+
+    if len(sel_mask) > 0:
+        assert len(sel_mask) == len(dst)
+
+
+        return KrEvent(X   = dst.X.values[sel_mask],
+                       Y   = dst.Y.values[sel_mask],
+                       Z   = dst.Z.values[sel_mask],
+                       R   = dst.R.values[sel_mask],
+                       Phi = dst.Phi.values[sel_mask],
+                       T   = dst.time.values[sel_mask],
+                       DT  = DT[sel_mask],
+                       S2e = dst.S2e.values[sel_mask],
+                       S1e = dst.S1e.values[sel_mask],
+                       S2q = dst.S2q.values[sel_mask],
+                       E   = E[sel_mask],
+                       Q   = Q[sel_mask])
+    else:
+        return KrEvent(X   = dst.X.values,
+                       Y   = dst.Y.values,
+                       Z   = dst.Z.values,
+                       R   = dst.R.values,
+                       Phi = dst.Phi.values,
+                       T   = dst.time.values,
+                       DT  = DT,
+                       S2e = dst.S2e.values,
+                       S1e = dst.S1e.values,
+                       S2q = dst.S2q.values,
+                       E   = E,
+                       Q   = Q)
+
+
+def kr_event_selection(kh : KrEvent, sel_mask : Array = [])->KrEvent:
+
+    if len(sel_mask) > 0:
+        assert len(sel_mask) == len(kh.X)
+
+        return KrEvent(X   = kh.X[sel_mask],
+                       Y   = kh.Y[sel_mask],
+                       Z   = kh.Z[sel_mask],
+                       R   = kh.R[sel_mask],
+                       Phi = kh.Phi[sel_mask],
+                       T   = kh.T[sel_mask],
+                       DT  = kh.DT[sel_mask],
+                       S2e = kh.S2e[sel_mask],
+                       S1e = kh.S1e[sel_mask],
+                       S2q = kh.S2q[sel_mask],
+                       E   = kh.E[sel_mask],
+                       Q   = kh.Q[sel_mask])
+    else:
+        return KrEvent(X   = kh.X,
+                       Y   = kh.Y,
+                       Z   = kh.Z,
+                       R   = kh.R,
+                       Phi = kh.Phi,
+                       T   = kh.T,
+                       DT  = kh.DT,
+                       S2e = kh.S2e,
+                       S1e = kh.S1e,
+                       S2q = kh.S2q,
+                       E   = kh.E,
+                       Q   = kh.Q)
 
 def kr_bins(xxrange   : Range = (-220,  220),
             yrange    : Range = (-220,  220),
@@ -136,88 +261,6 @@ def kre_concat(KRL : List[KrEvent])->KrEvent:
     return KrEvent(*C)
 
 
-def kr_event(dst      : DataFrame,
-             DT       : Array      = [],
-             E        : Array      = [],
-             Q        : Array      = [],
-             sel_mask : Array      = [])->KrEvent:
-
-    if len(DT) == 0:
-        DT = np.zeros(len(dst))
-    else:
-        assert len(DT) == len(dst)
-
-    if len(E) == 0:
-        E = np.zeros(len(dst))
-    else:
-        assert len(E) == len(dst)
-
-    if len(Q) == 0:
-        Q = np.zeros(len(dst))
-    else:
-        assert len(Q) == len(dst)
-
-    if len(sel_mask) > 0:
-        assert len(sel_mask) == len(dst)
-
-
-        return KrEvent(X   = dst.X.values[sel_mask],
-                       Y   = dst.Y.values[sel_mask],
-                       Z   = dst.Z.values[sel_mask],
-                       R   = dst.R.values[sel_mask],
-                       Phi = dst.Phi.values[sel_mask],
-                       T   = dst.time.values[sel_mask],
-                       DT  = DT[sel_mask],
-                       S2e = dst.S2e.values[sel_mask],
-                       S1e = dst.S1e.values[sel_mask],
-                       S2q = dst.S2q.values[sel_mask],
-                       E   = E[sel_mask],
-                       Q   = Q[sel_mask])
-    else:
-        return KrEvent(X   = dst.X.values,
-                       Y   = dst.Y.values,
-                       Z   = dst.Z.values,
-                       R   = dst.R.values,
-                       Phi = dst.Phi.values,
-                       T   = dst.time.values,
-                       DT  = DT,
-                       S2e = dst.S2e.values,
-                       S1e = dst.S1e.values,
-                       S2q = dst.S2q.values,
-                       E   = E,
-                       Q   = Q)
-
-
-def kr_event_selection(kh : KrEvent, sel_mask : Array = [])->KrEvent:
-
-    if len(sel_mask) > 0:
-        assert len(sel_mask) == len(kh.X)
-
-        return KrEvent(X   = kh.X[sel_mask],
-                       Y   = kh.Y[sel_mask],
-                       Z   = kh.Z[sel_mask],
-                       R   = kh.R[sel_mask],
-                       Phi = kh.Phi[sel_mask],
-                       T   = kh.T[sel_mask],
-                       DT  = kh.DT[sel_mask],
-                       S2e = kh.S2e[sel_mask],
-                       S1e = kh.S1e[sel_mask],
-                       S2q = kh.S2q[sel_mask],
-                       E   = kh.E[sel_mask],
-                       Q   = kh.Q[sel_mask])
-    else:
-        return KrEvent(X   = kh.X,
-                       Y   = kh.Y,
-                       Z   = kh.Z,
-                       R   = kh.R,
-                       Phi = kh.Phi,
-                       T   = kh.T,
-                       DT  = kh.DT,
-                       S2e = kh.S2e,
-                       S1e = kh.S1e,
-                       S2q = kh.S2q,
-                       E   = kh.E,
-                       Q   = kh.Q)
 
 
 def fiducial_volumes(dst     : DataFrame,
@@ -246,7 +289,33 @@ def select_rphi_sectors(dst     : DataFrame,
                         E       : np.array,
                         Q       : np.array,
                         RPS     : Dict[int, List[KrSector]])-> Dict[int, List[KrEvent]]:
-    """Return a dict of KrEvent organized by rphi sector"""
+    """
+    Return a dict of KrEvent organized by rphi sector.
+
+    Parameters
+    ----------
+        dst:
+        The input data frame.
+
+        dt:
+        An array of time differences needed to compute the time masks.
+
+        E:
+        An energy vector (can contain the corrected energy in the PMTs).
+
+        Q:
+        An energy vector (can contain the corrected energy in the SiPMs).
+
+        RPS:
+        RPHI selection, a map defining the RPHI wedges.
+
+    Returns
+    -------
+        A map of selections defined as Dict[int, List[KrEvent]]
+        where for each radial sector (the key in the dict) one has a list
+        (corresponding to the PHI sectors) of KrEvent (the events selected)
+
+    """
 
     def selection_mask_rphi_sectors(dst     : DataFrame,
                                     RPS     : Dict[int, List[KrSector]])->Dict[int, np.array]:
@@ -284,7 +353,31 @@ def select_xy_sectors(dst        : DataFrame,
                       Q          : np.array,
                       bins_x     : np.array,
                       bins_y     : np.array)-> Dict[int, List[KrEvent]]:
-    """Return a dict of KrEvent organized by xy sector"""
+    """
+    Return a dict of KrEvent organized by xy sector
+
+    Parameters
+    ----------
+        dst:
+        The input data frame.
+        time_diffs:
+        An array of time differences needed to compute the time masks.
+        E:
+        An energy vector (can contain the corrected energy in the PMTs).
+        Q:
+        An energy vector (can contain the corrected energy in the SiPMs).
+        bins_x:
+        An array of bins along x.
+        bins_y:
+        An array of bins along y.
+
+    Returns
+    -------
+        A map of selections defined as Dict[int, List[KrEvent]]
+        where for each x (the key in the dict) one has a list
+        (corresponding to y cells) of KrEvent (the events selected)
+
+    """
 
 
     def selection_mask_xy_sectors(dst     : DataFrame,
@@ -326,6 +419,19 @@ def events_sector(nMap : Dict[int, List[float]])->np.array:
 
 
 def event_map(KRES : Dict[int, List[KrEvent]])->DataFrame:
+    """
+    Return an event map containing the events in each RPHI sector.
+
+    Parameters
+    ----------
+        KRES:
+        A map of selections (a dictionary of KrEvent).
+
+    Returns
+    -------
+        A DataFrame containing the events in each RPHI sector.
+
+    """
     nMap = {}
     for i, kres in KRES.items():
         nMap[i] = [len(k.S2e) for k in kres]
