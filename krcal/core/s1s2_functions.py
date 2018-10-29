@@ -1,3 +1,16 @@
+"""Module s1s2_functions.
+This module includes functions related with S1 and S2, including
+time and energy profiles.
+
+Notes
+-----
+    KrCalib code depends on the IC library.
+    Public functions are documented using numpy style convention
+
+Documentation
+-------------
+    Insert documentation https
+"""
 import numpy as np
 import matplotlib.dates  as md
 import datetime
@@ -66,9 +79,9 @@ def energy_time_profile(T           : np.array,
     xfmt = md.DateFormatter('%d-%m %H:%M')
     fig = plt.figure(figsize=figsize)
 
-    x, y, yu = fitf.profileX(T, E, Tnbins, None, erange)
+    x, y, yu = fitf.profileX(T, E, Tnbins, Trange, erange)
     ax = fig.add_subplot(1, 1, 1)
-    
+
     ax.xaxis.set_major_formatter(xfmt)
     plt.errorbar(timeStamps, y, yu, fmt="kp", ms=7, lw=3)
     plt.xlabel('date')
