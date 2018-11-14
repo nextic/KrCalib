@@ -4,26 +4,27 @@ import numpy  as np
 import tables as tb
 
 @pytest.fixture(scope = 'session')
-def KRCALIB():
-    krc = os.environ['KRCALIB']
+def ICARO():
+    krc = os.environ['ICARO']
     return os.path.join(krc, "test_data")
 
 
 @pytest.fixture(scope = 'session')
-def DSTDIR(KRCALIB):
-    return os.path.join(KRCALIB, "dst")
+def DSTDIR(ICARO):
+    #return os.path.join(ICARO, "dst")
+    return os.path.join(os.environ['IC_DATA'], "dst")
 
 @pytest.fixture(scope = 'session')
-def MAPSDIR(KRCALIB):
-    return os.path.join(KRCALIB, "maps")
+def MAPSDIR(ICARO):
+    return os.path.join(ICARO, "maps")
 
 @pytest.fixture(scope = 'session')
-def KDSTDIR(KRCALIB):
-    return os.path.join(KRCALIB, "kdst")
+def KDSTDIR(ICARO):
+    return os.path.join(ICARO, "kdst")
 
 @pytest.fixture(scope = 'session')
-def LDSTDIR(KRCALIB):
-    return os.path.join(KRCALIB, "ldst")
+def LDSTDIR(ICARO):
+    return os.path.join(ICARO, "ldst")
 
 @pytest.fixture(scope = 'session')
 def config_tmpdir(tmpdir_factory):
