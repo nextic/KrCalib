@@ -113,11 +113,12 @@ def kdst_write(dst, filename):
 
 def write_maps(asm : ASectorMap, filename : str):
 
-    asm.chi2.to_hdf(filename, key='chi2', mode='w')
-    asm.e0.to_hdf(filename,   key='e0',   mode='a')
-    asm.e0u.to_hdf(filename,  key='e0u',  mode='a')
-    asm.lt.to_hdf(filename,   key='lt',   mode='a')
-    asm.ltu.to_hdf(filename,  key='ltu',  mode='a')
+    asm.chi2.to_hdf   (filename, key='chi2'   ,     mode='w')
+    asm.e0.to_hdf     (filename, key='e0'     ,     mode='a')
+    asm.e0u.to_hdf    (filename, key='e0u'    ,     mode='a')
+    asm.lt.to_hdf     (filename, key='lt'     ,     mode='a')
+    asm.ltu.to_hdf    (filename, key='ltu'    ,     mode='a')
+    asm.mapinfo.to_hdf(filename, key='mapinfo',     mode='a')
 
 
 def write_maps_ts(aMaps : Iterable[ASectorMap], ts: np.array, filename : str):
@@ -160,9 +161,10 @@ def read_energy_map(filename : str)->DataFrame:
 
 
 def read_maps(filename : str)->ASectorMap:
-    chi2 = pd.read_hdf(filename, 'chi2')
-    e0   = pd.read_hdf(filename, 'e0')
-    e0u  = pd.read_hdf(filename, 'e0u')
-    lt   = pd.read_hdf(filename, 'lt')
-    ltu  = pd.read_hdf(filename, 'ltu')
-    return ASectorMap(chi2, e0, lt, e0u, ltu)
+    chi2     = pd.read_hdf(filename, 'chi2')
+    e0       = pd.read_hdf(filename, 'e0')
+    e0u      = pd.read_hdf(filename, 'e0u')
+    lt       = pd.read_hdf(filename, 'lt')
+    ltu      = pd.read_hdf(filename, 'ltu')
+    mapinfo  = pd.read_hdf(filename, 'mapinfo')
+    return  ASectorMap(chi2, e0, lt, e0u, ltu, mapinfo)
