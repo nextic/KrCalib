@@ -8,7 +8,7 @@ from typing      import TypeVar
 from enum        import Enum
 
 from dataclasses import dataclass
-from pandas import DataFrame
+from pandas import DataFrame, Series
 
 from   invisible_cities.types.ic_types import minmax
 from   invisible_cities.evm  .ic_containers  import Measurement
@@ -245,11 +245,12 @@ class SectorMapTS:  # Map in chamber sector containing time series of pars
 
 @dataclass
 class ASectorMap:  # Map in chamber sector containing average of pars
-    chi2  : DataFrame
-    e0    : DataFrame
-    lt    : DataFrame
-    e0u   : DataFrame
-    ltu   : DataFrame
+    chi2    : DataFrame
+    e0      : DataFrame
+    lt      : DataFrame
+    e0u     : DataFrame
+    ltu     : DataFrame
+    mapinfo : Series
 
 
 @dataclass
