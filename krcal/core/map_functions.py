@@ -164,11 +164,12 @@ def amap_from_tsmap(tsMap      : SectorMapTS,
         mE0, mE0u  = fill_maps_av(tsMap.e0, range_e)
         mLT, mLTu  = fill_maps_av(tsMap.lt, range_lt)
 
-    return ASectorMap(chi2   = pd.DataFrame.from_dict(mChi2),
-                      e0    = pd.DataFrame.from_dict(mE0),
-                      lt    = pd.DataFrame.from_dict(mLT),
-                      e0u   = pd.DataFrame.from_dict(mE0u),
-                      ltu   = pd.DataFrame.from_dict(mLTu))
+    return ASectorMap(chi2      = pd.DataFrame.from_dict(mChi2),
+                      e0        = pd.DataFrame.from_dict(mE0),
+                      lt        = pd.DataFrame.from_dict(mLT),
+                      e0u       = pd.DataFrame.from_dict(mE0u),
+                      ltu       = pd.DataFrame.from_dict(mLTu),
+                      mapinfo   = None)
 
 
 def map_average(aMaps : List[ASectorMap])->ASectorMap:
@@ -209,7 +210,8 @@ def map_average(aMaps : List[ASectorMap])->ASectorMap:
                         e0 / len(aMaps),
                         lt/ len(aMaps),
                        e0u/ len(aMaps),
-                       ltu/ len(aMaps))
+                       ltu/ len(aMaps),
+                       mapinfo   = None)
 
 
 def get_maps_from_tsmap(tsm     : SectorMapTS,
@@ -284,7 +286,8 @@ def amap_average(amap : ASectorMap)->FitMapValue:
                       e0    = amap.e0.mean().mean(),
                       lt    = amap.lt.mean().mean(),
                       e0u   = amap.e0u.mean().mean(),
-                      ltu   = amap.ltu.mean().mean())
+                      ltu   = amap.ltu.mean().mean(),
+                      mapinfo   = None)
 
 
 def amap_max(amap : ASectorMap)->FitMapValue:
@@ -292,7 +295,8 @@ def amap_max(amap : ASectorMap)->FitMapValue:
                       e0    = amap.e0.max().max(),
                       lt    = amap.lt.max().max(),
                       e0u   = amap.e0u.max().max(),
-                      ltu   = amap.ltu.max().max())
+                      ltu   = amap.ltu.max().max(),
+                      mapinfo   = None)
 
 
 def amap_min(amap : ASectorMap)->FitMapValue:
@@ -300,7 +304,8 @@ def amap_min(amap : ASectorMap)->FitMapValue:
                       e0    = amap.e0.min().min(),
                       lt    = amap.lt.min().min(),
                       e0u   = amap.e0u.min().min(),
-                      ltu   = amap.ltu.min().min())
+                      ltu   = amap.ltu.min().min(),
+                      mapinfo   = None)
 
 
 def amap_replace_nan_by_mean(amap : ASectorMap, amMean : FitMapValue)->ASectorMap:
@@ -309,7 +314,8 @@ def amap_replace_nan_by_mean(amap : ASectorMap, amMean : FitMapValue)->ASectorMa
                       e0    = amap.e0.copy().fillna(amMean.e0),
                       lt    = amap.lt.copy().fillna(amMean.lt),
                       e0u   = amap.e0u.copy().fillna(amMean.e0u),
-                      ltu   = amap.ltu.copy().fillna(amMean.ltu))
+                      ltu   = amap.ltu.copy().fillna(amMean.ltu),
+                      mapinfo   = None)
 
 
 def amap_replace_nan_by_zero(amap : ASectorMap)->ASectorMap:
@@ -317,7 +323,8 @@ def amap_replace_nan_by_zero(amap : ASectorMap)->ASectorMap:
                       e0    = amap.e0.copy().fillna(0),
                       lt    = amap.lt.copy().fillna(0),
                       e0u   = amap.e0u.copy().fillna(0),
-                      ltu   = amap.ltu.copy().fillna(0))
+                      ltu   = amap.ltu.copy().fillna(0),
+                      mapinfo   = None)
 
 
 def amap_valid_fraction(vmask: ASectorMap)->FitMapValue:
@@ -342,7 +349,8 @@ def relative_errors(am : ASectorMap)->ASectorMap:
                       e0    = am.e0,
                       lt    = am.lt,
                       e0u   = 100 * am.e0u / am.e0,
-                      ltu   = 100 * am.ltu / am.lt)
+                      ltu   = 100 * am.ltu / am.lt,
+                      mapinfo   = None)
 
 
 def regularize_maps(amap    : ASectorMap,
@@ -359,7 +367,8 @@ def regularize_maps(amap    : ASectorMap,
                       e0    =       me0,
                       lt    =       mlt,
                       e0u   =       me0u,
-                      ltu   =       mltu)
+                      ltu   =       mltu,
+                      mapinfo   = None)
 
 
 def set_outliers_to_nan(dfmap : DataFrame, OL : Dict[int, List[int]])->DataFrame:
