@@ -4,6 +4,7 @@ from typing      import Tuple
 from typing      import Dict
 from typing      import List
 from typing      import TypeVar
+from typing      import Optional
 
 from enum        import Enum
 
@@ -250,7 +251,7 @@ class ASectorMap:  # Map in chamber sector containing average of pars
     lt      : DataFrame
     e0u     : DataFrame
     ltu     : DataFrame
-    mapinfo : Series
+    mapinfo : Optional[Series]
 
 
 @dataclass
