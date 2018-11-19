@@ -265,6 +265,39 @@ def get_maps_from_tsmap(tsm     : SectorMapTS,
         aMaps.append(asm)
     return aMaps
 
+def add_mapinfo(asm        : ASectorMap,
+                xr         : Tuple[float, float],
+                yr         : Tuple[float, float],
+                nx         : int,
+                ny         : int,
+                run_number : int) ->ASectorMap:
+    """
+    Add metadata to a ASectorMap
+
+        Parameters
+        ----------
+            asm
+                ASectorMap object.
+            xr, yr
+                Ranges in (x, y) defining the map.
+            nx, ny
+                Number of bins in (x, y) defining the map.
+            run_number
+                run number defining the map.
+
+        Returns
+        -------
+            A new ASectorMap containing metadata (in the variable mapinfo)
+
+    """
+    return ASectorMap(chi2  = asm.chi2,
+                      e0    =  asm.e0,
+                      lt    =  asm.lt,
+                      e0u   =  asm.e0u,
+                      ltu   =  asm.ltu,
+                      mapinfo   = pd.Series([*xr, *yr, nx, ny, run_number],
+                                           index=['xmin','xmax',
+                                                  'ymin','ymax','nx','ny','run_number']))
 
 def amap_valid_mask(amap : ASectorMap)->ASectorMap:
 
