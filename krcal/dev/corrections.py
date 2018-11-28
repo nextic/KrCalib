@@ -34,15 +34,15 @@ class Calibration:
         call() to apply corrections.
         """
 
-        print('calibration file :', correction_filename)
-        print('node             :', node)
+        #print('calibration file :', correction_filename)
+        #print('node             :', node)
 
         E0, _ = self._scale(correction_filename, 'E'+node)
         Q0, _ = self._scale(correction_filename, 'Q'+node)
         LT, _ = self._scale(correction_filename, 'Elifetime')
-        print('Energy   scale : {0:4.1f} (pes)'.format(E0))
-        print('Lifetime scale : {0:4.1f} (us) '.format(LT))
-        print('Charge   scale : {0:4.1f} (pes)'.format(Q0))
+        #print('Energy   scale : {0:4.1f} (pes)'.format(E0))
+        #print('Lifetime scale : {0:4.1f} (us) '.format(LT))
+        #print('Charge   scale : {0:4.1f} (pes)'.format(Q0))
         self.E0 = E0
         self.LT = LT
         self.Q0 = Q0
