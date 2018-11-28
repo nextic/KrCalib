@@ -296,8 +296,13 @@ def naiveblobs(eij, xij, yij, zij, blob_radius = 16.):
     if (len(zs) > 0):
         epoint2, eblob2, _  = eblob(zs)
 
-    #print('epoint1 ', epoint1)
-    #print('epoint2 ', epoint2)
+    eblobs = zip( (eblob1, eblob2), (epoint1, epoint2) )
+    eblobs = sorted(eblobs, reverse = True)
+    eblob1, epoint1 = eblobs[0]
+    eblob2, epoint2 = eblobs[1]
+
+    #print('epoint1 ', epoint1, eblob1)
+    #print('epoint2 ', epoint2, eblob2)
     d12 = np.sqrt(dis(epoint1, epoint2))
 
     return epoint1, epoint2, d12, eblob1, eblob2
@@ -388,12 +393,15 @@ def _calibration_factors(x, y, z, calibrate):
     nhits = len(z)
     ones = np.ones(nhits)
 
-    #ce0, cq0 = calibrate(x, y, None, None, ones, ones)
+    # Original
     ce , cq  = calibrate(x, y, z   , None, ones, ones)
-
-    #ce0 [ce0 <= 0.] = 1.
-    #fe, fq  = ce, cq0*ce/ce0
     fe, fq  = ce, cq
+
+    # MODIFIED
+    #ce , cq  = calibrate(x, y, None, None, ones, ones)
+    #lt  = 2638 # us
+    #fe, fq  = ce * np.exp(z/lt), cq
+
 
     return fe, fq
 
