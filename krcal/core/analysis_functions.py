@@ -41,6 +41,43 @@ import sys
 import logging
 log = logging.getLogger()
 
+
+def select_xy_sectors_np(dst, time_diffs, E, Q, bins_x, bins_y):
+    """
+    Return a dict of KrEvent organized by xy sector
+
+    Parameters
+    ----------
+        dst:
+        The input data frame.
+        time_diffs:
+        An array of time differences needed to compute the time masks.
+        E:
+        An energy vector (can contain the corrected energy in the PMTs).
+        Q:
+        An energy vector (can contain the corrected energy in the SiPMs).
+        bins_x:
+        An array of bins along x.
+        bins_y:
+        An array of bins along y.
+
+    Returns
+    -------
+        A map of selections defined as Dict[int, List[KrEvent]]
+        where for each x (the key in the dict) one has a list
+        (corresponding to y cells) of KrEvent (the events selected)
+
+    """
+    RGES = {}
+    nbins_x = len(bins_x) -1
+    nbins_y = len(bins_y) -1
+    for i in range(nbins_x):
+        dstx = dst[in_range(dst.X, *bins_x[i: i+2])]
+        RGES[i] = [dstx[in_range(dstx.Y, *bins_y[j: j+2])] for j in range(nbins_y) ]
+
+    return RGES
+
+
 def kr_event(dst      : DataFrame,
              DT       : Array      = [],
              E        : Array      = [],
