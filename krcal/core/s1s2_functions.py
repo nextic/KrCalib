@@ -138,7 +138,7 @@ def plot_s1histos(dst, s1d, bins=20,
                   range_s1e = (0,40),
                   range_s1w = (0,500),
                   range_s1h = (0,10),
-                  range_s1t = (0,600),
+                  range_s1t = (0,800),
                   figsize=(12,12)):
 
     fig = plt.figure(figsize=figsize) # Creates a new figure
@@ -284,7 +284,7 @@ def plot_s2histos(df, s2d, bins=20, emin=3000, emax=15000, figsize=(12,12)):
     ax.set_xlabel(r' X (mm)',fontsize = 11) #xlabel
     ax.set_ylabel('# of events', fontsize = 11)
     ax.hist(df.X,
-            range=(-200,200),
+            range=(-220,220),
             bins=bins,
             histtype='step',
             edgecolor='black',
