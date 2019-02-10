@@ -42,20 +42,57 @@ import logging
 log = logging.getLogger()
 
 
-def select_xy_sectors_np(dst, time_diffs, E, Q, bins_x, bins_y):
+def nmap(dstMap : Dict[int, List[DataFrame]])->DataFrame:
     """
-    Return a dict of KrEvent organized by xy sector
+    Compute a numerical map from a DataFrame map
+
+    Parameters
+    ----------
+    dstMAP:
+        A DataFrame map, e.g, a Dict[int, List[DataFrame]]
+
+    Returns
+    -------
+        A DataFrame in which each entry corresponds to the length of the
+        DataFrames in the map.
+
+    """
+    DLEN = {}
+    for i, ldst in dstMap.items():
+        DLEN[i] =[len(dst) for dst in ldst]
+    return pd.DataFrame.from_dict(DLEN)
+
+
+def data_frames_are_identical(df1 : DataFrame, df2 : DataFrame)->bool:
+    """
+    Compare two data frames
+
+    Parameters
+    ----------
+    df1, df2:
+        Data Frames to be compared
+
+    Returns
+    -------
+        A bool: True if all elements of the DFs are identical False otherwise
+    """
+    df = df1 == df2 # the resulting df is a df of bools.
+
+    # first all() gives a bool per column, creating a Series,
+    # seond all() gives a bool for the Series
+    return df.eq(True).all().all()
+
+
+def select_xy_sectors_df(dst        : DataFrame,
+                         bins_x     : np.array,
+                         bins_y     : np.array)-> Dict[int, List[DataFrame]]:
+    """
+    Return a dict of selections organized by xy sector
 
     Parameters
     ----------
         dst:
         The input data frame.
-        time_diffs:
-        An array of time differences needed to compute the time masks.
-        E:
-        An energy vector (can contain the corrected energy in the PMTs).
-        Q:
-        An energy vector (can contain the corrected energy in the SiPMs).
         bins_x:
         An array of bins along x.
         bins_y:
@@ -63,19 +100,19 @@ def select_xy_sectors_np(dst, time_diffs, E, Q, bins_x, bins_y):
 
     Returns
     -------
-        A map of selections defined as Dict[int, List[KrEvent]]
+        A map of selections defined as Dict[int, List[DataFrame]]
         where for each x (the key in the dict) one has a list
-        (corresponding to y cells) of KrEvent (the events selected)
+        (corresponding to y cells) of DataFrame (the events selected)
 
     """
-    RGES = {}
+    dstMap = {}
     nbins_x = len(bins_x) -1
     nbins_y = len(bins_y) -1
     for i in range(nbins_x):
         dstx = dst[in_range(dst.X, *bins_x[i: i+2])]
-        RGES[i] = [dstx[in_range(dstx.Y, *bins_y[j: j+2])] for j in range(nbins_y) ]
+        dstMap[i] = [dstx[in_range(dstx.Y, *bins_y[j: j+2])] for j in range(nbins_y) ]
 
-    return RGES
+    return dstMap
 
 
 def kr_event(dst      : DataFrame,
