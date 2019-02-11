@@ -19,10 +19,39 @@ from invisible_cities.core.testing_utils       import float_arrays
 from invisible_cities.core.testing_utils       import FLOAT_ARRAY
 from invisible_cities.core.testing_utils       import random_length_float_arrays
 
+from . core_functions       import get_time_series_df
 from . core_functions       import find_nearest
 from . core_functions       import divide_np_arrays
 from . core_functions       import file_numbers_from_file_range
 from   invisible_cities.evm.ic_containers  import Measurement
+
+
+def test_get_time_series_df(dstData):
+    """
+    See: https://github.com/nextic/KrCalibNB/blob/krypton/tutorials/TestsForMaps.ipynb
+    """
+    dst, _, _, _, _, nt, t0, tf, step, indx, ts = dstData
+
+    ts2, masks = get_time_series_df(nt,(t0, tf), dst, time_column='t')
+
+    assert np.allclose(ts,ts2)
+
+    t0 = int(t0)
+    tf = int(tf)
+    if step == 1:
+        indx2 = [(t0, tl)]
+    else:
+        indx2 = [(i, i + step) for i in range(t0, int(tf - step), step) ]
+        indx2.append((step * (nt -1), tf))
+
+    assert indx == indx2
+
+    for i in range(len(masks)-1):
+        assert np.count_nonzero(masks[i]) == 4
+
+    print(np.count_nonzero(masks[-1]))
+    assert np.count_nonzero(masks[-1] == 3)
+
 
 def nearest(a, v):
     """Alternative (not optimized) implementation of find_nearest
