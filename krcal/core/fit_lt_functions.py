@@ -41,12 +41,12 @@ from . kr_types import HistoPar, HistoPar2
 from . kr_types import FitCollection, FitCollection2
 
 
-from . kr_types import FitType, MapType
-from . kr_types import Number, Range
-from . kr_types import KrEvent
-#from . kr_types import TSectorMap, ASectorMap
+from . kr_types       import FitType, MapType
+from . kr_types       import Number, Range
+from . kr_types       import KrEvent
+from . core_functions import get_time_series_df
 
-from scipy.optimize import OptimizeWarning
+from scipy.optimize    import OptimizeWarning
 from . histo_functions import labels
 from numpy import sqrt, pi
 
@@ -383,6 +383,78 @@ def time_fcs(ts      : np.array,
 
     e0s, lts, c2s = pars_from_fcs(fcs)
     #print(value_from_measurement(e0s))
+    return FitParTS(ts  = np.array(ts),
+                    e0  = value_from_measurement(e0s),
+                    lt  = value_from_measurement(lts),
+                    c2  = c2s,
+                    e0u = uncertainty_from_measurement(e0s),
+                    ltu = uncertainty_from_measurement(lts))
+
+
+def time_fcs_df(ts      : np.array,
+                masks   : List[np.array],
+                dst     : DataFrame,
+                nbins_z : int,
+                nbins_e : int,
+                range_z : Tuple[float, float],
+                range_e : Tuple[float, float],
+                energy  : str                 = 'S2e',
+                fit     : FitType             = FitType.profile)->FitParTS:
+    """
+    Fit lifetime of a time series.
+
+    Parameters
+    ----------
+        ts
+            A vector of floats with the (central) values of the time series.
+        masks
+            A list of boolean vectors specifying the selection masks that define the time series.
+        dst
+            A dst DataFrame
+        range_z
+            Range in Z for fit.
+        nbins_z
+            Number of bins in Z for the fit.
+        nbins_e
+            Number of bins in energy.
+        range_z
+            Range in Z for fit.
+        range_e
+            Range in energy.
+        energy:
+            Takes by default S2e (uses S2e field in dst) but can take any value specified by str.
+        fit
+            Selects fit type.
+
+
+    Returns
+    -------
+        A FitParTs:
+
+    @dataclass
+    class FitParTS:             # Fit parameters Time Series
+        ts   : np.array         # contains the time series (integers expressing time differences)
+        e0   : np.array         # e0 fitted in time series
+        lt   : np.array         # lt fitted in time series
+        c2   : np.array         # c2 fitted in time series
+        e0u  : np.array         # e0 error fitted in time series
+        ltu  : np.array
+
+    """
+
+    dsts = [dst[sel_mask] for sel_mask in masks]
+
+    logging.debug('function:time_fcs ')
+    logging.debug(f' list of dsts has length {len(dsts)}')
+    [logging.debug(f' mask {i} has length {len(mask)}') for i, mask in enumerate(masks)]
+    [logging.debug(f' mask {i} has {np.count_nonzero(mask)} True elements')
+                   for i, mask in enumerate(masks)]
+
+    fcs =[fit_lifetime(dst.Z.values, dst[energy].values,
+                       nbins_z, nbins_e, range_z, range_e, fit) for dst in dsts]
+
+    e0s, lts, c2s = pars_from_fcs(fcs)
+
     return FitParTS(ts  = np.array(ts),
                     e0  = value_from_measurement(e0s),
                     lt  = value_from_measurement(lts),
