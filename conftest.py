@@ -69,14 +69,18 @@ def map_filename_ts_path(MAPSDIR, map_filename_ts):
 
 @pytest.fixture(scope='session')
 def dstData():
-    x = np.random.random(20) * 100
-    y = np.random.random(20) * 100
-    t = np.arange(0,100,5)
+    # define dst
     D = {}
-    D['X'] = x
-    D['Y'] = y
-    D['t'] = t
-    dst    = pd.DataFrame.from_dict(D)
+    D['X']      = np.random.random(20) * 100
+    D['Y']      = np.random.random(20) * 100
+    D['Z']      = np.random.random(20) * 100
+    D['R']      = np.random.random(20) * 100
+    D['Phi']    = np.random.random(20) * 100
+    D['S2e']    = np.random.random(20) * 100
+    D['S1e']    = np.random.random(20) * 100
+    D['S2q']    = np.random.random(20) * 100
+    D['time']   = np.arange(0,100,5)
+    dst         = pd.DataFrame.from_dict(D)
 
     ### Define x & y bins
     xb = np.arange(0,101,25)
@@ -86,8 +90,9 @@ def dstData():
 
     # define time bins
     nt = 5
-    t0 = dst.t.values[0]
-    tf = dst.t.values[-1]
+    t0 = dst.time.values[0]
+    tf = dst.time.values[-1]
+
     step = int((tf -  t0) / nt)
     indx = [(0, 19), (19, 38), (38, 57), (57, 76), (76, 95)]
     ts   = [9.5, 28.5, 47.5, 66.5, 85.5]
