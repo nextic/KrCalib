@@ -20,9 +20,12 @@ from invisible_cities.core.testing_utils       import FLOAT_ARRAY
 from invisible_cities.core.testing_utils       import random_length_float_arrays
 
 from . core_functions       import get_time_series_df
+from . fit_lt_functions     import get_time_series
+from . analysis_functions   import kr_event
 from . core_functions       import find_nearest
 from . core_functions       import divide_np_arrays
 from . core_functions       import file_numbers_from_file_range
+
 from   invisible_cities.evm.ic_containers  import Measurement
 
 
@@ -32,7 +35,7 @@ def test_get_time_series_df(dstData):
     """
     dst, _, _, _, _, nt, t0, tf, step, indx, ts = dstData
 
-    ts2, masks = get_time_series_df(nt,(t0, tf), dst, time_column='t')
+    ts2, masks = get_time_series_df(nt,(t0, tf), dst, time_column='time')
 
     assert np.allclose(ts,ts2)
 
@@ -49,8 +52,20 @@ def test_get_time_series_df(dstData):
     for i in range(len(masks)-1):
         assert np.count_nonzero(masks[i]) == 4
 
-    print(np.count_nonzero(masks[-1]))
-    assert np.count_nonzero(masks[-1] == 3)
+    #print(np.count_nonzero(masks[-1]))
+    #assert np.count_nonzero(masks[-1] == 3)
+
+
+def test_get_time_series_df_gives_same_result_time_series(dstData):
+    dst, _, _, _, _, nt, t0, tf, step, indx, ts = dstData
+
+    ts, masks = get_time_series_df(nt,(t0, tf), dst, time_column='time')
+
+    kge = kr_event(dst, dst.time.values, dst.X, dst.Y)
+    ts2, masks2 = get_time_series(nt, (t0, tf), kge)
+
+    assert np.allclose(ts,ts2)
+    assert np.array(masks).all() == np.array(masks2).all()
 
 
 def nearest(a, v):
