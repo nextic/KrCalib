@@ -1,5 +1,7 @@
 """
-Tests for fit_functions
+Tests for analysis_functions
+
+See: https://github.com/nextic/KrCalibNB/blob/krypton/tutorials/TestsForMaps.ipynb
 """
 
 import numpy as np
@@ -26,24 +28,7 @@ from   invisible_cities.core.core_functions    import in_range
 from . analysis_functions  import data_frames_are_identical
 from . analysis_functions  import nmap
 from . analysis_functions  import select_xy_sectors_df
-
 import pytest
-
-@pytest.fixture(scope='session')
-def dstData():
-    x = np.random.random(20) * 100
-    y = np.random.random(20) * 100
-    D = {}
-    D['X'] = x
-    D['Y'] = y
-    data = pd.DataFrame.from_dict(D)
-
-    ### Define bins
-    xb = np.arange(0,101,25)
-    yb = np.arange(0,101,25)
-    nbx = len(xb) -1
-    nby = len(yb) -1
-    return data, xb, yb, nbx, nby
 
 
 def x_and_y_ranges(data : DataFrame, xb : np.array, yb : np.array, nbx :int, nby : int):
@@ -57,15 +42,14 @@ def x_and_y_ranges(data : DataFrame, xb : np.array, yb : np.array, nbx :int, nby
     return r
 
 
-
 def test_x_and_y_ranges(dstData):
-    data, xb, yb, nbx, nby = dstData
+    dst, xb, yb, nbx, nby, _, _, _, _, _, _ = dstData
 
-    assert x_and_y_ranges(data, xb, yb, nbx, nby)
+    assert x_and_y_ranges(dst, xb, yb, nbx, nby)
 
 
 def test_select_xy_sectors_df(dstData):
-    data, xb, yb, nbx, nby = dstData
+    data, xb, yb, nbx, nby, _, _, _, _, _, _ = dstData
 
     selDict = {}
     for i in range(nbx):
