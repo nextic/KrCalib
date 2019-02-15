@@ -51,59 +51,25 @@ def in_range(data, minval=-np.inf, maxval=np.inf):
     return (minval <= data) & (data < maxval)
 
 
-def get_time_series_df(time_bins    : Number,
-                       time_range   : Tuple[float, float],
-                       dst          : DataFrame,
-                       time_column  : str = 'DT')->Tuple[np.array, List[np.array]]:
+def data_frames_are_identical(df1 : DataFrame, df2 : DataFrame)->bool:
+    """
+    Compare two data frames
+
+    Parameters
+    ----------
+    df1, df2:
+        Data Frames to be compared
+
+    Returns
+    -------
+        A bool: True if all elements of the DFs are identical False otherwise
     """
 
-    Given a dst (DataFrame) with a time column specified by the name time,
-    this function returns a time series (ts) and a list of masks which are used to divide
-    the event in time tranches.
+    df = df1 == df2 # the resulting df is a df of bools.
 
-    More generically, one can produce a "time series" using any column of the dst
-    simply specifying time_column = ColumName
-
-        Parameters
-        ----------
-            time_bins
-                Number of time bines.
-            time_range
-                Time range.
-            dst
-                A Data Frame 
-            time_column
-            A string specifyng the dst column to be divided in time slices.
-
-        Returns
-        -------
-            A Tuple with:
-            np.array       : This is the ts vector
-            List[np.array] : This are the list of masks defining the events in the time series.
-
-    """
-
-    logging.debug(f'function: get_time_series')
-    nt = time_bins
-    x = int((time_range[-1] -  time_range[0]) / nt)
-    tfirst = int(time_range[0])
-    tlast  = int(time_range[-1])
-    if x == 1:
-        indx = [(tfirst, tlast)]
-    else:
-        indx = [(i, i + x) for i in range(tfirst, int(tlast - x), x) ]
-        indx.append((x * (nt -1), tlast))
-
-    ts = [(indx[i][0] + indx[i][1]) / 2 for i in range(len(indx))]
-
-    logging.debug(f' number of time bins = {nt}, t_first = {tfirst} t_last = {tlast}')
-    logging.debug(f'indx = {indx}')
-    logging.debug(f'ts = {ts}')
-
-    times = dst[time_column].values
-    masks = [in_range(times, indx[i][0], indx[i][1]) for i in range(len(indx))]
-
-    return np.array(ts), masks
+    # first all() gives a bool per column, creating a Series,
+    # seond all() gives a bool for the Series
+    return df.eq(True).all().all()
 
 
 def phirad_to_deg(r : float)-> float:
