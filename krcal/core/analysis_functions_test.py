@@ -25,7 +25,7 @@ from invisible_cities.core.testing_utils       import FLOAT_ARRAY
 from invisible_cities.core.testing_utils       import random_length_float_arrays
 
 from   invisible_cities.core.core_functions    import in_range
-from . analysis_functions      import data_frames_are_identical
+from . core_functions      import data_frames_are_identical
 from . analysis_functions  import nmap
 from . analysis_functions  import select_xy_sectors_df
 import pytest
