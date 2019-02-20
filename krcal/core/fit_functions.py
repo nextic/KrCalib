@@ -306,3 +306,12 @@ def fit_slices_2d_expo(xdata, ydata, zdata, tdata,
             except:
                 pass
     return Measurement(const, constu), Measurement(slope, slopeu), chi2, valid
+    
+    
+def sigmoid(x          : np.array,
+            scale      : float,
+            inflection : float,
+            slope      : float,
+            offset     : float)->np.array:
+    
+    return scale / ( 1 + np.exp( - slope * ( x - inflection ) ) ) + offset
