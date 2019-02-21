@@ -41,6 +41,7 @@ import sys
 import logging
 log = logging.getLogger()
 
+
 def kr_event(dst      : DataFrame,
              DT       : Array      = [],
              E        : Array      = [],
@@ -199,7 +200,6 @@ def kr_bins(xxrange   : Range = (-220,  220),
                   Yp   = Ypitch,
                   T    = None)
 
-
 def kr_ranges_and_bins(dst       : DataFrame,
                        xxrange   : Range = (-220,  220),
                        yrange    : Range = (-220,  220),
@@ -235,11 +235,16 @@ def kr_ranges_and_bins(dst       : DataFrame,
                      xnbins, ynbins, znbins, s2enbins, s1enbins, s2qnbins)
 
 
-    dst_time = dst.sort_values('event')
-    T       = dst_time.time.values
+    T      = dst.time.values   # vector of times, will be all zeros if MC
+    if (T==0).all() : # MC!
+        tstart   = 0                         # time linear on events
+        tfinal   = len(T)
+    else:
+        dst_time = dst.sort_values('time')  # if data, sort on time,
+        T        = dst_time.time.values     # event number can be repeated with multiple DSTs
+        tstart   = T[0]
+        tfinal   = T[-1]
 
-    tstart  = T[0]
-    tfinal  = T[-1]
     Trange  = (tstart,tfinal)
     ntimebins  = int( np.floor( ( tfinal - tstart) / tpsamples) )
     Tnbins     = np.max([ntimebins, 1])
@@ -253,6 +258,7 @@ def kr_ranges_and_bins(dst       : DataFrame,
     TL         = [(Tbins[t],Tbins[t+1]) for t in range(Tnbins)]
     timeStamps = list(map(datetime.datetime.fromtimestamp, times))
     krTimes    = KrTimes(times = times, timeStamps = timeStamps, TL = TL)
+
 
     return krTimes, krRanges, krNbins, krBins
 

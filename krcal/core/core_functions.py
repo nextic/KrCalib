@@ -1,12 +1,20 @@
 import time
 from   datetime import datetime
 import numpy as np
+import pandas as pd
+from   pandas.core.frame import DataFrame
+
 from   typing      import Tuple, List, Iterable
 from . kr_types    import Number
 from   numpy      import pi
 from   invisible_cities.evm.ic_containers  import Measurement
 
 NN = np.nan
+
+import sys
+import logging
+log = logging.getLogger()
+
 
 def timeit(f):
     """
@@ -19,6 +27,7 @@ def timeit(f):
                                               time.time() - t0))
         return output
     return time_f
+
 
 def in_range(data, minval=-np.inf, maxval=np.inf):
     """
@@ -40,6 +49,28 @@ def in_range(data, minval=-np.inf, maxval=np.inf):
         for those values of data in the input range and False for the others.
     """
     return (minval <= data) & (data < maxval)
+
+
+def data_frames_are_identical(df1 : DataFrame, df2 : DataFrame)->bool:
+    """
+    Compare two data frames
+
+    Parameters
+    ----------
+    df1, df2:
+        Data Frames to be compared
+
+    Returns
+    -------
+        A bool: True if all elements of the DFs are identical False otherwise
+    """
+
+    df = df1 == df2 # the resulting df is a df of bools.
+
+    # first all() gives a bool per column, creating a Series,
+    # seond all() gives a bool for the Series
+    return df.eq(True).all().all()
+
 
 def phirad_to_deg(r : float)-> float:
     return (r + pi) * 180 / pi

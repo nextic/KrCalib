@@ -41,12 +41,11 @@ from . kr_types import HistoPar, HistoPar2
 from . kr_types import FitCollection, FitCollection2
 
 
-from . kr_types import FitType, MapType
-from . kr_types import Number, Range
-from . kr_types import KrEvent
-#from . kr_types import TSectorMap, ASectorMap
+from . kr_types       import FitType, MapType
+from . kr_types       import Number, Range
+from . kr_types       import KrEvent
 
-from scipy.optimize import OptimizeWarning
+from scipy.optimize    import OptimizeWarning
 from . histo_functions import labels
 from numpy import sqrt, pi
 
@@ -601,7 +600,7 @@ def fit_fcs_in_rphi_sectors(sector        : int,
                             range_z       : Tuple[float, float],
                             range_e       : Tuple[float, float],
                             energy        : str                 = 'S2e',
-                            fit           : FitType             = FitType.profile,
+                            fit           : FitType             = FitType.unbined,
                             n_min         : int                 = 100)->List[FitParTS]:
     """
     Returns fits to a (radial) sector of a RPHI-time series map

@@ -2,6 +2,7 @@ import os
 import pytest
 import numpy  as np
 import tables as tb
+import pandas as pd
 
 @pytest.fixture(scope = 'session')
 def ICARO():
@@ -65,3 +66,34 @@ def map_filename_path(MAPSDIR, map_filename):
 @pytest.fixture(scope='session')
 def map_filename_ts_path(MAPSDIR, map_filename_ts):
     return os.path.join(MAPSDIR, map_filename_ts)
+
+@pytest.fixture(scope='session')
+def dstData():
+    # define dst
+    D = {}
+    D['X']      = np.random.random(20) * 100
+    D['Y']      = np.random.random(20) * 100
+    D['Z']      = np.random.random(20) * 100
+    D['R']      = np.random.random(20) * 100
+    D['Phi']    = np.random.random(20) * 100
+    D['S2e']    = np.random.random(20) * 100
+    D['S1e']    = np.random.random(20) * 100
+    D['S2q']    = np.random.random(20) * 100
+    D['time']   = np.arange(0,100,5)
+    dst         = pd.DataFrame.from_dict(D)
+
+    ### Define x & y bins
+    xb = np.arange(0,101,25)
+    yb = np.arange(0,101,25)
+    nbx = len(xb) -1
+    nby = len(yb) -1
+
+    # define time bins
+    nt = 5
+    t0 = dst.time.values[0]
+    tf = dst.time.values[-1]
+
+    step = int((tf -  t0) / nt)
+    indx = [(0, 19), (19, 38), (38, 57), (57, 76), (76, 95)]
+    ts   = [9.5, 28.5, 47.5, 66.5, 85.5]
+    return dst, xb, yb, nbx, nby, nt, t0, tf, step, indx, ts
