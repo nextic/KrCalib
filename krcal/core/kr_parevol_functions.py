@@ -105,3 +105,70 @@ def computing_kr_parameters(data       : pd.DataFrame,
     return pars
 
 
+def kr_time_evolution(ts         : np.array,
+                      masks      : List[np.array],
+                      dst        : pd.DataFrame,
+                      emaps      : ASectorMap,
+                      xr_map     : Tuple[float, float],
+                      yr_map     : Tuple[float, float],
+                      nx_map     : int,
+                      ny_map     : int,
+                      zslices_lt : int                 = 50,
+                      zrange_lt  : Tuple[float,float]  = (0, 550),
+                      nbins_dv   : int                 = 35,
+                      zrange_dv  : Tuple[float, float] = (500, 625),
+                      detector   : str                 = 'new',
+                      plot_fit   : bool                = False)->pd.DataFrame:
+    """
+    Computes some average parameters (e0, lt, drift v,
+    S1w, S1h, S1e, S2w, S2h, S2e, S2q, Nsipm, 'Xrms, Yrms)
+    for a given krypton distribution and for different time slices.
+    Returns a DataFrame.
+
+    Parameters
+    ----------
+    ts: np.array of floats
+        Sequence of central times for the different time slices.
+    masks: list of boolean lists
+        Allows dividing the distribution into time slices
+    data: DataFrame
+        Kdst distribution to analyze.
+    emaps: correction map
+        Allows geometrical correction of the energy.
+    xr_map, yr_map: length-2 tuple
+        Set the X/Y-coordinate range of the correction map.
+    nx_map, ny_map: int
+        Set the number of X/Y-coordinate bins for the correction map.
+    z_slices: int (optional)
+        Number of Z-coordinate bins for doing the exponential fit to compute the lifetime
+    zrange_lt: length-2 tuple (optional)
+        Number of Z-coordinate range for doing the exponential fit to compute the lifetime
+    nbins_dv: int (optional)
+        Number of bins in Z-coordinate for doing the histogram to compute the drift velocity
+    zrange_dv: int (optional)
+        Range in Z-coordinate for doing the histogram to compute the drift velocity
+    detector: string (optional)
+        Used to get the cathode position from DB for the drift velocity computation.
+    plot_fit: boolean (optional)
+        Flag for plotting the Z-distribution of events around the cathode and the sigmoid fit.
+
+    Returns
+    -------
+    pars: DataFrame
+        Each column corresponds to the average value for a given parameter.
+        Each row corresponds to the parameters for a given time slice.
+    """
+
+    frames = []
+    for index in range(len(masks)):
+        sel_dst = dst[masks[index]]
+        pars    = computing_kr_parameters(sel_dst, ts[index],
+                                          emaps, xr_map, yr_map, nx_map, ny_map,
+                                          zslices_lt, zrange_lt,
+                                          nbins_dv, zrange_dv,
+                                          detector, plot_fit)
+        frames.append(pars)
+
+    total_pars = pd.concat(frames, ignore_index=True)
+
+    return total_pars
