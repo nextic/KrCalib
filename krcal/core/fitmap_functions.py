@@ -51,6 +51,7 @@ def time_fcs_df(ts      : np.array,
                 range_z : Tuple[float, float],
                 range_e : Tuple[float, float],
                 energy  : str                 = 'S2e',
+                z       : str                 = 'Z',
                 fit     : FitType             = FitType.unbined)->FitParTS:
     """
     Fit lifetime of a time series.
@@ -75,6 +76,8 @@ def time_fcs_df(ts      : np.array,
             Range in energy.
         energy:
             Takes by default S2e (uses S2e field in dst) but can take any value specified by str.
+        z:
+            Takes by default Z (uses Z field in dst) but can take any value specified by str.
         fit
             Selects fit type.
 
@@ -95,7 +98,7 @@ def time_fcs_df(ts      : np.array,
     """
 
     dsts = [dst[sel_mask] for sel_mask in masks]
-    fcs =[fit_lifetime(dst.Z.values, dst[energy].values,
+    fcs =[fit_lifetime(dst[z].values, dst[energy].values,
                        nbins_z, nbins_e, range_z, range_e, fit) for dst in dsts]
 
     e0s, lts, c2s = pars_from_fcs(fcs)
@@ -117,6 +120,7 @@ def fit_map_xy_df(selection_map : Dict[int, List[DataFrame]],
                   range_z       : Tuple[float, float],
                   range_e       : Tuple[float, float],
                   energy        : str                 = 'S2e',
+                  z             : str                 = 'Z',
                   fit           : FitType             = FitType.profile,
                   n_min         : int                 = 100)->Dict[int, List[FitParTS]]:
     """
@@ -141,8 +145,9 @@ def fit_map_xy_df(selection_map : Dict[int, List[DataFrame]],
         range_e
             Range in energy.
         energy:
-            Takes two values: S2e (uses S2e field in kre) or E (used E field on kre).
-            This field allows to select fits over uncorrected (S2e) or corrected (E) energies.
+            Takes by default S2e (uses S2e field in dst) but can take any value specified by str.
+        z:
+            Takes by default Z (uses Z field in dst) but can take any value specified by str.
         fit
             Selects fit type.
         n_min
@@ -173,6 +178,7 @@ def fit_map_xy_df(selection_map : Dict[int, List[DataFrame]],
                            range_z       : Tuple[float, float],
                            range_e       : Tuple[float, float],
                            energy        : str                 = 'S2e',
+                           z             : str                 = 'Z',
                            fit           : FitType             = FitType.profile,
                            n_min         : int                 = 100)->FitParTS:
         """Returns fits in the bin specified by xybin"""
@@ -187,7 +193,7 @@ def fit_map_xy_df(selection_map : Dict[int, List[DataFrame]],
 
         if nevt > n_min:
             return time_fcs_df(ts, masks, selection_map[i][j],
-                               nbins_z, nbins_e, range_z, range_e, energy, fit)
+                               nbins_z, nbins_e, range_z, range_e, energy, z, fit)
         else:
             warnings.warn(f'Cannot fit: events in bin[{i}][{j}] ={event_map[i][j]} < {n_min}',
                          UserWarning)
@@ -201,7 +207,7 @@ def fit_map_xy_df(selection_map : Dict[int, List[DataFrame]],
     r, c = event_map.shape
     for i in range(r):
         fMAP[i] = [fit_fcs_in_xy_bin((i,j), selection_map, event_map, n_time_bins, time_diffs,
-                                     nbins_z, nbins_e, range_z,range_e, energy, fit, n_min)
+                                     nbins_z, nbins_e, range_z,range_e, energy, z, fit, n_min)
                                      for j in range(c) ]
     return fMAP
 
