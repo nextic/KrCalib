@@ -15,11 +15,14 @@ import warnings
 from typing      import List, Tuple, Sequence, Iterable, Callable
 
 import invisible_cities.core .fit_functions  as     fitf
+import invisible_cities.database.load_db     as     DB
 from   invisible_cities.core .core_functions import in_range
 from   invisible_cities.evm  .ic_containers  import Measurement
 from   invisible_cities.icaro.hst_functions  import shift_to_bin_centers
 from   invisible_cities.icaro.hst_functions  import labels
-from   invisible_cities.evm.ic_containers import FitFunction
+from   invisible_cities.evm.ic_containers    import FitFunction
+from   invisible_cities.core.stat_functions  import poisson_sigma
+
 
 
 def chi2f(f   : Callable,
@@ -306,3 +309,65 @@ def fit_slices_2d_expo(xdata, ydata, zdata, tdata,
             except:
                 pass
     return Measurement(const, constu), Measurement(slope, slopeu), chi2, valid
+    
+    
+def sigmoid(x          : np.array,
+            scale      : float,
+            inflection : float,
+            slope      : float,
+            offset     : float)->np.array:
+    
+    return scale / ( 1 + np.exp( - slope * ( x - inflection ) ) ) + offset
+
+
+def compute_drift_v(zdata    : np.array,
+                    nbins    : int                               = 35,
+                    zrange   : Tuple[float, float]               = (500, 640),
+                    seed     : Tuple[float, float, float, float] = None,
+                    detector : str                               = 'new',
+                    plot_fit : bool                              = False)->Tuple[float, float]:
+    """
+    Computes the drift velocity for a given distribution
+    using the sigmoid function to get the cathode edge.
+
+    Parameters
+    ----------
+    zdata: array_like
+        Values of Z coordinate.
+    nbins: int (optional)
+        The number of bins in the z coordinate for the binned fit.
+    zrange: length-2 tuple (optional)
+        Fix the range in z.
+    seed: length-4 tuple (optional)
+        Seed for the fit.
+    detector: string (optional)
+        Used to get the cathode position from DB.
+    plot_fit: boolean (optional)
+        Flag for plotting the results.
+
+    Returns
+    -------
+    dv: float
+        Drift velocity.
+    dvu: float
+        Drift velocity uncertainty.
+    """
+
+    y, x = np.histogram(zdata, nbins, zrange)
+    x    = shift_to_bin_centers(x)
+
+    if seed is None: seed = np.max(y), np.mean(zrange), 0.5, np.min(y)
+
+    f = fitf.fit(sigmoid, x, y, seed, sigma=poisson_sigma(y), fit_range=zrange)
+
+    z_cathode = DB.DetectorGeo(detector).ZMAX[0]
+    dv        = z_cathode/f.values[1]
+    dvu       = dv / f.values[1] * f.errors[1]
+
+    if plot_fit:
+        plt.figure();
+        plt.hist(zdata, nbins, zrange)
+        xx = np.linspace(zrange[0], zrange[1], nbins)
+        plt.plot(xx, sigmoid(xx, *f[1]), color='red');
+
+    return dv, dvu
