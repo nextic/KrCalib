@@ -98,6 +98,8 @@ def time_fcs_df(ts      : np.array,
     """
 
     dsts = [dst[sel_mask] for sel_mask in masks]
+
+    logging.debug(f' time_fcs_df: len(dsts) = {len(dsts)}')
     fcs =[fit_lifetime(dst[z].values, dst[energy].values,
                        nbins_z, nbins_e, range_z, range_e, fit) for dst in dsts]
 
@@ -188,10 +190,12 @@ def fit_map_xy_df(selection_map : Dict[int, List[DataFrame]],
         nevt = event_map[i][j]
         tlast = time_diffs[-1]
         tfrst = time_diffs[0]
-        KRE = selection_map
         ts, masks =  get_time_series_df(n_time_bins, (tfrst, tlast), selection_map[i][j])
 
+        logging.debug(f' ****fit_fcs_in_xy_bin: bins ={i,j}')
+
         if nevt > n_min:
+            logging.debug(f' events in fit ={nevt}, time series = {ts}')
             return time_fcs_df(ts, masks, selection_map[i][j],
                                nbins_z, nbins_e, range_z, range_e, energy, z, fit)
         else:
@@ -202,7 +206,7 @@ def fit_map_xy_df(selection_map : Dict[int, List[DataFrame]],
             dum.fill(np.nan)
             return FitParTS(ts, dum, dum, dum, dum, dum)
 
-
+    logging.debug(f' fit_map_xy_df')
     fMAP = {}
     r, c = event_map.shape
     for i in range(r):
