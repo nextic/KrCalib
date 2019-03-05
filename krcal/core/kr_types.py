@@ -107,7 +107,7 @@ class KrBins:
     X    : Array
     Y    : Array
     Xsi  : Array
-    YSi  : Array
+    Ysi  : Array
     Z    : Array
     Xc   : Array
     Yc   : Array
@@ -124,7 +124,7 @@ class KrNBins:
     X    : Int
     Y    : Int
     Xsi  : Int
-    YSi  : Int    
+    Ysi  : Int
     Z    : Int
     T    : Int
 
