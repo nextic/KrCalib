@@ -226,6 +226,7 @@ def fit_fcs_in_rphi_sectors_df(sector        : int,
                                range_z       : Tuple[float, float],
                                range_e       : Tuple[float, float],
                                energy        : str                 = 'S2e',
+                               z             : str                 = 'Z',
                                fit           : FitType             = FitType.unbined,
                                n_min         : int                 = 100)->List[FitParTS]:
     """
@@ -283,7 +284,7 @@ def fit_fcs_in_rphi_sectors_df(sector        : int,
         if event_map[sector][i] > n_min:
             ts, masks =  get_time_series_df(n_time_bins, (tfrst, tlast), selection_map[sector][i])
             fp  = time_fcs_df(ts, masks, selection_map[sector][i],
-                              nbins_z, nbins_e, range_z, range_e, energy, fit)
+                              nbins_z, nbins_e, range_z, range_e, energy, z, fit)
         else:
             warnings.warn(f'Cannot fit: events in s/w[{sector}][{i}] ={event_map[sector][i]} < {n_min}',
                          UserWarning)
