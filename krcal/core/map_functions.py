@@ -360,6 +360,15 @@ def amap_replace_nan_by_zero(amap : ASectorMap)->ASectorMap:
                       mapinfo   = None)
 
 
+def amap_replace_nan_by_value(amap : ASectorMap, val : float)->ASectorMap:
+    return ASectorMap(chi2  = amap.chi2.copy().fillna(val),
+                      e0    = amap.e0.copy().fillna(val),
+                      lt    = amap.lt.copy().fillna(val),
+                      e0u   = amap.e0u.copy().fillna(val),
+                      ltu   = amap.ltu.copy().fillna(val),
+                      mapinfo   = None)
+
+
 def amap_valid_fraction(vmask: ASectorMap)->FitMapValue:
 
     def count_valid(df):
@@ -384,6 +393,81 @@ def relative_errors(am : ASectorMap)->ASectorMap:
                       e0u   = 100 * am.e0u / am.e0,
                       ltu   = 100 * am.ltu / am.lt,
                       mapinfo   = None)
+
+
+def regularize_maps_df(amap    : ASectorMap,
+                       erange  : Tuple[float, float] = (2000, 14000),
+                       ltrange : Tuple[float, float] = (500,5000),
+                       c2range : Tuple[float, float] = (0.5,5.5),
+                       maxNan  : int                 = 5)->ASectorMap:
+    """This function:
+
+    1) Sets outliers to nan
+    2) Replaces nans inside the DF by interpolated values, replacing a maximum of maxNan nans
+    3) Replaces nans outside the DF by zero.
+    """
+
+    def find_outliers_df(dfmap : DataFrame,
+                         xr    : Tuple[float,float])->Dict[int, List[int]]:
+        OL = {}
+        for i in dfmap.columns:
+            ltc = dfmap[i]
+            gltc = ltc.dropna().between(*xr)
+            lst = list(gltc[gltc==False].index)
+            if len(lst) > 0:
+                OL[i] = lst
+        return OL
+
+
+    def set_outliers_to_nan(dfmap : DataFrame, OL : Dict[int, List[int]])->DataFrame:
+        newmap = dfmap.copy()
+        for i, lst in OL.items():
+            for j in lst:
+                newmap[i][j] = np.nan
+        return newmap
+
+
+    def regularize_maps(mapdf    : DataFrame,
+                        mapdfu   : DataFrame,
+                        mrange   : Tuple[float, float] = (2000, 20000)):
+
+        OL   = find_outliers_df(mapdf, xr=mrange)
+        m0   = set_outliers_to_nan(mapdf, OL)
+        m0u  = set_outliers_to_nan(mapdfu, OL)
+        return DataFrame.interpolate(m0, limit=maxNan), DataFrame.interpolate(m0u,limit=maxNan)
+
+    def regularize_maps_chi2(am      : ASectorMap,
+                             c2range : Tuple[float, float] = (0.5, 5.5)):
+
+        OL    = find_outliers_df(am.chi2, xr=c2range)
+        c20   = set_outliers_to_nan(am.chi2, OL)
+        e0    = set_outliers_to_nan(am.e0  , OL)
+        e0u   = set_outliers_to_nan(am.e0u , OL)
+        lt    = set_outliers_to_nan(am.lt  , OL)
+        ltu   = set_outliers_to_nan(am.ltu , OL)
+
+
+        return ASectorMap(chi2       = DataFrame.interpolate(c20,limit=maxNan),
+                           e0        = DataFrame.interpolate(e0,limit=maxNan),
+                           lt        = DataFrame.interpolate(lt,limit=maxNan),
+                           e0u       = DataFrame.interpolate(e0u,limit=maxNan),
+                           ltu       = DataFrame.interpolate(ltu,limit=maxNan),
+                           mapinfo   =       None)
+
+
+    me0, me0u = regularize_maps(amap.e0, amap.e0u, erange)
+    mlt, mltu = regularize_maps(amap.lt, amap.ltu, ltrange)
+
+    rmap = ASectorMap(chi2      = amap.chi2,
+                       e0        =       me0,
+                       lt        =       mlt,
+                       e0u       =       me0u,
+                       ltu       =       mltu,
+                       mapinfo   =       None)
+
+    rmap = regularize_maps_chi2(rmap, c2range)
+    return rmap
+
 
 
 def regularize_maps(amap    : ASectorMap,
@@ -427,4 +511,19 @@ def find_outliers(dfmap : DataFrame,
             logging.debug(f'column {i}')
             for il in lst:
                 logging.debug(f'outlier found, index = {il}, value ={ltc[il]}')
+    return OL
+
+
+def find_outliers_df(dfmap : DataFrame,
+                     xr    : Tuple[float,float])->Dict[int, List[int]]:
+    """Returns a dict where the keys are the DF columns. For each column
+    the data is the list of indexes of outlayers
+    """
+    OL = {}
+    for i in dfmap.columns:
+        ltc = dfmap[i]
+        gltc = ltc.dropna().between(*xr)
+        lst = list(gltc[gltc==False].index)
+        if len(lst) > 0:
+            OL[i] = lst
     return OL
