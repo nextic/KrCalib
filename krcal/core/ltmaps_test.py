@@ -22,16 +22,24 @@ from  krcal.core.kr_types            import FitType, KrSector, MapType
 
 import warnings
 import pytest
-
+import os
 @pytest.fixture(scope='session')
 def DST(dst_filenames_path):
 
+    print('HERE')
+    #dst           = load_dsts(dst_filenames_path, "DST", "Events")
+    print(f'dst_filenames_path ={dst_filenames_path}')
 
-    dst           = load_dsts(dst_filenames_path, "DST", "Events")
+    fix_path      = os.path.join(os.environ['IC_DATA'], "dst")
+    print(f'fix_path ={fix_path}')
+
+    dst           = load_dsts(fix_path, "DST", "Events")
+
     dst_time      = dst.sort_values('event')
     T             = dst_time.time.values
     DT            = time_delta_from_time(T)
     kge           = kr_event(dst, DT, dst.S2e, dst.S2q)
+
     return dst, DT, kge
 
 
