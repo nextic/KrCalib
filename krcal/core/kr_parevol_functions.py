@@ -10,6 +10,32 @@ import pandas as pd
 import numpy  as np
 
 
+def get_number_of_time_bins(nStimeprofile: int,
+                            tstart       : int,
+                            tfinal       : int )->int:
+    """
+    Computes the number of time bins to compute for a given time step
+    in seconds.
+
+    Parameters
+    ----------
+    nStimeprofile: int
+        Time step in seconds
+    tstart: int
+        Initial timestamp for the data set
+    tfinal: int
+        Final timestamp for the data set
+
+    Returns
+    -------
+    ntimebins: int
+        Number of bins
+    """
+    ntimebins = int( np.floor( ( tfinal - tstart) / nStimeprofile) )
+    ntimebins = np.max([ntimebins, 1])
+
+    return ntimebins
+
 def computing_kr_parameters(data       : pd.DataFrame,
                             ts         : float,
                             emaps      : ASectorMap,
