@@ -7,13 +7,15 @@ from typing      import TypeVar
 from typing      import Optional
 
 from enum        import Enum
+from enum        import auto
 
 from dataclasses import dataclass
 from pandas import DataFrame, Series
 
-from   invisible_cities.types.ic_types import minmax
-from   invisible_cities.evm  .ic_containers  import Measurement
-from   invisible_cities.evm.ic_containers import FitFunction
+from invisible_cities.types.ic_types      import minmax
+from invisible_cities.types.ic_types      import AutoNameEnumBase
+from invisible_cities.evm  .ic_containers import Measurement
+from invisible_cities.evm  .ic_containers import FitFunction
 
 Number = TypeVar('Number', None, int, float)
 Str   = TypeVar('Str', None, str)
@@ -22,6 +24,11 @@ Array = TypeVar('Array', List, np.array)
 #Sel   = TypeVar('Sel',   None, np.array)  # where np.array is array of bool
 #LMeasurement =  List[Measurement]
 Int = TypeVar('Int', None, int)
+
+
+class type_of_signal(AutoNameEnumBase):
+    nS1 = auto()
+    nS2 = auto()
 
 
 class FitType(Enum):
