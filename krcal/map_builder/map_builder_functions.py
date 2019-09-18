@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from krcal.core       .histo_functions    import compute_and_save_hist_as_pd
 from krcal.core       .histo_functions    import compute_equal_histo
 from krcal.core       .histo_functions    import normalize_histo_and_error
+from krcal.core       .kr_parevol_functions import get_number_of_time_bins
 from krcal.map_builder.checking_functions import check_if_values_in_interval
 
 class AbortingMapCreation(Exception):
@@ -113,12 +114,60 @@ def check_Z_dst(Z_vect   : np.array,
     check_if_values_in_interval(diff_sig, -n_sigmas, n_sigmas, message)
     return;
 
-def rate_check(dst         : pd.DataFrame,
-               sigma_range : float,
-               mask        : Optional[np.array] = None,
-               **kwargs                                ) -> None:
-    """ Raises exception if rate changes more than sigma_range"""
-    pass
+
+def check_rate_and_hist(times    : np.array           ,
+                        output_f : pd.HDFStore        ,
+                        n_dev    : float       = 5    ,
+                        bin_size : int         = 180  ,
+                        normed   : bool        = False)->None:
+    """
+    Raises exception if evolution of rate vs time is
+    not flat. It also computes histogram.
+    Parameters
+    ----------
+    times: np.array
+        Time of the events.
+    output_f: pd.HDFStore
+        File where histogram will be saved.
+    n_dev: float
+        Relative standard deviation to judge if
+        distribution is correct.
+    bin_size: int
+        Size (in seconds) for histogram bins.
+        By default it corresponds to 3 min.
+    normed: bool (optional)
+        If True, histogram will be normalized.
+    Returns
+    ----------
+        Nothing.
+
+    """
+    min_time   = times.min()
+    max_time   = times.max()
+    ntimebins  = get_number_of_time_bins(bin_size,
+                                         min_time,
+                                         max_time)
+    compute_and_save_hist_as_pd(times,
+                                output_f,
+                                table_name = "Rate",
+                                n_bins     = ntimebins,
+                                range_hist = (min_time,
+                                              max_time))
+
+    n, _ = np.histogram(times, bins=ntimebins,
+                        range = (min_time, max_time))
+    mean    = np.mean(n)
+    dev     = np.std(n, ddof = 1)
+    rel_dev = dev / mean * 100
+
+    message = "Relative deviation is greater than the allowed one."
+    message += " There must be some issue in rate distribution."
+    check_if_values_in_interval(np.array(rel_dev)        ,
+                                low_lim         = 0      ,
+                                up_lim          = n_dev  ,
+                                raising_message = message)
+    return;
+
 
 def z_band_sel(dst           : pd.DataFrame,
                bootstrap_map : ASectorMap,
