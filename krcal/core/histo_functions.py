@@ -123,7 +123,10 @@ def h1d(x         : np.array,
 
     fig = plt.figure(figsize=figsize)
     ax      = fig.add_subplot(1, 1, 1)
-    n, b, mu, std    = h1(x, bins=bins, range = range, stats = stats, lbl = lbl)
+    n, b, mu, std    = h1(x, bins=bins, range = range, stats = stats, lbl = lbl,
+                          normed = normed, color = color,
+                          width = width, style=style,
+                          weights=weights, log=log)
     plot_histo(pltLabels, ax, legendloc=legendloc)
     return n, b, mu, std
 
