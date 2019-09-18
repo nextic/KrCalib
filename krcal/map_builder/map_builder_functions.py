@@ -2,8 +2,10 @@ from typing import Tuple
 from typing import Optional
 import pandas as pd
 import numpy  as np
-from krcal.core.kr_types  import ASectorMap
+from krcal.core.kr_types  import ASectorMap, type_of_signal
 from dataclasses import dataclass
+from krcal.core       .histo_functions    import compute_and_save_hist_as_pd
+from krcal.map_builder.checking_functions import check_if_values_in_interval
 
 class AbortingMapCreation(Exception):
     pass
@@ -23,17 +25,58 @@ def load_data(config :str) -> Tuple(pd.DataFrame, ASectorMap, reference_histogra
     pass
 
 
-def check_ns_cut(dst         : pd.DataFrame,
-                 s_type      : str,
-                 threshold   : float,
-                 mask        : Optional[np.array] = None,
-                 output_hist : bool = True,
-                 hist_folder : Optional[str] = None,
-                 **kwargs                                  ) -> np.array:
-    """ Checks percentage of events with nSi ==1, optionally saves histogram
-    and outputs mask. Raises exception if number of events smaller than
-    threshold."""
-    pass
+def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
+                                   column     : type_of_signal              ,
+                                   interval   : Tuple[float, float]         ,
+                                   output_f   : pd.HDFStore                 ,
+                                   nbins_hist : int                 = 10    ,
+                                   range_hist : Tuple[float, float] = (0,10),
+                                   norm       : bool = True)->np.array:
+    """
+    Selects nS1(or nS2) == 1 for a given kr dst and
+    returns the mask. It also computes selection efficiency,
+    checking if the value is within a given interval, and
+    saves histogram parameters.
+    Parameters
+    ----------
+    dst: pd.Dataframe
+        Krypton dst dataframe.
+    column: type_of_signal
+        The function can be appplied over nS1 or nS2.
+    interval: length-2 tuple
+        If the selection efficiency is out of this interval
+        (given by the config file) the map production will abort.
+    output_f: pd.HDFStore
+        File where histogram will be saved.
+    nbins_hist: int
+        Number of bins to make the histogram.
+    range_hist: length-2 tuple (optional)
+        Range of the histogram.
+    norm: bool
+        If True, histogram will be normalized.
+    Returns
+    ----------
+        A mask corresponding to the selected events.
+    """
+    mask         = getattr(dst, column.value) == 1
+    nevts_before = dst[mask].event.nunique()
+    nevts_after  = dst      .event.nunique()
+    eff          = nevts_before / nevts_after
+
+    compute_and_save_hist_as_pd(getattr(dst[(dst.s1_peak==0)&(dst.s2_peak==0)],
+                                        column.value),
+                                output_f, column.value,
+                                nbins_hist, range_hist, norm)
+
+    message = "Selection efficiency of "
+    message += column.value
+    message += "==1 out of range."
+    check_if_values_in_interval(np.array(eff),
+                                interval[0],
+                                interval[1],
+                                message)
+    return mask
+
 
 def check_z_dist(dst           : pd.DataFrame,
                  allowed_sigma : float,
