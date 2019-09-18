@@ -5,6 +5,9 @@ import numpy  as np
 from krcal.core.kr_types  import ASectorMap
 from dataclasses import dataclass
 
+class AbortingMapCreation(Exception):
+    pass
+
 @dataclass
 class reference_histograms:
     Z_distribution_hist : np.array
