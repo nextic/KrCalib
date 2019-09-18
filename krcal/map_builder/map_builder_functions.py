@@ -5,6 +5,8 @@ import numpy  as np
 from krcal.core.kr_types  import ASectorMap, type_of_signal
 from dataclasses import dataclass
 from krcal.core       .histo_functions    import compute_and_save_hist_as_pd
+from krcal.core       .histo_functions    import compute_equal_histo
+from krcal.core       .histo_functions    import normalize_histo_and_error
 from krcal.map_builder.checking_functions import check_if_values_in_interval
 
 class AbortingMapCreation(Exception):
@@ -78,13 +80,38 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
     return mask
 
 
-def check_z_dist(dst           : pd.DataFrame,
-                 allowed_sigma : float,
-                 mask          : Optional[np.array] = None,
-                 **kwargs                                  ) -> None:
-    """ checks the z distribution of events, raises exception ifç
-    distribution differes"""
-    pass
+def check_Z_dst(Z_vect   : np.array,
+                ref_file : str     ,
+                n_sigmas : int      = 10)->None:
+    """
+    From a given Z distribution, this function checks, raising
+    an exception, if Z histogram is correct.
+    Parameters:
+    ----------
+    Z_vect : np.array
+        Array of Z values for each kr event.
+    ref_file: string
+        Name of the file that contains reference histogram.
+        Table must contain two columns: 'Z' and 'entries'.
+    n_sigmas: int
+        Number of sigmas to consider if distributions are similar enough.
+    Returns
+    -------
+        Continue if both Z distributions are compatible
+        within a 'n_sigmas' interval.
+    """
+    ref = pd.read_hdf(ref_file, key='Z_hist')
+
+    N_Z, z_Z   = compute_equal_histo(Z_vect, ref)
+    N_Z, err_N = normalize_histo_and_error(N_Z, z_Z)
+
+    diff     = N_Z - ref.entries
+    diff_sig = diff / (err_N+ref.error)
+
+    message = "Z distribution very different to reference one."
+    message += " May be some error in Z distribution of events."
+    check_if_values_in_interval(diff_sig, -n_sigmas, n_sigmas, message)
+    return;
 
 def rate_check(dst         : pd.DataFrame,
                sigma_range : float,
