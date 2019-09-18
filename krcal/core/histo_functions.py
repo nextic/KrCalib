@@ -197,6 +197,33 @@ def compute_similar_histo(param     : np.array,
     return N, b
 
 
+def normalize_histo_and_poisson_error(N : np.array,
+                                      b : np.array
+                                      )->Tuple[np.array,
+                                               np.array]:
+    """
+    Computes poissonian error for each bin. Normalizes the histogram
+    with its area, applying this factor also to the error.
+    Parameters
+    ----------
+    N: np.array
+        Array with the entries inside each bin.
+    b: np.array
+        Array with limits of each bin.
+    Returns
+    ----------
+        The input N array normalized, and its error multiplied
+        by same normalization value.
+    """
+    err_N = np.sqrt(N)
+
+    norm  = 1/sum(N)/((b[-1]-b[0])/(len(b)-1))
+    N     = N*norm
+    err_N = err_N*norm
+
+    return N, err_N
+
+
 def compute_and_save_hist_as_pd(values     : np.array           ,
                                 out_file   : pd.HDFStore        ,
                                 hist_name  : str                ,
