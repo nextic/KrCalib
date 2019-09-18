@@ -173,6 +173,30 @@ def h2d(x         : np.array,
     return nevt
 
 
+def compute_similar_histo(param     : np.array,
+                          reference : pd.DataFrame
+                          )-> Tuple[np.array, np.array]:
+    """
+    This function computes a histogram with the same
+    bin_size and number of bins as a given one.
+    Parameters
+    ----------
+    param : np.array
+        Array to be represented in the histogram.
+    reference: pd.DataFrame
+        Dataframe with the information of a reference histogram.
+    Returns
+    ----------
+        Two arrays with the entries and the limits of each bin.
+    """
+    bin_size   = np.diff(reference.Z)[0]
+    min_Z_hist = reference.Z.values[ 0] - bin_size/2
+    max_Z_hist = reference.Z.values[-1] + bin_size/2
+    N, b = np.histogram(param, bins = len(reference),
+                        range =(min_Z_hist, max_Z_hist));
+    return N, b
+
+
 def compute_and_save_hist_as_pd(values     : np.array           ,
                                 out_file   : pd.HDFStore        ,
                                 hist_name  : str                ,
