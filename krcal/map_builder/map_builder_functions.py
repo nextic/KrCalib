@@ -25,7 +25,7 @@ def quality_cut(dst : pd.DataFrame, r_range : float, **kwargs) -> pd.DataFrame:
     """ Does basic quality cut : R inside the r_range"""
     pass
 
-def load_data(config :str) -> Tuple(pd.DataFrame, ASectorMap, reference_histograms):
+def load_data(config :str) -> Tuple[pd.DataFrame, ASectorMap, reference_histograms]:
     """ Reads kdst files and applies basic R cut. Outputs kdst as pd.DataFrame,
     bootstrap map, and reference histograms"""
     pass
@@ -269,7 +269,7 @@ def get_binning_auto(nevt_sel: int,
 
 
 
-def calculate_map(dst : pd.DataFrame, bins : Tuple(int, int), **kwargs):
+def calculate_map(dst : pd.DataFrame, bins : Tuple[int, int], **kwargs):
     """ Calculates and outputs correction map"""
     pass
 
@@ -288,7 +288,7 @@ def write_map (maps : ASectorMap, map_folder : str, **kwargs ):
     """A function to write maps"""
     pass
 
-def compute_map(dst : pd.DataFrame, bins : Tuple(int, int), **kwargs) -> ASectorMap:
+def compute_map(dst : pd.DataFrame, bins : Tuple[int, int], **kwargs) -> ASectorMap:
     maps = calculate_map (dst, bins, **kwargs)
     check_failed_fits (**kwargs)
     regularized_maps = regularize_map(maps, **kwargs)
