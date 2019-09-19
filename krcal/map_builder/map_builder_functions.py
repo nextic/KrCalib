@@ -9,8 +9,8 @@ from krcal.core.correction_functions          import e0_xy_correction #
 from krcal.core.selection_functions           import plot_selection_in_band
 from dataclasses import dataclass
 from krcal.core       .histo_functions    import compute_and_save_hist_as_pd
-from krcal.core       .histo_functions    import compute_equal_histo
-from krcal.core       .histo_functions    import normalize_histo_and_error
+from krcal.core       .histo_functions    import compute_similar_histo
+from krcal.core       .histo_functions    import normalize_histo_and_poisson_error
 from krcal.core       .kr_parevol_functions import get_number_of_time_bins
 from krcal.map_builder.checking_functions import check_if_values_in_interval
 from krcal.map_builder.checking_functions import AbortingMapCreation
@@ -106,8 +106,8 @@ def check_Z_dst(Z_vect   : np.array,
     """
     ref = pd.read_hdf(ref_file, key='Z_hist')
 
-    N_Z, z_Z   = compute_equal_histo(Z_vect, ref)
-    N_Z, err_N = normalize_histo_and_error(N_Z, z_Z)
+    N_Z, z_Z   = compute_similar_histo(Z_vect, ref)
+    N_Z, err_N = normalize_histo_and_poisson_error(N_Z, z_Z)
 
     diff     = N_Z - ref.entries
     diff_sig = diff / (err_N+ref.error)
