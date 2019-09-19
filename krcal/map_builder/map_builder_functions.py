@@ -18,15 +18,30 @@ from krcal.map_builder.checking_functions import AbortingMapCreation
 from krcal.core       .io_functions       import write_complete_maps
 
 
+from invisible_cities.core.core_functions  import in_range
+
 
 @dataclass
 class reference_histograms:
     Z_distribution_hist : np.array
 
 
-def quality_cut(dst : pd.DataFrame, r_range : float, **kwargs) -> pd.DataFrame:
-    """ Does basic quality cut : R inside the r_range"""
-    pass
+def quality_cut(dst : pd.DataFrame, r_max : float) -> pd.DataFrame:
+    """
+    Does basic quality cut : R inside the r_max
+    Parameters
+    ----------
+    dst : pd.DataFrame
+        Input dst to obtain the mask from.
+    r_max: float
+        Upper limit for R.
+    Returns
+    ----------
+    mask : pd.DataFrame
+        Mask for filtering events not matching the criteria
+    """
+    mask = in_range(dst.R, 0, r_max)
+    return mask
 
 def load_data(config :str) -> Tuple[pd.DataFrame, ASectorMap, reference_histograms]:
     """ Reads kdst files and applies basic R cut. Outputs kdst as pd.DataFrame,
