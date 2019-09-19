@@ -3,6 +3,10 @@ from typing import Optional
 import pandas as pd
 import numpy  as np
 from krcal.core.kr_types  import ASectorMap, type_of_signal
+from krcal.core.io_functions                  import read_maps #
+from krcal.core.map_functions                 import amap_max #
+from krcal.core.correction_functions          import e0_xy_correction #
+from krcal.core.selection_functions           import plot_selection_in_band
 from dataclasses import dataclass
 from krcal.core       .histo_functions    import compute_and_save_hist_as_pd
 from krcal.core       .histo_functions    import compute_equal_histo
@@ -169,14 +173,75 @@ def check_rate_and_hist(times    : np.array           ,
     return;
 
 
-def z_band_sel(dst           : pd.DataFrame,
-               bootstrap_map : ASectorMap,
-               sigma_range   : float,
-               mask          : Optional[np.array] = None,
-               **kwargs                                  ) -> np.array:
-    """ Applies geometric corrections from the bootstrap map and outputs
-    mask - events inside the band"""
-    pass
+def eff_sel_band_and_hist(dst       : pd.DataFrame,
+                          boot_map  : str,
+                          range_Z   : Tuple[np.array, np.array] = (10, 550),
+                          range_E   : Tuple[np.array, np.array] = (10.0e+3,14e+3),
+                          nbins_z   : int                       = 50,
+                          nbins_e   : int                       = 50,
+                          nsigma_sel: float                     = 3.5,
+                          eff_min   : float                     = 0.4,
+                          eff_max   : float                     = 0.6
+                          )->np.array:
+    """
+    This function returns a selection of the events that
+    are inside the Kr E vz Z band, and checks
+    if the selection efficiency is correct.
+
+    Parameters
+    ----------
+    dst : pd.DataFrame
+        Krypton dataframe.
+    boot_map: str
+        Name of bootstrap map file.
+    norm_strt: norm_strategy
+        Provides the desired normalization to be used.
+    range_Z: Tuple[np.array, np.array]
+        Range in Z-axis
+    range_E: Tuple[np.array, np.array]
+        Range in Energy-axis
+    nbins_z: int
+        Number of bins in Z-axis
+    nbins_e: int
+        Number of bins in energy-axis
+    nsigma_sel: float
+        Number of sigmas to set the band width
+    eff_min: float
+        Lower limit of the range where selection efficiency
+        is considered correct.
+    eff_max: float
+        Upper limit of the range where selection efficiency
+        is considered correct.
+    Returns
+    ----------
+        A  mask corresponding to the selection made.
+    """
+    emaps = read_maps(filename=boot_map)
+    norm  = amap_max(emaps)
+    E0 = e0_xy_correction(dst.S2e.values,
+                          dst.X.values,
+                          dst.Y.values,
+                          E0M = emaps.e0 / norm.e0,
+                          xr  = (-200,200),
+                          yr  = (-200,200),
+                          nx  = 50,
+                          ny  = 50)
+
+    sel_krband, _, _, _, _ = selection_in_band(dst.Z, E0,
+                                               range_z = range_Z,
+                                               range_e = range_E,
+                                               nbins_z = nbins_z,
+                                               nbins_e = nbins_e,
+                                               nsigma  = nsigma_sel)
+
+    effsel = dst[sel_krband].event.nunique()/dst.event.nunique()
+    message = "Band selection efficiency out of range."
+    check_if_values_in_interval(np.array(effsel),
+                                eff_min,
+                                eff_max,
+                                message)
+
+    return sel_krband
 
 def get_binning_auto(nevt_sel: int,
                      thr_events_for_map_bins: int = 1e6,
