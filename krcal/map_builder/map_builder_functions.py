@@ -178,12 +178,30 @@ def z_band_sel(dst           : pd.DataFrame,
     mask - events inside the band"""
     pass
 
-def calculate_bins(dst       : pd.dataFrame,
-                   threshold : float,
-                   **kwargs                 ) -> Tuple(int, int):
-    """ Calculates number of bins based on the number of events > threshold.
-     Returns Tuple of bins"""
-    pass
+def get_binning_auto(nevt_sel: int,
+                     thr_events_for_map_bins: int = 1e6,
+                     n_bins:                  int = None)->int:
+    """
+    Computes the number of X-Y bins to be used in the creation
+    of correction map regarding the number of selected events.
+    Parameters
+    ---------
+    nevt_sel: int
+        Number of kr events to compute the map.
+    thr_events_for_map_bins: int (optional)
+        Threshold to use 50x50 or 100x100 maps (standard values).
+    n_bins: int (optional)
+        The number of events to use can be chosen a priori.
+    Returns
+    ---------
+    n_bins: int
+        Number of bins in each direction (X,Y) (square map).
+    """
+    if n_bins != None: pass;
+    elif nevt_sel<thr_events_for_map_bins:
+        n_bins = 50;
+    else: n_bins = 100
+    return n_bins;
 
 
 
