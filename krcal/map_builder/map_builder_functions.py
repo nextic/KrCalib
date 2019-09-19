@@ -13,9 +13,8 @@ from krcal.core       .histo_functions    import compute_equal_histo
 from krcal.core       .histo_functions    import normalize_histo_and_error
 from krcal.core       .kr_parevol_functions import get_number_of_time_bins
 from krcal.map_builder.checking_functions import check_if_values_in_interval
+from krcal.map_builder.checking_functions import AbortingMapCreation
 
-class AbortingMapCreation(Exception):
-    pass
 
 @dataclass
 class reference_histograms:

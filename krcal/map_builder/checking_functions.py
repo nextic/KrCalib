@@ -1,6 +1,9 @@
 import numpy as np
-from krcal.map_builder.map_builder_functions import AbortingMapCreation
 from invisible_cities.core .core_functions   import in_range
+
+
+class AbortingMapCreation(Exception):
+    pass
 
 
 def check_if_values_in_interval(values          : np.array,
