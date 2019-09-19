@@ -2,6 +2,8 @@ from typing import Tuple
 from typing import Optional
 import pandas as pd
 import numpy  as np
+import glob
+
 from krcal.core.kr_types  import ASectorMap, type_of_signal
 from krcal.core.io_functions                  import read_maps #
 from krcal.core.map_functions                 import amap_max #
@@ -19,6 +21,8 @@ from krcal.core       .io_functions       import write_complete_maps
 
 
 from invisible_cities.core.core_functions  import in_range
+from invisible_cities.io  .dst_io          import load_dsts
+from invisible_cities.reco.corrections_new import read_maps
 
 
 @dataclass
@@ -43,10 +47,50 @@ def quality_cut(dst : pd.DataFrame, r_max : float) -> pd.DataFrame:
     mask = in_range(dst.R, 0, r_max)
     return mask
 
-def load_data(config :str) -> Tuple[pd.DataFrame, ASectorMap, reference_histograms]:
-    """ Reads kdst files and applies basic R cut. Outputs kdst as pd.DataFrame,
-    bootstrap map, and reference histograms"""
-    pass
+def load_data(input_path         : str ,
+              input_dsts         : str ,
+              file_bootstrap_map : str ,
+              ref_Z_histo_file   : str ,
+              quality_ranges     : dict ) -> Tuple[pd.DataFrame,
+                                                   ASectorMap  ,
+                                                   reference_histograms]:
+    """
+    Reads kdst files and applies basic R cut. Outputs kdst as pd.DataFrame,
+    bootstrap map, and reference histograms
+
+    Parameters
+    ----------
+    input_path : str
+        Path to the input map_folder
+    input_dsts : str
+        Name criteria for the dst to be read
+    file_bootstrap_map : str
+        Path to the bootstrap map file
+    ref_Z_histo_file : str
+        Path to the reference histogram file
+    quality_ranges : dict
+        Dictionary containing ranges for the quality cuts
+
+    Returns
+    ----------
+    dst_filtered : pd.DataFrame
+        Dst containing all the events once filtered
+    bootstrap_map : ASectorMap
+        Bootstrap map
+    reference_histograms : reference_histograms
+        To be completed
+    """
+
+    dst_files = glob.glob(input_path + input_dsts)
+    dst_full  = load_dsts(dst_files, "DST", "Events")
+    mask_quality = quality_cut(dst_full, **quality_ranges)
+    dst_filtered = dst_full[mask_quality]
+
+    bootstrap_map = read_maps(file_bootstrap_map)
+
+    temporal = reference_histograms(None)
+
+    return dst_filtered, bootstrap_map, temporal
 
 
 def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
