@@ -23,6 +23,9 @@ from krcal.core       .io_functions       import write_complete_maps
 from invisible_cities.core.core_functions  import in_range
 from invisible_cities.io  .dst_io          import load_dsts
 from invisible_cities.reco.corrections_new import read_maps
+from invisible_cities.reco.corrections_new import maps_coefficient_getter
+from invisible_cities.reco.corrections_new import correct_geometry_
+from invisible_cities.reco.corrections_new import norm_strategy
 
 
 @dataclass
@@ -232,6 +235,18 @@ def check_rate_and_hist(times    : np.array           ,
                                 up_lim          = n_dev  ,
                                 raising_message = message)
     return;
+
+def e0_xy_correction(map        : ASectorMap                         ,
+                     norm_strat : norm_strategy   = norm_strategy.max):
+     """
+     Temporal function to perfrom IC geometric corrections only
+     """
+    normalization   = get_normalization_factor(map        , norm_strat)
+    get_xy_corr_fun = maps_coefficient_getter (map.mapinfo, map.e0)
+    def geo_correction_factor(x : np.array,
+                              y : np.array) -> np.array:
+        return correct_geometry_(get_xy_corr_fun(x,y))* normalization
+    return geo_correction_factor
 
 
 def eff_sel_band_and_hist(dst       : pd.DataFrame,
