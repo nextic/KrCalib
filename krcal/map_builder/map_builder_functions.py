@@ -251,6 +251,7 @@ def e0_xy_correction(map        : ASectorMap                         ,
 
 def eff_sel_band_and_hist(dst       : pd.DataFrame,
                           boot_map  : str,
+                          norm_strat: norm_strategy             = norm_strategy.max,
                           range_Z   : Tuple[np.array, np.array] = (10, 550),
                           range_E   : Tuple[np.array, np.array] = (10.0e+3,14e+3),
                           nbins_z   : int                       = 50,
@@ -292,16 +293,8 @@ def eff_sel_band_and_hist(dst       : pd.DataFrame,
     ----------
         A  mask corresponding to the selection made.
     """
-    emaps = read_maps(filename=boot_map)
-    norm  = amap_max(emaps)
-    E0 = e0_xy_correction(dst.S2e.values,
-                          dst.X.values,
-                          dst.Y.values,
-                          E0M = emaps.e0 / norm.e0,
-                          xr  = (-200,200),
-                          yr  = (-200,200),
-                          nx  = 50,
-                          ny  = 50)
+    emaps = e0_xy_correcion(boot_map, norm_strat  = norm_strat)
+    E0 = dst.S2e.values * emaps(dst.X.values, dst.Y.values)
 
     sel_krband, _, _, _, _ = selection_in_band(dst.Z, E0,
                                                range_z = range_Z,
