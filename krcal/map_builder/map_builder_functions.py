@@ -348,16 +348,97 @@ def get_binning_auto(nevt_sel: int,
 
 
 
-def calculate_map(dst : pd.DataFrame, bins : Tuple[int, int], **kwargs):
-    """ Calculates and outputs correction map"""
-    pass
+def calculate_map(dst : pd.DataFrame, nbins : int, **kwargs):
 
-def check_failed_fits(**kwargs):
-    """ Raises exception if fit failed"""
-    pass
-def regularize_map(maps : ASectorMap, **kwargs) -> ASectorMap:
-    """ Applies regularization to the map"""
-    pass
+    dst_time = dst.sort_values('time')
+    T       = dst_time.time.values
+    DT      = time_delta_from_time(T)
+
+    RMAX      = 200
+    RCORE     = 100
+    s1e_range = (3, 25)
+    s2e_range = (2000, 14000)
+    s2q_range = (200, 800)
+
+    xy_range  = (-RMAX,  RMAX)
+    z_range   = (10,  550)
+    e_range = (5000, 14000)
+    lt_range = (1000, 8000)
+    c2_range = (0,5)
+
+    krTimes, krRanges, krNbins, krBins = kr_ranges_and_bins(dst,
+                                                            xxrange   = xy_range,
+                                                            yrange    = xy_range,
+                                                            zrange    = z_range,
+                                                            s2erange  = s2e_range,
+                                                            s1erange  = s1e_range,
+                                                            s2qrange  = s2q_range,
+                                                            xnbins    = nbins,
+                                                            ynbins    = nbins,
+                                                            znbins    = 15,
+                                                            s2enbins  = 25,
+                                                            s1enbins  = 10,
+                                                            s2qnbins  = 25,
+                                                            tpsamples = 3600) # tsamples in seconds
+
+    KRES = select_xy_sectors_df(dst, krBins.X, krBins.Y)
+
+    neM = event_map_df(KRES)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        fpmxy = fit_map_xy_df(selection_map = KRES,
+                           event_map     = neM,
+                           n_time_bins   = 1,
+                           time_diffs    = DT,
+                           nbins_z        = krNbins.Z,
+                           nbins_e        = krNbins.S2e,
+                           range_z        = z_range,
+                           range_e        = e_range,
+                           energy        = 'S2e',
+                           fit           = FitType.unbined,
+                           n_min         = 100)
+
+    tsm = tsmap_from_fmap(fpmxy)
+
+    am = amap_from_tsmap(tsm,
+                         ts = 0,
+                         range_e     = e_range,
+                         range_chi2  = c2_range,
+                         range_lt    = lt_range)
+
+    return am
+
+def check_failed_fits(maps : ASectorMap, maxFailed : float = 600 ):
+
+    numFailed = 0
+
+    for i in range(len(maps.lt)):
+        for j in range(len(maps.lt[i])):
+            if np.isnan(maps.lt[i][j]):
+                numFailed += 1
+
+    if numFailed > maxFailed:
+        raise NameError('NUM FILLED FITS EXCEEDS MAX ALLOWED')
+    else:
+        pass
+
+def regularize_map(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2) ):
+
+    amap = asm_copy(maps)
+
+    for i in range(len(amap.lt)):
+        for j in range(len(amap.lt[i])):
+            if amap.chi2[i][j] > x2range[1] or amap.chi2[i][j] < x2range[0]:
+                amap.lt[i][j] = np.nan
+                amap.ltu[i][j] = np.nan
+                amap.e0[i][j] = np.nan
+                amap.e0u[i][j] = np.nan
+
+    av = amap_average(am)
+    amap = amap_replace_nan_by_mean(amap, amMean=av)
+
+    return amap
 
 def add_krevol(maps : ASectorMap, dst : pd.DataFrame, **kwargs) -> ASectorMap:
     """ Adds time evolution dataframe to the map"""
