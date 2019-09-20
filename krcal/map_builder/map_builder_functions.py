@@ -13,7 +13,10 @@ from krcal.core       .histo_functions    import compute_similar_histo
 from krcal.core       .histo_functions    import normalize_histo_and_poisson_error
 from krcal.core       .kr_parevol_functions import get_number_of_time_bins
 from krcal.map_builder.checking_functions import check_if_values_in_interval
+
 from krcal.map_builder.checking_functions import AbortingMapCreation
+from krcal.core       .io_functions       import write_complete_maps
+
 
 
 @dataclass
@@ -284,9 +287,6 @@ def add_krevol(maps : ASectorMap, dst : pd.DataFrame, **kwargs) -> ASectorMap:
     """ Adds time evolution dataframe to the map"""
     pass
 
-def write_map (maps : ASectorMap, map_folder : str, **kwargs ):
-    """A function to write maps"""
-    pass
 
 def compute_map(dst : pd.DataFrame, bins : Tuple[int, int], **kwargs) -> ASectorMap:
     maps = calculate_map (dst, bins, **kwargs)
@@ -312,4 +312,5 @@ def automatic_test(config):
     bin_size  = calculate_bins(dst_passed_cut, **locals)
     final_map = compute_map(dst_passed_cut, bin_size, **locals)
 
-    write_map(final_map, **locals)
+    write_complete_maps(asm      = final_map          ,
+                        filename = config.file_out_map)
