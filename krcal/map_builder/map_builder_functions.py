@@ -193,8 +193,8 @@ def check_Z_dst(Z_vect   : np.array     ,
     N_Z, err_N = normalize_histo_and_poisson_error(N = N_Z,
                                                    b = z_Z)
 
-    diff     = N_Z - ref_hist.entries
-    diff_sig = diff / (err_N+ref_hist.error)
+    diff     = N_Z - ref_hist.bin_entries
+    diff_sig = diff / (err_N+ref_hist.err_bin_entries)
 
     message = "Z distribution very different to reference one."
     message += " May be some error in Z distribution of events."

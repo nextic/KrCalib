@@ -189,9 +189,9 @@ def compute_similar_histo(param     : np.array,
     ----------
         Two arrays with the entries and the limits of each bin.
     """
-    bin_size   = np.diff(reference.Z)[0]
-    min_Z_hist = reference.Z.values[ 0] - bin_size/2
-    max_Z_hist = reference.Z.values[-1] + bin_size/2
+    bin_size   = np.diff(reference.bin_centres)[0]
+    min_Z_hist = reference.bin_centres.values[ 0] - bin_size/2
+    max_Z_hist = reference.bin_centres.values[-1] + bin_size/2
     N, b = np.histogram(param, bins = len(reference),
                         range =(min_Z_hist, max_Z_hist));
     return N, b
