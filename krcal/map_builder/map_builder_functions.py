@@ -38,7 +38,7 @@ def e0_xy_correction(map        : ASectorMap                         ,
 
 @dataclass
 class reference_histograms:
-    Z_distribution_hist : np.array
+    Z_distribution_hist : Tuple[np.array, np.array, np.array]
 
 
 def quality_cut(dst : pd.DataFrame, r_max : float) -> pd.DataFrame:
@@ -169,8 +169,8 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
     return mask
 
 
-def check_Z_dst(Z_vect   : np.array,
-                ref_file : str     ,
+def check_Z_dst(Z_vect   : np.array     ,
+                ref_hist : pd.DataFrame ,
                 n_sigmas : int      = 10)->None:
     """
     From a given Z distribution, this function checks, raising
@@ -179,9 +179,8 @@ def check_Z_dst(Z_vect   : np.array,
     ----------
     Z_vect : np.array
         Array of Z values for each kr event.
-    ref_file: string
-        Name of the file that contains reference histogram.
-        Table must contain two columns: 'Z' and 'entries'.
+    ref_hist: pd.DataFrame
+        Table that contains reference histogram info.
     n_sigmas: int
         Number of sigmas to consider if distributions are similar enough.
     Returns
@@ -189,15 +188,13 @@ def check_Z_dst(Z_vect   : np.array,
         Continue if both Z distributions are compatible
         within a 'n_sigmas' interval.
     """
-    ref = pd.read_hdf(ref_file, key='Z_hist')
-
     N_Z, z_Z   = compute_similar_histo(param     = Z_vect,
-                                       reference = ref   )
+                                       reference = ref_hist)
     N_Z, err_N = normalize_histo_and_poisson_error(N = N_Z,
                                                    b = z_Z)
 
-    diff     = N_Z - ref.entries
-    diff_sig = diff / (err_N+ref.error)
+    diff     = N_Z - ref_hist.entries
+    diff_sig = diff / (err_N+ref_hist.error)
 
     message = "Z distribution very different to reference one."
     message += " May be some error in Z distribution of events."
@@ -479,7 +476,7 @@ def apply_cuts(dst              : pd.DataFrame       ,
                nS2_eff_interval : Tuple[float, float],
                store_hist_s2    : pd.HDFStore        ,
                ns2_histo_params : dict               ,
-               ref_Z_histo      : str                ,
+               ref_Z_histo      : pd.DataFrame       ,
                nsigmas_Zdst     : float              ,
                bootstrapmap     : ASectorMap         ,
                band_sel_params  : dict               ,
@@ -497,7 +494,7 @@ def apply_cuts(dst              : pd.DataFrame       ,
                                            input_mask = mask1         ,
                                            **ns2_histo_params         )
     check_Z_dst(Z_vect   = dst.Z       ,
-                ref_file = ref_Z_histo ,
+                ref_hist = ref_Z_histo ,
                 n_sigmas = nsigmas_Zdst)
 
     mask3 = band_selector_and_check(dst        = dst         ,
@@ -527,8 +524,9 @@ def automatic_test(config):
                                                     config.nS2_eff_max)   ,
                                 store_hist_s2    = store_hist             ,
                                 ns2_histo_params = config.ns2_histo_params,
-                                ref_Z_histo      = config.ref_Z_histo_file,
                                 nsigmas_Zdst     = config.nsigmas_Zdst    ,
+                                ref_Z_histo      = references.
+                                                       Z_distribution_hist,
                                 bootstrapmap     = bootstrapmap           ,
                                 band_sel_params  = config.band_sel_params )
 
