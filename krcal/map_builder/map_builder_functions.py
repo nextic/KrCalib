@@ -270,6 +270,7 @@ def check_rate_and_hist(times      : np.array           ,
 def band_selector_and_check(dst       : pd.DataFrame,
                            boot_map   : ASectorMap,
                            norm_strat : norm_strategy             = norm_strategy.max,
+                           input_mask : np.array                  = None,
                            range_Z    : Tuple[np.array, np.array] = (10, 550),
                            range_E    : Tuple[np.array, np.array] = (10.0e+3,14e+3),
                            nbins_z    : int                       = 50,
@@ -291,6 +292,8 @@ def band_selector_and_check(dst       : pd.DataFrame,
         Name of bootstrap map file.
     norm_strt: norm_strategy
         Provides the desired normalization to be used.
+    mask_input: np.array
+        Mask of the previous selection cut.
     range_Z: Tuple[np.array, np.array]
         Range in Z-axis
     range_E: Tuple[np.array, np.array]
@@ -311,17 +314,23 @@ def band_selector_and_check(dst       : pd.DataFrame,
     ----------
         A  mask corresponding to the selection made.
     """
+    if input_mask is None:
+        input_mask = [True] * len(dst)
+    else: pass;
+
     emaps = e0_xy_correction(boot_map, norm_strat  = norm_strat)
-    E0 = dst.S2e.values * emaps(dst.X.values, dst.Y.values)
+    E0 = dst[input_mask].S2e.values * emaps(dst[input_mask].X.values, dst[input_mask].Y.values)
 
-    sel_krband, _, _, _, _ = selection_in_band(dst.Z, E0,
-                                               range_z = range_Z,
-                                               range_e = range_E,
-                                               nbins_z = nbins_z,
-                                               nbins_e = nbins_e,
-                                               nsigma  = nsigma_sel)
+    sel_krband = np.zeros_like(input_mask)
+    sel_krband[input_mask], _, _, _, _ = selection_in_band(dst[input_mask].Z,
+                                                           E0,
+                                                           range_z = range_Z,
+                                                           range_e = range_E,
+                                                           nbins_z = nbins_z,
+                                                           nbins_e = nbins_e,
+                                                           nsigma  = nsigma_sel)
 
-    effsel = dst[sel_krband].event.nunique()/dst.event.nunique()
+    effsel = dst[sel_krband].event.nunique()/dst[input_mask].event.nunique()
     message = "Band selection efficiency out of range."
     check_if_values_in_interval(values          = np.array(effsel),
                                 low_lim         = eff_min         ,
@@ -490,9 +499,11 @@ def apply_cuts(dst              : pd.DataFrame       ,
     check_Z_dst(Z_vect   = dst.Z       ,
                 ref_file = ref_Z_histo ,
                 n_sigmas = nsigmas_Zdst)
-    mask3 = band_selector_and_check(dst      = dst,
-                                    boot_map = bootstrapmap,
-                                    **band_sel_params      )
+
+    mask3 = band_selector_and_check(dst        = dst         ,
+                                    boot_map   = bootstrapmap,
+                                    input_mask = mask2       ,
+                                    **band_sel_params        )
     return dst[mask3]
 
 def automatic_test(config):
