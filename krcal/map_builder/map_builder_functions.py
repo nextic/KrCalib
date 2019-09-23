@@ -108,6 +108,7 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
                                    column     : type_of_signal              ,
                                    interval   : Tuple[float, float]         ,
                                    output_f   : pd.HDFStore                 ,
+                                   input_mask : np.array            = None  ,
                                    nbins_hist : int                 = 10    ,
                                    range_hist : Tuple[float, float] = (0,10),
                                    norm       : bool = True)->np.array:
@@ -127,6 +128,9 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
         (given by the config file) the map production will abort.
     output_f: pd.HDFStore
         File where histogram will be saved.
+    input_mask: np.array (Optional)
+        Selection mask of the previous cut. If this is the first selection
+        cut, input_mask is set to be an all True array.
     nbins_hist: int
         Number of bins to make the histogram.
     range_hist: length-2 tuple (optional)
@@ -137,12 +141,17 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
     ----------
         A mask corresponding to the selected events.
     """
-    mask         = getattr(dst, column.value) == 1
-    nevts_before = dst[mask].event.nunique()
-    nevts_after  = dst      .event.nunique()
-    eff          = nevts_before / nevts_after
+    if input_mask is None:
+        input_mask = [True] * len(dst)
+    else: pass;
+    mask             = np.zeros_like(input_mask)
+    mask[input_mask] = getattr(dst[input_mask], column.value) == 1
+    nevts_after      = dst[mask]      .event.nunique()
+    nevts_before     = dst[input_mask].event.nunique()
+    eff              = nevts_after / nevts_before
 
-    compute_and_save_hist_as_pd(values     = getattr(dst[(dst.s1_peak==0)&(dst.s2_peak==0)],
+    mod_dst = dst[['event', column.value]].drop_duplicates()
+    compute_and_save_hist_as_pd(values     = getattr(mod_dst,
                                                      column.value),
                                 out_file   = output_f,
                                 hist_name  = column.value,
@@ -472,19 +481,20 @@ def apply_cuts(dst              : pd.DataFrame       ,
                                            interval = nS1_eff_interval,
                                            output_f = store_hist_s1   ,
                                            **ns1_histo_params         )
-    mask2 = selection_nS_mask_and_checking(dst = dst[mask1]           ,
+    mask2 = selection_nS_mask_and_checking(dst = dst                  ,
                                            column = S2_signal         ,
                                            interval = nS2_eff_interval,
                                            output_f = store_hist_s2   ,
+                                           input_mask = mask1         ,
                                            **ns2_histo_params         )
+    mask_nS = mask1 * mask2
     check_Z_dst(Z_vect   = dst.Z       ,
                 ref_file = ref_Z_histo ,
                 n_sigmas = nsigmas_Zdst)
-    mask3 = band_selector_and_check(dst      = dst[mask1*mask2],
-                                    boot_map = bootstrapmap    ,
-                                    **band_sel_params          )
-    all_mask = mask1 * mask2 * mask3
-    return dst[all_mask]
+    mask3 = band_selector_and_check(dst      = dst[mask_nS],
+                                    boot_map = bootstrapmap,
+                                    **band_sel_params      )
+    return dst[mask3]
 
 def automatic_test(config):
     dst, bootstrapmap, references  = load_data(**locals)
