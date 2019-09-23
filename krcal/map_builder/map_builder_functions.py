@@ -493,7 +493,8 @@ def apply_cuts(dst              : pd.DataFrame       ,
                                            output_f = store_hist_s2   ,
                                            input_mask = mask1         ,
                                            **ns2_histo_params         )
-    check_Z_dst(Z_vect   = dst.Z       ,
+
+    check_Z_dst(Z_vect   = dst[mask2].Z,
                 ref_hist = ref_Z_histo ,
                 n_sigmas = nsigmas_Zdst)
 
