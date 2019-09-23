@@ -487,11 +487,10 @@ def apply_cuts(dst              : pd.DataFrame       ,
                                            output_f = store_hist_s2   ,
                                            input_mask = mask1         ,
                                            **ns2_histo_params         )
-    mask_nS = mask1 * mask2
     check_Z_dst(Z_vect   = dst.Z       ,
                 ref_file = ref_Z_histo ,
                 n_sigmas = nsigmas_Zdst)
-    mask3 = band_selector_and_check(dst      = dst[mask_nS],
+    mask3 = band_selector_and_check(dst      = dst,
                                     boot_map = bootstrapmap,
                                     **band_sel_params      )
     return dst[mask3]
