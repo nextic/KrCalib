@@ -194,7 +194,7 @@ def check_Z_dst(Z_vect   : np.array     ,
                                                    b = z_Z)
 
     diff     = N_Z - ref_hist.bin_entries
-    diff_sig = diff / (err_N+ref_hist.err_bin_entries)
+    diff_sig = diff / np.sqrt(err_N**2+ref_hist.err_bin_entries**2)
 
     message = "Z distribution very different to reference one."
     message += " May be some error in Z distribution of events."
