@@ -5,7 +5,13 @@ import numpy  as np
 import glob
 
 from krcal.core.kr_types  import ASectorMap, type_of_signal
+from krcal.core.kr_types                      import FitType
 from krcal.core.selection_functions           import selection_in_band
+from krcal.core.selection_functions           import select_xy_sectors_df
+from krcal.core.selection_functions           import event_map_df
+from krcal.core.fitmap_functions              import fit_map_xy_df
+from krcal.core.map_functions                 import amap_from_tsmap
+from krcal.core.map_functions                 import tsmap_from_fmap
 
 from krcal.core       .io_functions       import write_complete_maps
 from krcal.core       .histo_functions    import compute_and_save_hist_as_pd
@@ -362,67 +368,61 @@ def get_binning_auto(nevt_sel: int,
     return n_bins;
 
 
+def calculate_map(dst     : pd.DataFrame,
+                  XYbins  : Tuple[int, int],
+                  nbins_z : int,
+                  nbins_e : int,
+                  z_range : Tuple[float, float],
+                  e_range : Tuple[float, float],
+                  c2_range: Tuple[float, float],
+                  lt_range: Tuple[float, float],
+                  fit_type: FitType = FitType.unbined,
+                  nmin    : int     = 100,
+                  x_range : Tuple[float, float] = (-200,200),
+                  y_range : Tuple[float, float] = (-200,200)
+                  ):
+    """
+    Calculates and outputs correction map
 
-def calculate_map(dst : pd.DataFrame, nbins : int, **kwargs):
-
-    dst_time = dst.sort_values('time')
-    T       = dst_time.time.values
-    DT      = time_delta_from_time(T)
-
-    RMAX      = 200
-    RCORE     = 100
-    s1e_range = (3, 25)
-    s2e_range = (2000, 14000)
-    s2q_range = (200, 800)
-
-    xy_range  = (-RMAX,  RMAX)
-    z_range   = (10,  550)
-    e_range = (5000, 14000)
-    lt_range = (1000, 8000)
-    c2_range = (0,5)
-
-    krTimes, krRanges, krNbins, krBins = kr_ranges_and_bins(dst,
-                                                            xxrange   = xy_range,
-                                                            yrange    = xy_range,
-                                                            zrange    = z_range,
-                                                            s2erange  = s2e_range,
-                                                            s1erange  = s1e_range,
-                                                            s2qrange  = s2q_range,
-                                                            xnbins    = nbins,
-                                                            ynbins    = nbins,
-                                                            znbins    = 15,
-                                                            s2enbins  = 25,
-                                                            s1enbins  = 10,
-                                                            s2qnbins  = 25,
-                                                            tpsamples = 3600) # tsamples in seconds
-
-    KRES = select_xy_sectors_df(dst, krBins.X, krBins.Y)
-
-    neM = event_map_df(KRES)
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        fpmxy = fit_map_xy_df(selection_map = KRES,
-                           event_map     = neM,
-                           n_time_bins   = 1,
-                           time_diffs    = DT,
-                           nbins_z        = krNbins.Z,
-                           nbins_e        = krNbins.S2e,
-                           range_z        = z_range,
-                           range_e        = e_range,
-                           energy        = 'S2e',
-                           fit           = FitType.unbined,
-                           n_min         = 100)
-
-    tsm = tsmap_from_fmap(fpmxy)
-
-    am = amap_from_tsmap(tsm,
-                         ts = 0,
-                         range_e     = e_range,
-                         range_chi2  = c2_range,
-                         range_lt    = lt_range)
+    Parameters
+    ---------
+    dst: pd.DataFrame
+        Dst where to stract the map from
+    XYbins: Tuple[int, int]
+        Number of bins for XY map
+    nbins_z : int
+        Number of bins for z
+        The number of events to use can be chosen a priori.
+    Returns
+    ---------
+    n_bins: int
+        Number of bins in each direction (X,Y) (square map).
+    """
+    xbins = np.linspace(*x_range, XYbins[0]+1)
+    ybins = np.linspace(*y_range, XYbins[1]+1)
+    KXY = select_xy_sectors_df(dst, xbins, ybins)
+    nXY = event_map_df(KXY)
+    fmxy = fit_map_xy_df(selection_map = KXY,
+                         event_map     = nXY,
+                         n_time_bins   = 1,
+                         time_diffs    = dst.time.values,
+                         nbins_z       = nbins_z,
+                         nbins_e       = nbins_e,
+                         range_z       = z_range,
+                         range_e       = e_range,
+                         energy        = 'S2e',
+                         z             = 'Z',
+                         fit           = fit_type,
+                         n_min         = nmin)
+    tsm = tsmap_from_fmap(fmxy)
+    am  = amap_from_tsmap(tsm,
+                          ts         = 0,
+                          range_e    = e_range,
+                          range_chi2 = c2_range,
+                          range_lt   = lt_range)
 
     return am
+
 
 def check_failed_fits(maps : ASectorMap, maxFailed : float = 600 ):
 
@@ -460,10 +460,31 @@ def add_krevol(maps : ASectorMap, dst : pd.DataFrame, **kwargs) -> ASectorMap:
     pass
 
 
-def compute_map(dst : pd.DataFrame, bins : Tuple[int, int], **kwargs) -> ASectorMap:
-    maps = calculate_map (dst, bins, **kwargs)
-    check_failed_fits (**kwargs)
+def compute_map(dst     : pd.DataFrame,
+                XYbins  : Tuple[int, int],
+                nbins_z : int,
+                nbins_e : int,
+                z_range : Tuple[float, float],
+                e_range : Tuple[float, float],
+                c2_range: Tuple[float, float],
+                lt_range: Tuple[float, float],
+                fit_type: FitType = FitType.unbined,
+                nmin    : int     = 100             ) -> ASectorMap:
+
+    maps = calculate_map (dst      = dst,
+                          XYbins   = XYbins,
+                          nbins_z  = nbins_z,
+                          nbins_e  = nbins_e,
+                          z_range  = z_range,
+                          e_range  = e_range,
+                          c2_range = c2_range,
+                          lt_range = lt_range,
+                          fit_type = fit_type,
+                          nmin     = nmin,
+                          x_range  = x_range,
+                          y_range  = y_range)
     regularized_maps = regularize_map(maps, **kwargs)
+
     add_krevol(regularized_maps, dst)
     return regularized_maps
 
