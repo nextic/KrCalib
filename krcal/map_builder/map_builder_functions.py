@@ -469,7 +469,8 @@ def compute_map(dst     : pd.DataFrame,
                 c2_range: Tuple[float, float],
                 lt_range: Tuple[float, float],
                 fit_type: FitType = FitType.unbined,
-                nmin    : int     = 100             ) -> ASectorMap:
+                nmin    : int     = 100,
+                x2range : Tuple[float, float] = (0, 2) ) -> ASectorMap:
 
     maps = calculate_map (dst      = dst,
                           XYbins   = XYbins,
@@ -483,7 +484,9 @@ def compute_map(dst     : pd.DataFrame,
                           nmin     = nmin,
                           x_range  = x_range,
                           y_range  = y_range)
-    regularized_maps = regularize_map(maps, **kwargs)
+
+    regularized_maps = regularize_map(maps    = maps,
+                                      x2range = x2range)
 
     add_krevol(regularized_maps, dst)
     return regularized_maps
