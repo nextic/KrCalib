@@ -1,5 +1,6 @@
 from typing      import Tuple
 from dataclasses import dataclass
+from copy        import deepcopy
 import pandas as pd
 import numpy  as np
 import glob
@@ -12,6 +13,9 @@ from krcal.core.selection_functions           import event_map_df
 from krcal.core.fitmap_functions              import fit_map_xy_df
 from krcal.core.map_functions                 import amap_from_tsmap
 from krcal.core.map_functions                 import tsmap_from_fmap
+
+from krcal.core.map_functions             import amap_average
+from krcal.core.map_functions             import amap_replace_nan_by_mean
 
 from krcal.core       .io_functions       import write_complete_maps
 from krcal.core       .histo_functions    import compute_and_save_hist_as_pd
@@ -459,7 +463,6 @@ def find_outliers(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2)):
     return mask
 
 def regularize_map(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2) ):
-
     """
     Parameters
     ---------
