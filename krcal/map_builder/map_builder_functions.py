@@ -562,6 +562,7 @@ def compute_map(dst          : pd.DataFrame,
                 lt_range     : Tuple[float, float],
                 fit_type     : FitType = FitType.unbined,
                 nmin         : int     = 100,
+                maxFailed    : int = 600,
                 x2range      : Tuple[float, float] = (0, 2),
                 r_fid        : float = 100,
                 nStimeprofile: int = 1800,
@@ -581,6 +582,8 @@ def compute_map(dst          : pd.DataFrame,
                           nmin     = nmin,
                           x_range  = x_range,
                           y_range  = y_range)
+
+    check_failed_fits(maps = maps, maxFailed = maxFailed)
 
     regularized_maps = regularize_map(maps    = maps,
                                       x2range = x2range)
