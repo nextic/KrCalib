@@ -438,6 +438,26 @@ def check_failed_fits(maps : ASectorMap, maxFailed : float = 600 ):
     else:
         pass
 
+def find_outliers(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2)):
+    """
+    For a given maps and deserved range, it returns a mask where values are
+    within the interval.
+
+    Parameters
+    ---------
+    maps: ASectorMap
+        Map to check the outliers
+    x2range : Tuple[float, float]
+        Range for chi2
+
+    Returns
+    ---------
+    mask: pd.DataFrame
+        Mask.
+    """
+    mask = in_range(maps.chi2, *x2range)
+    return mask
+
 def regularize_map(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2) ):
 
     amap = asm_copy(maps)
