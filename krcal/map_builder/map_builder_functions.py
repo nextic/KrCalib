@@ -464,6 +464,9 @@ def find_outliers(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2)):
 
 def regularize_map(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2) ):
     """
+    For a given map and deserved range, it replaces where values are
+    outside the provided interval by the average.
+
     Parameters
     ---------
     maps: ASectorMap
