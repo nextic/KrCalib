@@ -27,6 +27,8 @@ from krcal.core       .histo_functions    import compute_similar_histo
 from krcal.core       .histo_functions    import normalize_histo_and_poisson_error
 from krcal.core       .kr_parevol_functions import get_number_of_time_bins
 from krcal.map_builder.checking_functions import check_if_values_in_interval
+from krcal.map_builder.checking_functions import check_failed_fits
+
 
 from invisible_cities.core.core_functions  import in_range
 from invisible_cities.io  .dst_io          import load_dsts
@@ -432,19 +434,7 @@ def calculate_map(dst     : pd.DataFrame,
     return am
 
 
-def check_failed_fits(maps : ASectorMap, maxFailed : float = 600 ):
 
-    numFailed = 0
-
-    for i in range(len(maps.lt)):
-        for j in range(len(maps.lt[i])):
-            if np.isnan(maps.lt[i][j]):
-                numFailed += 1
-
-    if numFailed > maxFailed:
-        raise NameError('NUM FILLED FITS EXCEEDS MAX ALLOWED')
-    else:
-        pass
 
 def find_outliers(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2)):
     """

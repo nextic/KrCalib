@@ -32,3 +32,11 @@ def check_if_values_in_interval(values          : np.array,
         return;
     else:
         raise AbortingMapCreation(raising_message)
+
+def check_failed_fits(maps : ASectorMap, maxFailed : float = 600 ):
+
+    numFailed = np.count_nonzero(~np.isnan(maps.lt))
+    if numFailed > maxFailed:
+        raise AbortingMapCreation('NUM FAILED FITS EXCEEDS MAX ALLOWED')
+    else:
+        return
