@@ -460,17 +460,28 @@ def find_outliers(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2)):
 
 def regularize_map(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2) ):
 
-    amap = asm_copy(maps)
+    """
+    Parameters
+    ---------
+    maps: ASectorMap
+        Map to check the outliers
+    x2range : Tuple[float, float]
+        Range for chi2
 
-    for i in range(len(amap.lt)):
-        for j in range(len(amap.lt[i])):
-            if amap.chi2[i][j] > x2range[1] or amap.chi2[i][j] < x2range[0]:
-                amap.lt[i][j] = np.nan
-                amap.ltu[i][j] = np.nan
-                amap.e0[i][j] = np.nan
-                amap.e0u[i][j] = np.nan
+    Returns
+    ---------
+    amap: ASectorMap
+        Regularized map
+    """
+    amap     = deepcopy(maps)
+    outliers = np.logical_not(find_outliers(amap, x2range))
 
-    av = amap_average(am)
+    amap.lt [outliers] = np.nan
+    amap.ltu[outliers] = np.nan
+    amap.e0 [outliers] = np.nan
+    amap.e0u[outliers] = np.nan
+
+    av = amap_average(amap)
     amap = amap_replace_nan_by_mean(amap, amMean=av)
 
     return amap
