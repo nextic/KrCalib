@@ -14,6 +14,10 @@ from krcal.core.fitmap_functions              import fit_map_xy_df
 from krcal.core.map_functions                 import amap_from_tsmap
 from krcal.core.map_functions                 import tsmap_from_fmap
 
+from krcal.core.selection_functions           import get_time_series_df
+from krcal.core.kr_parevol_functions          import kr_time_evolution
+
+
 from krcal.core.map_functions             import amap_average
 from krcal.core.map_functions             import amap_replace_nan_by_mean
 
@@ -492,22 +496,78 @@ def regularize_map(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2) ):
 
     return amap
 
-def add_krevol(maps : ASectorMap, dst : pd.DataFrame, **kwargs) -> ASectorMap:
-    """ Adds time evolution dataframe to the map"""
-    pass
+def add_krevol(maps         : ASectorMap,
+               dst          : pd.DataFrame,
+               r_fid        : float,
+               nStimeprofile: int,
+               x_range      : Tuple[float, float],
+               y_range      : Tuple[float, float],
+               XYbins       : Tuple[int, int]
+                                                    ) -> None:
+    """
+    Adds time evolution dataframe to the map
+
+    Parameters
+    ---------
+    maps: ASectorMap
+        Map to check the outliers
+    dst: pd.DataFrame
+        Dst where to stract the data from
+    r_fid: float
+        Maximum radius for fiducial sample
+    nStimeprofile: int
+        Number of seconds for each time bin
+    x_range, y_range: Tuple[float, float]:
+        Range for x and y for the map
+    XYbins: Tuple[int, int]
+        Number of bins for XY map
+
+    Returns
+    ---------
+    Nothing
+    """
+
+    dstf       = dst[dst.R < r_fid]
+    min_time   = dstf.time.min()
+    max_time   = dstf.time.max()
+    ntimebins  = get_number_of_time_bins(nStimeprofile = nStimeprofile,
+                                         tstart        = min_time,
+                                         tfinal        = max_time)
+
+    ts, masks = get_time_series_df(time_bins  = ntimebins,
+                                   time_range = (min_time, max_time),
+                                   dst        = dstf)
+
+    pars = kr_time_evolution(ts     = ts,
+                             masks  = masks,
+                             dst    = dstf,
+                             emaps  = maps,
+                             xr_map = x_range,
+                             yr_map = y_range,
+                             nx_map = XYbins[0],
+                             ny_map = XYbins[1])
+
+    maps.t_evol = pars
+
+    return
 
 
-def compute_map(dst     : pd.DataFrame,
-                XYbins  : Tuple[int, int],
-                nbins_z : int,
-                nbins_e : int,
-                z_range : Tuple[float, float],
-                e_range : Tuple[float, float],
-                c2_range: Tuple[float, float],
-                lt_range: Tuple[float, float],
-                fit_type: FitType = FitType.unbined,
-                nmin    : int     = 100,
-                x2range : Tuple[float, float] = (0, 2) ) -> ASectorMap:
+def compute_map(dst          : pd.DataFrame,
+                XYbins       : Tuple[int, int],
+                nbins_z      : int,
+                nbins_e      : int,
+                z_range      : Tuple[float, float],
+                e_range      : Tuple[float, float],
+                c2_range     : Tuple[float, float],
+                lt_range     : Tuple[float, float],
+                fit_type     : FitType = FitType.unbined,
+                nmin         : int     = 100,
+                x2range      : Tuple[float, float] = (0, 2),
+                r_fid        : float = 100,
+                nStimeprofile: int = 1800,
+                x_range      : Tuple[float, float] = (-200,200),
+                y_range      : Tuple[float, float] = (-200,200)
+                                                                ) -> ASectorMap:
 
     maps = calculate_map (dst      = dst,
                           XYbins   = XYbins,
@@ -525,7 +585,14 @@ def compute_map(dst     : pd.DataFrame,
     regularized_maps = regularize_map(maps    = maps,
                                       x2range = x2range)
 
-    add_krevol(regularized_maps, dst)
+    add_krevol(maps          = regularized_maps,
+               dst           = dst,
+               r_fid         = r_fid,
+               nStimeprofile = nStimeprofile,
+               x_range       = x_range,
+               y_range       = y_range,
+               XYbins        = XYbins)
+
     return regularized_maps
 
 def apply_cuts(dst              : pd.DataFrame       ,
