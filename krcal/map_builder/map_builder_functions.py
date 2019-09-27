@@ -79,10 +79,10 @@ def quality_cut(dst : pd.DataFrame, r_max : float) -> pd.DataFrame:
 def load_data(input_path         : str ,
               input_dsts         : str ,
               file_bootstrap_map : str ,
-              ref_Z_histo_file   : str ,
+              ref_histo_file     : str ,
               quality_ranges     : dict ) -> Tuple[pd.DataFrame,
                                                    ASectorMap  ,
-                                                   reference_histograms]:
+                                                   ref_hist_container]:
     """
     Reads kdst files and applies basic R cut. Outputs kdst as pd.DataFrame,
     bootstrap map, and reference histograms
@@ -106,7 +106,7 @@ def load_data(input_path         : str ,
         Dst containing all the events once filtered
     bootstrap_map : ASectorMap
         Bootstrap map
-    reference_histograms : reference_histograms
+    ref_hist_container : ref_hist_container
         To be completed
     """
 
