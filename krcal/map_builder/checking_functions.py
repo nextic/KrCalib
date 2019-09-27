@@ -1,5 +1,7 @@
 import numpy as np
-from invisible_cities.core .core_functions   import in_range
+from invisible_cities.core .core_functions import in_range
+from invisible_cities.reco.corrections_new import ASectorMap
+
 
 
 class AbortingMapCreation(Exception):

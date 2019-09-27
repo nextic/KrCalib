@@ -5,7 +5,7 @@ import pandas as pd
 import numpy  as np
 import glob
 
-from krcal.core.kr_types  import ASectorMap, type_of_signal
+from krcal.core.kr_types  import type_of_signal
 from krcal.core.kr_types                      import FitType
 from krcal.core.selection_functions           import selection_in_band
 from krcal.core.selection_functions           import select_xy_sectors_df
@@ -34,6 +34,7 @@ from krcal.map_builder.checking_functions import check_failed_fits
 
 from invisible_cities.core.core_functions  import in_range
 from invisible_cities.io  .dst_io          import load_dsts
+from invisible_cities.reco.corrections_new import ASectorMap
 from invisible_cities.reco.corrections_new import read_maps
 from invisible_cities.reco.corrections_new import maps_coefficient_getter
 from invisible_cities.reco.corrections_new import correct_geometry_
