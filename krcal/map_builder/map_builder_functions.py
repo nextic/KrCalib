@@ -626,7 +626,12 @@ def apply_cuts(dst              : pd.DataFrame       ,
     return dst[mask3]
 
 def automatic_test(config):
-    dst, bootstrapmap, references  = load_data(**locals)
+    dst, bootstrapmap, references  = load_data(input_path         = config.folder            ,
+                                               input_dsts         = config.file_in           ,
+                                               file_bootstrap_map = config.file_bootstrap_map,
+                                               ref_Z_histo_file   = config.ref_Z_histo_file  ,
+                                               quality_ranges     = config.quality_ranges     )
+
     store_hist = pd.HDFStore(config.file_out_hists, "w", complib=str("zlib"), complevel=4)
 
     check_rate_and_hist(times      = dst.time         ,
@@ -664,7 +669,10 @@ def automatic_test(config):
                                       thr_events_for_map_bins = config.thr_evts_for_sel_map_bins,
                                       n_bins                  = config.default_n_bins           )
 
-    final_map = compute_map(dst_passed_cut, number_of_bins, **locals)
+    final_map = compute_map(dst    = dst_passed_cut  ,
+                            XYbins = (number_of_bins ,
+                                      number_of_bins),
+                            **config.map_params       )
 
     write_complete_maps(asm      = final_map          ,
                         filename = config.file_out_map)
