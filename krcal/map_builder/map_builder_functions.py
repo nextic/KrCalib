@@ -53,8 +53,8 @@ def e0_xy_correction(map        : ASectorMap                         ,
     return geo_correction_factor
 
 @dataclass
-class reference_histograms:
-    Z_distribution_hist : Tuple[np.array, np.array, np.array]
+class ref_hist_container:
+    Z_dist_hist : ref_hist
 
 
 def quality_cut(dst : pd.DataFrame, r_max : float) -> pd.DataFrame:
