@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import random
+from dataclasses import dataclass
 
 import matplotlib.pyplot as plt
 from . import fit_functions_ic as fitf
@@ -13,6 +14,11 @@ from . kr_types        import PlotLabels
 
 from  invisible_cities.core.core_functions import shift_to_bin_centers
 
+@dataclass
+class ref_hist:
+    bin_centres     : np.array
+    bin_entries     : np.array
+    err_bin_entries : np.array
 
 def labels(pl : PlotLabels):
     """
@@ -174,7 +180,7 @@ def h2d(x         : np.array,
 
 
 def compute_similar_histo(param     : np.array,
-                          reference : pd.DataFrame
+                          reference : ref_hist
                           )-> Tuple[np.array, np.array]:
     """
     This function computes a histogram with the same
@@ -192,7 +198,7 @@ def compute_similar_histo(param     : np.array,
     bin_size   = np.diff(reference.bin_centres)[0]
     min_Z_hist = reference.bin_centres.values[ 0] - bin_size/2
     max_Z_hist = reference.bin_centres.values[-1] + bin_size/2
-    N, b = np.histogram(param, bins = len(reference),
+    N, b = np.histogram(param, bins = len(reference.bin_centres),
                         range =(min_Z_hist, max_Z_hist));
     return N, b
 
