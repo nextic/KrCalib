@@ -633,7 +633,7 @@ def apply_cuts(dst              : pd.DataFrame       ,
     return dst[mask3]
 
 def automatic_test(config):
-    dst, bootstrapmap, references  = load_data(input_path         = config.folder            ,
+    dst, bootstrapmap, ref_histos  = load_data(input_path         = config.folder            ,
                                                input_dsts         = config.file_in           ,
                                                file_bootstrap_map = config.file_bootstrap_map,
                                                ref_Z_histo_file   = config.ref_Z_histo_file  ,
@@ -659,8 +659,8 @@ def automatic_test(config):
                                 store_hist_s2    = store_hist             ,
                                 ns2_histo_params = config.ns2_histo_params,
                                 nsigmas_Zdst     = config.nsigmas_Zdst    ,
-                                ref_Z_histo      = references.
-                                                       Z_distribution_hist,
+                                ref_Z_histo      = ref_histos.
+                                                       Z_dist_hist,
                                 bootstrapmap     = bootstrapmap           ,
                                 band_sel_params  = config.band_sel_params )
 
