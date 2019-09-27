@@ -80,6 +80,7 @@ def load_data(input_path         : str ,
               input_dsts         : str ,
               file_bootstrap_map : str ,
               ref_histo_file     : str ,
+              key_Z_histo        : str ,
               quality_ranges     : dict ) -> Tuple[pd.DataFrame,
                                                    ASectorMap  ,
                                                    ref_hist_container]:
@@ -117,9 +118,13 @@ def load_data(input_path         : str ,
 
     bootstrap_map = read_maps(file_bootstrap_map)
 
-    temporal = reference_histograms(None)
+    z_pd       = pd.read_hdf(ref_histo_file, key=key_Z_histo)
+    z_histo    = ref_hist(bin_centres     = z_pd.bin_centres,
+                          bin_entries     = z_pd.bin_entries,
+                          err_bin_entries = z_pd.err_bin_entries)
+    ref_histos =  ref_hist_container(Z_dist_hist = z_histo)
 
-    return dst_filtered, bootstrap_map, temporal
+    return dst_filtered, bootstrap_map, ref_histos
 
 
 def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
