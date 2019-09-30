@@ -185,7 +185,8 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
 
     message = "Selection efficiency of "
     message += column.value
-    message += "==1 out of range."
+    message += "==1 ({0}) out of range ".format(np.round(eff, 3))
+    message += "({0} - {1}).".format(interval[0], interval[1])
     check_if_values_in_interval(values          = np.array(eff),
                                 low_lim         = interval[0]  ,
                                 up_lim          = interval[1]  ,
@@ -220,8 +221,8 @@ def check_Z_dst(Z_vect   : np.array     ,
     diff     = N_Z - ref_hist.bin_entries
     diff_sig = diff / np.sqrt(err_N**2+ref_hist.err_bin_entries**2)
 
-    message = "Z distribution very different to reference one."
-    message += " May be some error in Z distribution of events."
+    message = "Z distribution very different to reference one. "
+    message += "At least 1 point out of {0} sigmas region. ".format(n_sigmas)
     check_if_values_in_interval(values          = diff_sig ,
                                 low_lim         = -n_sigmas,
                                 up_lim          = n_sigmas ,
@@ -279,8 +280,8 @@ def check_rate_and_hist(times      : np.array           ,
     dev     = np.std(n, ddof = 1)
     rel_dev = dev / mean * 100
 
-    message = "Relative deviation is greater than the allowed one."
-    message += " There must be some issue in rate distribution."
+    message = "Relative deviation ({0}) greater ".format(rel_dev)
+    message += "than the allowed one ({0}).".format(n_dev)
     check_if_values_in_interval(values          = np.array(rel_dev),
                                 low_lim         = 0                ,
                                 up_lim          = n_dev            ,
@@ -352,7 +353,8 @@ def band_selector_and_check(dst       : pd.DataFrame,
                                                            nsigma  = nsigma_sel)
 
     effsel = dst[sel_krband].event.nunique()/dst[input_mask].event.nunique()
-    message = "Band selection efficiency out of range."
+    message = "Band selection efficiency {0} ".format(np.round(effsel, 3))
+    message += "out of range: ({0} - {1}).".format(eff_min, eff_max)
     check_if_values_in_interval(values          = np.array(effsel),
                                 low_lim         = eff_min         ,
                                 up_lim          = eff_max         ,

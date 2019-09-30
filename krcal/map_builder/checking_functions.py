@@ -39,6 +39,8 @@ def check_failed_fits(maps : ASectorMap, maxFailed : float = 600 ):
 
     numFailed = np.count_nonzero(~np.isnan(maps.lt))
     if numFailed > maxFailed:
-        raise AbortingMapCreation('NUM FAILED FITS EXCEEDS MAX ALLOWED')
+        message = "Number of failed fits ({0}) ".format(numFailed)
+        message += "exceeds max. allowed ({0}).".format(maxFailed)
+        raise AbortingMapCreation(message)
     else:
         return
