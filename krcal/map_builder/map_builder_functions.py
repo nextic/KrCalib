@@ -637,8 +637,8 @@ def automatic_test(config):
     dst, bootstrapmap, ref_histos  = load_data(input_path         = config.folder            ,
                                                input_dsts         = config.file_in           ,
                                                file_bootstrap_map = config.file_bootstrap_map,
-                                               ref_Z_histo_file   = config.ref_Z_histo_file  ,
-                                               quality_ranges     = config.quality_ranges     )
+                                               quality_ranges     = config.quality_ranges    ,
+                                               **config.ref_Z_histogram                      )
 
     store_hist = pd.HDFStore(config.file_out_hists, "w", complib=str("zlib"), complevel=4)
 
