@@ -13,6 +13,7 @@ from krcal.core.selection_functions           import event_map_df
 from krcal.core.fitmap_functions              import fit_map_xy_df
 from krcal.core.map_functions                 import amap_from_tsmap
 from krcal.core.map_functions                 import tsmap_from_fmap
+from krcal.core.map_functions                 import add_mapinfo
 
 from krcal.core.selection_functions           import get_time_series_df
 from krcal.core.kr_parevol_functions          import kr_time_evolution
@@ -553,6 +554,7 @@ def add_krevol(maps         : ASectorMap,
 
 
 def compute_map(dst          : pd.DataFrame,
+                run_number   : int,
                 XYbins       : Tuple[int, int],
                 nbins_z      : int,
                 nbins_e      : int,
@@ -587,6 +589,13 @@ def compute_map(dst          : pd.DataFrame,
 
     regularized_maps = regularize_map(maps    = maps,
                                       x2range = x2range)
+
+    regularized_maps = add_mapinfo(asm        = regularized_maps,
+                                   xr         = x_range,
+                                   yr         = y_range,
+                                   nx         = XYbins[0],
+                                   ny         = XYbins[1],
+                                   run_number = run_number)
 
     add_krevol(maps          = regularized_maps,
                dst           = dst,
@@ -679,10 +688,11 @@ def automatic_test(config):
                                       thr_events_for_map_bins = config.thr_evts_for_sel_map_bins,
                                       n_bins                  = config.default_n_bins           )
 
-    final_map = compute_map(dst    = dst_passed_cut  ,
-                            XYbins = (number_of_bins ,
-                                      number_of_bins),
-                            **config.map_params       )
+    final_map = compute_map(dst        = dst_passed_cut   ,
+                            run_number = config.run_number,
+                            XYbins     = (number_of_bins  ,
+                                          number_of_bins) ,
+                            **config.map_params           )
 
     write_complete_maps(asm      = final_map          ,
                         filename = config.file_out_map)
