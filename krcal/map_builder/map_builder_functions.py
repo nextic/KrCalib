@@ -21,6 +21,8 @@ from krcal.core.kr_parevol_functions          import kr_time_evolution
 
 from krcal.core.map_functions             import amap_average
 from krcal.core.map_functions             import amap_replace_nan_by_mean
+from krcal.core.map_functions             import relative_errors
+
 
 from krcal.core       .io_functions       import write_complete_maps
 from krcal.core       .histo_functions    import compute_and_save_hist_as_pd
@@ -589,15 +591,15 @@ def compute_map(dst          : pd.DataFrame,
 
     regularized_maps = regularize_map(maps    = maps,
                                       x2range = x2range)
+    asm = relative_errors(regularized_maps)
+    asm = add_mapinfo(asm        = asm,
+                      xr         = x_range,
+                      yr         = y_range,
+                      nx         = XYbins[0],
+                      ny         = XYbins[1],
+                      run_number = run_number)
 
-    regularized_maps = add_mapinfo(asm        = regularized_maps,
-                                   xr         = x_range,
-                                   yr         = y_range,
-                                   nx         = XYbins[0],
-                                   ny         = XYbins[1],
-                                   run_number = run_number)
-
-    add_krevol(maps          = regularized_maps,
+    add_krevol(maps          = asm,
                dst           = dst,
                r_fid         = r_fid,
                nStimeprofile = nStimeprofile,
@@ -605,7 +607,7 @@ def compute_map(dst          : pd.DataFrame,
                y_range       = y_range,
                XYbins        = XYbins)
 
-    return regularized_maps
+    return asm
 
 def apply_cuts(dst              : pd.DataFrame       ,
                S1_signal        : type_of_signal     ,
