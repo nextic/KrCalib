@@ -10,6 +10,32 @@ import pandas as pd
 import numpy  as np
 
 
+def get_number_of_time_bins(nStimeprofile: int,
+                            tstart       : int,
+                            tfinal       : int )->int:
+    """
+    Computes the number of time bins to compute for a given time step
+    in seconds.
+
+    Parameters
+    ----------
+    nStimeprofile: int
+        Time step in seconds
+    tstart: int
+        Initial timestamp for the data set
+    tfinal: int
+        Final timestamp for the data set
+
+    Returns
+    -------
+    ntimebins: int
+        Number of bins
+    """
+    ntimebins = int( np.floor( ( tfinal - tstart) / nStimeprofile) )
+    ntimebins = np.max([ntimebins, 1])
+
+    return ntimebins
+
 def computing_kr_parameters(data       : pd.DataFrame,
                             ts         : float,
                             emaps      : ASectorMap,
@@ -42,17 +68,23 @@ def computing_kr_parameters(data       : pd.DataFrame,
     nx_map, ny_map: int
         Set the number of X/Y-coordinate bins for the correction map.
     zslices_lt: int
-        Number of Z-coordinate bins for doing the exponential fit to compute the lifetime
+        Number of Z-coordinate bins for doing the exponential fit to compute
+        the lifetime.
     zrange_lt: length-2 tuple (optional)
-        Number of Z-coordinate range for doing the exponential fit to compute the lifetime
+        Number of Z-coordinate range for doing the exponential fit to compute
+        the lifetime.
     nbins_dv: int (optional)
-        Number of bins in Z-coordinate for doing the histogram to compute the drift velocity
+        Number of bins in Z-coordinate for doing the histogram to compute
+        the drift velocity.
     zrange_dv: int (optional)
-        Range in Z-coordinate for doing the histogram to compute the drift velocity
+        Range in Z-coordinate for doing the histogram to compute the drift
+        velocity.
     detector: string (optional)
-        Used to get the cathode position from DB for the drift velocity computation.
+        Used to get the cathode position from DB for the drift velocity
+        computation.
     plot_fit: boolean (optional)
-        Flag for plotting the Z-distribution of events around the cathode and the sigmoid fit.
+        Flag for plotting the Z-distribution of events around the cathode and
+        the sigmoid fit.
 
     Returns
     -------
@@ -79,28 +111,30 @@ def computing_kr_parameters(data       : pd.DataFrame,
                                plot_fit=plot_fit)
 
     ## average values
-    parameters = ['S1w', 'S1h', 'S1e', 'S2w', 'S2h', 'S2e', 'S2q', 'Nsipm', 'Xrms', 'Yrms']
-    mean_dict, var_dict = {}, {}
+    parameters = ['S1w', 'S1h', 'S1e',
+                  'S2w', 'S2h', 'S2e', 'S2q',
+                  'Nsipm', 'Xrms', 'Yrms']
+    mean_d, var_d = {}, {}
     for parameter in parameters:
         data_value           = getattr(data, parameter)
-        mean_dict[parameter] = np.mean(data_value)
-        var_dict [parameter] = (np.var(data_value)/len(data_value))**0.5
+        mean_d[parameter] = np.mean(data_value)
+        var_d [parameter] = (np.var(data_value)/len(data_value))**0.5
 
     ## saving as pd.DataFrame
-    pars = pd.DataFrame({'ts':    [ts],
-                         'e0':    [e0],                 'e0u':    [e0u],
-                         'lt':    [lt],                 'ltu':    [ltu],
-                         'dv':    [dv],                 'dvu':    [dvu],
-                         's1w':   [mean_dict['S1w']],   's1wu':   [var_dict['S1w']],
-                         's1h':   [mean_dict['S1h']],   's1hu':   [var_dict['S1h']],
-                         's1e':   [mean_dict['S1e']],   's1eu':   [var_dict['S1e']],
-                         's2w':   [mean_dict['S2w']],   's2wu':   [var_dict['S2w']],
-                         's2h':   [mean_dict['S2h']],   's2hu':   [var_dict['S2h']],
-                         's2e':   [mean_dict['S2e']],   's2eu':   [var_dict['S2e']],
-                         's2q':   [mean_dict['S2q']],   's2qu':   [var_dict['S2q']],
-                         'Nsipm': [mean_dict['Nsipm']], 'Nsipmu': [var_dict['Nsipm']],
-                         'Xrms':  [mean_dict['Xrms']],  'Xrmsu':  [var_dict['Xrms']],
-                         'Yrms':  [mean_dict['Yrms']],  'Yrmsu':  [var_dict['Yrms']]})
+    pars = pd.DataFrame({'ts'   : [ts]             ,
+                         'e0'   : [e0]             , 'e0u'   : [e0u]           ,
+                         'lt'   : [lt]             , 'ltu'   : [ltu]           ,
+                         'dv'   : [dv]             , 'dvu'   : [dvu]           ,
+                         's1w'  : [mean_d['S1w']]  , 's1wu'  : [var_d['S1w']]  ,
+                         's1h'  : [mean_d['S1h']]  , 's1hu'  : [var_d['S1h']]  ,
+                         's1e'  : [mean_d['S1e']]  , 's1eu'  : [var_d['S1e']]  ,
+                         's2w'  : [mean_d['S2w']]  , 's2wu'  : [var_d['S2w']]  ,
+                         's2h'  : [mean_d['S2h']]  , 's2hu'  : [var_d['S2h']]  ,
+                         's2e'  : [mean_d['S2e']]  , 's2eu'  : [var_d['S2e']]  ,
+                         's2q'  : [mean_d['S2q']]  , 's2qu'  : [var_d['S2q']]  ,
+                         'Nsipm': [mean_d['Nsipm']], 'Nsipmu': [var_d['Nsipm']],
+                         'Xrms' : [mean_d['Xrms']] , 'Xrmsu' : [var_d['Xrms']] ,
+                         'Yrms' : [mean_d['Yrms']] , 'Yrmsu' : [var_d['Yrms']]})
 
     return pars
 
@@ -130,7 +164,7 @@ def kr_time_evolution(ts         : np.array,
     ts: np.array of floats
         Sequence of central times for the different time slices.
     masks: list of boolean lists
-        Allows dividing the distribution into time slices
+        Allows dividing the distribution into time slices.
     data: DataFrame
         Kdst distribution to analyze.
     emaps: correction map
@@ -140,17 +174,23 @@ def kr_time_evolution(ts         : np.array,
     nx_map, ny_map: int
         Set the number of X/Y-coordinate bins for the correction map.
     z_slices: int (optional)
-        Number of Z-coordinate bins for doing the exponential fit to compute the lifetime
+        Number of Z-coordinate bins for doing the exponential fit to compute
+        the lifetime.
     zrange_lt: length-2 tuple (optional)
-        Number of Z-coordinate range for doing the exponential fit to compute the lifetime
+        Number of Z-coordinate range for doing the exponential fit to compute
+        the lifetime.
     nbins_dv: int (optional)
-        Number of bins in Z-coordinate for doing the histogram to compute the drift velocity
+        Number of bins in Z-coordinate for doing the histogram to compute
+        the drift velocity.
     zrange_dv: int (optional)
-        Range in Z-coordinate for doing the histogram to compute the drift velocity
+        Range in Z-coordinate for doing the histogram to compute the drift
+        velocity.
     detector: string (optional)
-        Used to get the cathode position from DB for the drift velocity computation.
+        Used to get the cathode position from DB for the drift velocity
+        computation.
     plot_fit: boolean (optional)
-        Flag for plotting the Z-distribution of events around the cathode and the sigmoid fit.
+        Flag for plotting the Z-distribution of events around the cathode and
+        the sigmoid fit.
 
     Returns
     -------

@@ -106,6 +106,8 @@ class KrBins:
     S2q : Array
     X    : Array
     Y    : Array
+    Xsi  : Array
+    Ysi  : Array
     Z    : Array
     Xc   : Array
     Yc   : Array
@@ -121,6 +123,8 @@ class KrNBins:
     S2q  : Int
     X    : Int
     Y    : Int
+    Xsi  : Int
+    Ysi  : Int
     Z    : Int
     T    : Int
 

@@ -116,7 +116,7 @@ def fit_lifetime(z       : np.array,
         fp, fp2, fr = fit_lifetime_unbined(z, e, nbins_z, range_z)
 
     return FitCollection2(fp = fp, fp2 = fp2, hp = hp, fr = fr)
-
+    logging.debug(f' fp ={fp}, fp2 ={fp2} ')
 
 def fit_lifetime_profile(z : np.array,
                          e : np.array,

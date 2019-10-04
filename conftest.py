@@ -12,7 +12,7 @@ def ICARO():
 
 @pytest.fixture(scope = 'session')
 def DSTDIR(ICARO):
-    return os.path.join(os.environ['IC_DATA'], "dst")
+    return os.path.join(ICARO, "dst")
 
 @pytest.fixture(scope = 'session')
 def MAPSDIR(ICARO):

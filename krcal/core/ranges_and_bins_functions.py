@@ -33,15 +33,20 @@ def kr_bins(xxrange   : Range = (-220,  220),
             s2erange  : Range = (3e3, 13e3),
             s1erange  : Range = (1, 25),
             s2qrange  : Range = (200, 800),
-            xnbins    : Int   = 60,
-            ynbins    : Int   = 60,
-            znbins    : Int   = 12,
-            s2enbins  : Int   = 50,
+            xnbins    : Int   = 50,
+            ynbins    : Int   = 50,
+            xsinbins  : Int   = 50,
+            ysinbins  : Int   = 50,
+            znbins    : Int   = 15,
+            s2enbins  : Int   = 25,
             s1enbins  : Int   = 10,
             s2qnbins  : Int   = 25)->KrBins:
 
     Xbins      = np.linspace(*xxrange, xnbins + 1)
     Ybins      = np.linspace(*yrange, ynbins + 1)
+    XSibins    = np.linspace(*xxrange, xsinbins + 1)
+    YSibins    = np.linspace(*yrange, ysinbins + 1)
+
     Xcenters   = shift_to_bin_centers(Xbins)
     Ycenters   = shift_to_bin_centers(Ybins)
     Xpitch     = np.diff(Xbins)[0]
@@ -52,6 +57,8 @@ def kr_bins(xxrange   : Range = (-220,  220),
                   S2q = np.linspace(*s2qrange,  s2qnbins + 1),
                   X    = Xbins,
                   Y    = Ybins,
+                  Xsi  = XSibins,
+                  Ysi  = YSibins,
                   Z    = np.linspace(*zrange, znbins + 1),
                   Xc   = Xcenters,
                   Yc   = Ycenters,
@@ -66,10 +73,12 @@ def kr_ranges_and_bins(dst       : DataFrame,
                        s2erange  : Range = (3e3, 13e3),
                        s1erange  : Range = (1, 25),
                        s2qrange  : Range = (200, 800),
-                       xnbins    : Int   = 60,
-                       ynbins    : Int   = 60,
-                       znbins    : Int   = 12,
-                       s2enbins  : Int   = 50,
+                       xnbins    : Int   = 50,
+                       ynbins    : Int   = 50,
+                       xsinbins  : Int   = 50,
+                       ysinbins  : Int   = 50,
+                       znbins    : Int   = 15,
+                       s2enbins  : Int   = 25,
                        s1enbins  : Int   = 10,
                        s2qnbins  : Int   = 25,
                        tpsamples : Int  = 3600)->Tuple[KrTimes, KrRanges, KrNBins, KrBins]:
@@ -79,6 +88,8 @@ def kr_ranges_and_bins(dst       : DataFrame,
                         S2q = s2qnbins,
                         X    = xnbins,
                         Y    = ynbins,
+                        Xsi  = xsinbins,
+                        Ysi  = ysinbins,
                         Z    = znbins,
                         T    = None)
 
@@ -91,7 +102,7 @@ def kr_ranges_and_bins(dst       : DataFrame,
                         T    = None)
 
     krBins = kr_bins(xxrange, yrange, zrange, s2erange, s1erange, s2qrange,
-                     xnbins, ynbins, znbins, s2enbins, s1enbins, s2qnbins)
+                     xnbins, ynbins, xsinbins, ysinbins, znbins, s2enbins, s1enbins, s2qnbins)
 
 
     T      = dst.time.values   # vector of times, will be all zeros if MC
