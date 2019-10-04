@@ -4,6 +4,7 @@ from copy        import deepcopy
 import pandas as pd
 import numpy  as np
 import glob
+import os
 
 from krcal.core.kr_types  import type_of_signal
 from krcal.core.kr_types                      import FitType
@@ -115,13 +116,16 @@ def load_data(input_path         : str ,
         To be completed
     """
 
+    input_path = os.path.expandvars(input_path)
     dst_files = glob.glob(input_path + input_dsts)
     dst_full  = load_dsts(dst_files, "DST", "Events")
     mask_quality = quality_cut(dst_full, **quality_ranges)
     dst_filtered = dst_full[mask_quality]
 
+    file_bootstrap_map = os.path.expandvars(file_bootstrap_map)
     bootstrap_map = read_maps(file_bootstrap_map)
 
+    ref_histo_file = os.path.expandvars(ref_histo_file)
     z_pd       = pd.read_hdf(ref_histo_file, key=key_Z_histo)
     z_histo    = ref_hist(bin_centres     = z_pd.bin_centres,
                           bin_entries     = z_pd.bin_entries,
