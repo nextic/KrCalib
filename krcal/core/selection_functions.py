@@ -16,35 +16,25 @@ Last revised: Feb, 2019
 """
 import numpy as np
 import pandas as pd
-import datetime
 from   pandas.core.frame import DataFrame
 
 import matplotlib.pyplot as plt
 from . histo_functions import labels
 from . kr_types        import PlotLabels
 
-from . core_functions  import  value_from_measurement
-from . core_functions  import  uncertainty_from_measurement
-from . core_functions  import  NN
 
-from   invisible_cities.icaro. hst_functions import shift_to_bin_centers
 from   invisible_cities.core.core_functions  import in_range
 from   invisible_cities.icaro. hst_functions import shift_to_bin_centers
-from . fit_lt_functions     import fit_lifetime, fit_lifetime_unbined
+from . fit_lt_functions     import fit_lifetime_unbined
 from . fit_functions        import fit_slices_1d_gauss
 
 
-from . kr_types             import Number, Int, Range, Array
-from . kr_types             import KrBins, KrNBins, KrRanges, KrTimes
-from . kr_types             import KrEvent, FitType, FitParTS
-from . kr_types             import HistoPar2, ProfilePar, FitPar, KrSector
+from . kr_types             import Number, Range
+from . kr_types             import HistoPar2, ProfilePar, FitPar
 from . core_functions       import phirad_to_deg
-from . histo_functions      import h1, h1d, h2, h2d, plot_histo
 
-from typing      import List, Tuple, Sequence, Iterable, Dict
-import dataclasses as dc
+from typing      import List, Tuple, Dict
 
-import sys
 import logging
 log = logging.getLogger()
 
@@ -102,7 +92,6 @@ def get_time_series_df(time_bins    : Number,
             List[np.array] : This are the list of masks defining the events in the time series.
 
     """
-    nt = time_bins
     ip = np.linspace(time_range[0], time_range[-1], time_bins+1)
     masks = np.array([in_range(dst[time_column].values, ip[i], ip[i + 1]) for i in range(len(ip) -1)])
     return shift_to_bin_centers(ip), masks
@@ -141,49 +130,49 @@ def select_xy_sectors_df(dst        : DataFrame,
     return dstMap
 
 
-def select_rphi_sectors_df(dst     : DataFrame,
-                           RPS     : Dict[int, List[KrSector]])-> Dict[int, List[DataFrame]]:
-    """
-    Return a dict of KrEvent organized by rphi sector.
+# def select_rphi_sectors_df(dst     : DataFrame,
+#                            RPS     : Dict[int, List[KrSector]])-> Dict[int, List[DataFrame]]:
+#     """
+#     Return a dict of KrEvent organized by rphi sector.
 
-    Parameters
-    ----------
-        dst:
-        The input data frame.
+#     Parameters
+#     ----------
+#         dst:
+#         The input data frame.
 
-        RPS:
-        RPHI selection, a map defining the RPHI wedges.
+#         RPS:
+#         RPHI selection, a map defining the RPHI wedges.
 
-    Returns
-    -------
-        A DataFrameMap of selections
-        where for each radial sector (the key in the dict) one has a list
-        (corresponding to the PHI sectors) of DataFrame (the events selected)
+#     Returns
+#     -------
+#         A DataFrameMap of selections
+#         where for each radial sector (the key in the dict) one has a list
+#         (corresponding to the PHI sectors) of DataFrame (the events selected)
 
-    """
+#     """
 
-    def selection_mask_rphi_sectors(dst     : DataFrame,
-                                       RPS     : Dict[int, List[KrSector]])->Dict[int, np.array]:
-        """Returns a dict of selections arranged in a dict of rphi sectors"""
-        logging.debug(f' --selection_mask_rphi_sectors:')
-        MSK = {}
-        for i, rps in RPS.items():
-            sel_mask = [in_range(dst.R,
-                                 s.rmin,
-                                 s.rmax).values & in_range(phirad_to_deg(dst.Phi),
-                                                           s.phimin,
-                                                           s.phimax).values for s in rps]
-            MSK[i] = sel_mask
+#     def selection_mask_rphi_sectors(dst     : DataFrame,
+#                                        RPS     : Dict[int, List[KrSector]])->Dict[int, np.array]:
+#         """Returns a dict of selections arranged in a dict of rphi sectors"""
+#         logging.debug(f' --selection_mask_rphi_sectors:')
+#         MSK = {}
+#         for i, rps in RPS.items():
+#             sel_mask = [in_range(dst.R,
+#                                  s.rmin,
+#                                  s.rmax).values & in_range(phirad_to_deg(dst.Phi),
+#                                                            s.phimin,
+#                                                            s.phimax).values for s in rps]
+#             MSK[i] = sel_mask
 
-        return MSK
+#         return MSK
 
 
-    MSK = selection_mask_rphi_sectors(dst, RPS)
-    RGES = {}
-    for i, msk in MSK.items():
-        logging.debug(f' defining kr_event for sector {i}')
-        RGES[i] = [dst[m] for m in msk]
-    return RGES
+#     MSK = selection_mask_rphi_sectors(dst, RPS)
+#     RGES = {}
+#     for i, msk in MSK.items():
+#         logging.debug(f' defining kr_event for sector {i}')
+#         RGES[i] = [dst[m] for m in msk]
+#     return RGES
 
 
 def selection_in_band(z         : np.array,
