@@ -1,44 +1,14 @@
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
-from . analysis_functions import kre_concat
 from . histo_functions    import labels
-from . histo_functions    import h1, h2, plot_histo
+from . histo_functions    import h1, plot_histo
 from . kr_types           import PlotLabels
-from . kr_types           import KrEvent
-from  typing              import List, Tuple, Sequence, Iterable, Dict
 
-import sys
+
 import logging
 log = logging.getLogger()
 
-
-def plot_sector(KRES : Dict[int, List[KrEvent]],
-                nbins_x  : int,
-                nbins_y  : int,
-                ranges_x : Tuple[int,int],
-                ranges_y : Tuple[int,int],
-                sector =0):
-    krl = KRES[sector]
-    kre = kre_concat(krl)
-    nevt = h2(kre.X, kre.Y, nbins_x, nbins_y, ranges_x, ranges_y, profile = False)
-    logging.debug(f'number of events in sector = {np.sum(nevt)}')
-
-
-def plot_sectors(KRES : Dict[int, List[KrEvent]],
-                 nbins_x  : int,
-                 nbins_y  : int,
-                 ranges_x : Tuple[int,int],
-                 ranges_y : Tuple[int,int],
-                 nx       : int = 4,
-                 ny       : int = 3,
-                 figsize=(14,14)):
-    fig = plt.figure(figsize=figsize)
-    for i in KRES.keys():
-        fig.add_subplot(nx, ny, i+1)
-        plot_sector(KRES, nbins_x, nbins_y, ranges_x, ranges_y, sector=i)
-    plt.tight_layout()
 
 
 def plot_xy_density(dst, xybins, figsize=(10,8)):
