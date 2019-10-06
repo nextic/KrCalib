@@ -11,7 +11,6 @@ Documentation
     Insert documentation https
 """
 
-import matplotlib.pyplot as plt
 
 import numpy as np
 import pandas as pd
@@ -19,17 +18,15 @@ import pandas as pd
 from pandas import DataFrame
 
 from . stat_functions import  mean_and_std
-from . core_functions import  NN
 
 from . kr_types        import FitParTS
 from . kr_types        import ASectorMap
 from . kr_types        import SectorMapTS
 from . kr_types        import FitMapValue
 
-from typing            import List, Tuple, Dict, Sequence, Iterable
-from typing            import Optional
+from typing            import List, Tuple, Dict
 
-from numpy import sqrt
+
 import logging
 log = logging.getLogger()
 
