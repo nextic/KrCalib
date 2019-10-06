@@ -4,24 +4,13 @@ Tests for fit_functions
 
 import numpy as np
 
-from pytest        import mark
-from pytest        import approx
-from pytest        import raises
-from flaky         import flaky
-from numpy.testing import assert_array_equal
 from numpy.testing import assert_allclose
 
-from hypothesis            import given, settings
-from hypothesis.strategies import integers
-from hypothesis.strategies import floats
+
 from invisible_cities.core.testing_utils       import exactly
-from invisible_cities.core.testing_utils       import float_arrays
-from invisible_cities.core.testing_utils       import FLOAT_ARRAY
-from invisible_cities.core.testing_utils       import random_length_float_arrays
 
 import matplotlib.pyplot as plt
 from . histo_functions              import h1
-from invisible_cities.icaro. hst_functions import shift_to_bin_centers
 
 def test_matplotlib_histo_equals_numpy_histo():
     Nevt  = int(1e5)
