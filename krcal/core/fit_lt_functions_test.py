@@ -3,39 +3,16 @@ Tests for fit_functions
 """
 
 import numpy as np
-
-from pytest        import mark
 from pytest        import approx
-from pytest        import raises
-from flaky         import flaky
-from numpy.testing import assert_array_equal
-from numpy.testing import assert_allclose
-
-from hypothesis            import given, settings
-from hypothesis.strategies import integers
-from hypothesis.strategies import floats
-from invisible_cities.core.testing_utils       import exactly
-from invisible_cities.core.testing_utils       import float_arrays
-from invisible_cities.core.testing_utils       import FLOAT_ARRAY
-from invisible_cities.core.testing_utils       import random_length_float_arrays
-from invisible_cities.icaro. hst_functions     import shift_to_bin_centers
-
-from invisible_cities.core .stat_functions     import poisson_sigma
-from invisible_cities.core.core_functions      import in_range
-from invisible_cities.evm  .ic_containers      import Measurement
-
 from .                     import fit_functions_ic as fitf
 
-from . fit_functions       import chi2, expo_seed
+from . fit_functions       import expo_seed
 from . stat_functions      import mean_and_std
 from . stat_functions      import energy_lt_experiment
 from . stat_functions      import energy_lt_experiments
 
-from . fit_lt_functions    import fit_lifetime
 from . fit_lt_functions    import fit_lifetime_profile
-from . fit_lt_functions    import fit_lifetime_unbined
 from . fit_lt_functions    import fit_lifetime_experiments
-from . fit_lt_functions    import fit_lifetime_unbined
 from . fit_lt_functions    import lt_params_from_fcs
 from . kr_types import FitType
 
@@ -58,7 +35,6 @@ def test_lt_profile_yields_same_result_expo_fit():
     seed = expo_seed(x, y)
     f    = fitf.fit(fitf.expo, x, y, seed, sigma=yu)
 
-    c2   = chi2(f, x, y, yu)
     par  = np.array(f.values)
     err  = np.array(f.errors)
     e0   = par[0]
