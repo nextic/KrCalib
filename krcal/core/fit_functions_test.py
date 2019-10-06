@@ -9,7 +9,6 @@ from   pytest                               import approx
 from   hypothesis                           import given
 from   hypothesis.strategies                import floats
 
-from   invisible_cities.evm  .ic_containers import Measurement
 import invisible_cities.database.load_db    as     DB
 from invisible_cities.core                  import  fit_functions as fitf
 from . fit_functions                        import sigmoid
@@ -80,8 +79,7 @@ def test_compute_drift_v_when_moving_edge(edge):
     data    = np.random.uniform(450, edge, Nevents)
     data    = np.random.normal(data, 1)
     dv, dvu = compute_drift_v(data, 60, [500,600],
-                              [1500, 550,1,0], 'new',
-                              plot_fit=False)
+                              [1500, 550,1,0], 'new')
     dv_th   = DB.DetectorGeo('new').ZMAX[0]/edge
 
     assert dv_th == approx(dv, abs=5*dvu)
