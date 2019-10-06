@@ -51,8 +51,7 @@ def computing_kr_parameters(data       : pd.DataFrame,
                             zrange_lt  : Tuple[float,float]  = (0, 550),
                             nbins_dv   : int                 = 35,
                             zrange_dv  : Tuple[float, float] = (500, 625),
-                            detector   : str                 = 'new',
-                            plot_fit   : bool                = False)->pd.DataFrame:
+                            detector   : str                 = 'new')->pd.DataFrame:
 
     """
     Computes some average parameters (e0, lt, drift v, energy
@@ -86,10 +85,6 @@ def computing_kr_parameters(data       : pd.DataFrame,
     detector: string (optional)
         Used to get the cathode position from DB for the drift velocity
         computation.
-    plot_fit: boolean (optional)
-        Flag for plotting the Z-distribution of events around the cathode and
-        the sigmoid fit.
-
     Returns
     -------
     pars: DataFrame
@@ -111,8 +106,7 @@ def computing_kr_parameters(data       : pd.DataFrame,
 
     ## compute drift_v
     dv, dvu  = compute_drift_v(data.Z, nbins=nbins_dv,
-                               zrange=zrange_dv, detector=detector,
-                               plot_fit=plot_fit)
+                               zrange=zrange_dv, detector=detector)
 
   ## energy resolution and error
     tot_corr_factor = apply_all_correction(maps = emaps,
@@ -168,8 +162,7 @@ def kr_time_evolution(ts         : np.array,
                       zrange_lt  : Tuple[float,float]  = (0, 550),
                       nbins_dv   : int                 = 35,
                       zrange_dv  : Tuple[float, float] = (500, 625),
-                      detector   : str                 = 'new',
-                      plot_fit   : bool                = False)->pd.DataFrame:
+                      detector   : str                 = 'new')->pd.DataFrame:
     """
     Computes some average parameters (e0, lt, drift v,
     S1w, S1h, S1e, S2w, S2h, S2e, S2q, Nsipm, 'Xrms, Yrms)
@@ -205,9 +198,6 @@ def kr_time_evolution(ts         : np.array,
     detector: string (optional)
         Used to get the cathode position from DB for the drift velocity
         computation.
-    plot_fit: boolean (optional)
-        Flag for plotting the Z-distribution of events around the cathode and
-        the sigmoid fit.
 
     Returns
     -------
@@ -223,7 +213,7 @@ def kr_time_evolution(ts         : np.array,
                                           emaps, xr_map, yr_map, nx_map, ny_map,
                                           zslices_lt, zrange_lt,
                                           nbins_dv, zrange_dv,
-                                          detector, plot_fit)
+                                          detector)
         frames.append(pars)
 
     total_pars = pd.concat(frames, ignore_index=True)
