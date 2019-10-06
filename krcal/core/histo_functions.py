@@ -1,15 +1,12 @@
 import numpy as np
-import pandas as pd
-import random
-from dataclasses import dataclass
-
 import matplotlib.pyplot as plt
+from dataclasses import dataclass
 from . import fit_functions_ic as fitf
-
+import pandas as pd
 from typing import Tuple, Optional
 
 from . stat_functions  import mean_and_std
-from . kr_types import Number, Array, Str
+from . kr_types import Array, Str
 from . kr_types        import PlotLabels
 
 from  invisible_cities.core.core_functions import shift_to_bin_centers
