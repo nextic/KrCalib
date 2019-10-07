@@ -36,6 +36,14 @@ def check_if_values_in_interval(values          : np.array,
         raise AbortingMapCreation(raising_message)
 
 def check_failed_fits(maps : ASectorMap, maxFailed : float = 600 ):
+def get_core(nbins,rmax, rfid):
+    r = np.zeros([nbins,nbins])
+    x = np.linspace(-rmax, rmax, nbins)
+    for i in range(nbins):
+        for j in range(nbins):
+            r[i,j] = (x[i]**2 + x[j]**2)**0.5
+    mask = in_range(r, 0, rfid)
+    return mask
 
     numFailed = np.count_nonzero(~np.isnan(maps.lt))
     if numFailed > maxFailed:
