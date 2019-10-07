@@ -35,7 +35,6 @@ def check_if_values_in_interval(values          : np.array,
     else:
         raise AbortingMapCreation(raising_message)
 
-def check_failed_fits(maps : ASectorMap, maxFailed : float = 600 ):
 def get_core(nbins,rmax, rfid):
     x      = np.linspace(-rmax, rmax, nbins)
     xx, yy = np.meshgrid(x, x)
@@ -50,7 +49,7 @@ def check_failed_fits(maps      : ASectorMap,
                       rfid      : float = 200):
     inner_core_mask    = get_core(nbins=nbins, rmax=rmax, rfid=rfid)
     map_values_in_core = maps.lt.values[inner_core_mask]
-    numFailed = np.count_nonzero(~np.isnan(map_values_in_core))
+    numFailed = np.count_nonzero(np.isnan(map_values_in_core))
     if numFailed > maxFailed:
         message = "Number of failed fits ({0}) ".format(numFailed)
         message += "exceeds max. allowed ({0}).".format(maxFailed)
