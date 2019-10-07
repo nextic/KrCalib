@@ -660,38 +660,37 @@ def automatic_test(config):
                                                quality_ranges     = config.quality_ranges    ,
                                                **config.ref_Z_histogram                      )
 
-    store_hist = pd.HDFStore(config.file_out_hists, "w", complib=str("zlib"), complevel=4)
+    with pd.HDFStore(config.file_out_hists, "w", complib=str("zlib"), complevel=4) as store_hist:
 
-    check_rate_and_hist(times      = dst.time         ,
-                        output_f   = store_hist       ,
-                        name_table = "rate_before_sel",
-                        n_dev      = config.n_dev_rate,
-                        **config.rate_histo_params    )
+        check_rate_and_hist(times      = dst.time         ,
+                            output_f   = store_hist       ,
+                            name_table = "rate_before_sel",
+                            n_dev      = config.n_dev_rate,
+                            **config.rate_histo_params    )
 
-    dst_passed_cut = apply_cuts(dst              = dst                    ,
-                                S1_signal        = type_of_signal.nS1     ,
-                                nS1_eff_interval = (config.nS1_eff_min    ,
-                                                    config.nS1_eff_max)   ,
-                                store_hist_s1    = store_hist             ,
-                                ns1_histo_params = config.ns1_histo_params,
-                                S2_signal        = type_of_signal.nS2     ,
-                                nS2_eff_interval = (config.nS2_eff_min    ,
-                                                    config.nS2_eff_max)   ,
-                                store_hist_s2    = store_hist             ,
-                                ns2_histo_params = config.ns2_histo_params,
-                                nsigmas_Zdst     = config.nsigmas_Zdst    ,
-                                ref_Z_histo      = ref_histos.
-                                                       Z_dist_hist,
-                                bootstrapmap     = bootstrapmap           ,
-                                band_sel_params  = config.band_sel_params )
+        dst_passed_cut = apply_cuts(dst              = dst                    ,
+                                    S1_signal        = type_of_signal.nS1     ,
+                                    nS1_eff_interval = (config.nS1_eff_min    ,
+                                                        config.nS1_eff_max)   ,
+                                    store_hist_s1    = store_hist             ,
+                                    ns1_histo_params = config.ns1_histo_params,
+                                    S2_signal        = type_of_signal.nS2     ,
+                                    nS2_eff_interval = (config.nS2_eff_min    ,
+                                                        config.nS2_eff_max)   ,
+                                    store_hist_s2    = store_hist             ,
+                                    ns2_histo_params = config.ns2_histo_params,
+                                    nsigmas_Zdst     = config.nsigmas_Zdst    ,
+                                    ref_Z_histo      = ref_histos.
+                                                           Z_dist_hist,
+                                    bootstrapmap     = bootstrapmap           ,
+                                    band_sel_params  = config.band_sel_params )
 
-    check_rate_and_hist(times      = dst_passed_cut.time,
-                        output_f   = store_hist         ,
-                        name_table = "rate_after_sel"   ,
-                        n_dev      = config.n_dev_rate  ,
-                        **config.rate_histo_params      )
+        check_rate_and_hist(times      = dst_passed_cut.time,
+                            output_f   = store_hist         ,
+                            name_table = "rate_after_sel"   ,
+                            n_dev      = config.n_dev_rate  ,
+                            **config.rate_histo_params      )
 
-    store_hist.close()
 
     number_of_bins = get_binning_auto(nevt_sel                = dst_passed_cut.event.nunique()  ,
                                       thr_events_for_map_bins = config.thr_evts_for_sel_map_bins,
