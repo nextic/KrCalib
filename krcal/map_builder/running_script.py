@@ -1,5 +1,5 @@
 from invisible_cities.core.configure import configure
-from krcal.map_builder.map_builder_functions import automatic_test
+from krcal.map_builder.map_builder_functions import map_builder
 import sys
 import logging
 import warnings
@@ -10,4 +10,4 @@ this_script_logger.setLevel(logging.INFO)
 
 if __name__ == "__main__":
     config = configure(sys.argv).as_namespace
-    automatic_test(config)
+    map_builder(config)

@@ -670,7 +670,7 @@ def apply_cuts(dst              : pd.DataFrame       ,
                                     **band_sel_params        )
     return dst[mask3]
 
-def automatic_test(config):
+def map_builder(config):
     dst, bootstrapmap, ref_histos  = load_data(input_path         = config.folder            ,
                                                input_dsts         = config.file_in           ,
                                                file_bootstrap_map = config.file_bootstrap_map,
