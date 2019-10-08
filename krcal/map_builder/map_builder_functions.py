@@ -34,6 +34,7 @@ from krcal.core       .histo_functions    import ref_hist
 from krcal.core       .kr_parevol_functions import get_number_of_time_bins
 from krcal.map_builder.checking_functions import check_if_values_in_interval
 from krcal.map_builder.checking_functions import check_failed_fits
+from krcal.map_builder.checking_functions import get_core
 
 
 from invisible_cities.core.core_functions  import in_range
@@ -502,6 +503,19 @@ def regularize_map(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2) ):
     amap = amap_replace_nan_by_mean(amap, amMean=av)
 
     return amap
+def remove_peripheral(map       : ASectorMap,
+                      nbins     : int   = 100,
+                      rmax      : float = 200,
+                      rfid      : float = 200) -> ASectorMap:
+
+    new_map     = deepcopy(map)
+    mask_core   = get_core(nbins,rmax, rfid)
+    new_map.e0  = new_map.e0.where(mask_core)
+    new_map.e0u = new_map.e0u.where(mask_core)
+    new_map.lt  = new_map.lt.where(mask_core)
+    new_map.ltu = new_map.ltu.where(mask_core)
+
+    return new_map
 
 def add_krevol(maps         : ASectorMap,
                dst          : pd.DataFrame,
@@ -599,14 +613,17 @@ def compute_map(dst          : pd.DataFrame,
     regularized_maps = regularize_map(maps    = maps,
                                       x2range = chi2_range)
     asm = relative_errors(regularized_maps)
-    asm = add_mapinfo(asm        = asm,
-                      xr         = x_range,
-                      yr         = y_range,
-                      nx         = XYbins[0],
-                      ny         = XYbins[1],
-                      run_number = run_number)
 
-    add_krevol(maps          = asm,
+    no_peripheral = remove_peripheral(asm, XYbins[0], r_max, r_max)
+
+    no_peripheral = add_mapinfo(asm        = no_peripheral,
+                                xr         = x_range,
+                                yr         = y_range,
+                                nx         = XYbins[0],
+                                ny         = XYbins[1],
+                                run_number = run_number)
+
+    add_krevol(maps          = no_peripheral,
                dst           = dst,
                r_fid         = r_fid,
                nStimeprofile = nStimeprofile,
@@ -614,7 +631,7 @@ def compute_map(dst          : pd.DataFrame,
                y_range       = y_range,
                XYbins        = XYbins)
 
-    return asm
+    return no_peripheral
 
 def apply_cuts(dst              : pd.DataFrame       ,
                S1_signal        : type_of_signal     ,
