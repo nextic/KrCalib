@@ -34,6 +34,22 @@ def config_tmpdir(tmpdir_factory):
 def output_tmpdir(tmpdir_factory):
     return tmpdir_factory.mktemp('output_files')
 
+@pytest.fixture(scope = 'session')
+def folder_test_dst(ICARO):
+    return os.path.expandvars('$ICARO/test_data/dst/')
+
+@pytest.fixture(scope='session')
+def test_dst_file():
+    return 'kdst_7517_LB_0-100_TestMapScript.h5'
+
+@pytest.fixture(scope = 'session')
+def test_map_file(ICARO):
+    return os.path.expandvars('$ICARO/test_data/maps/test_map_nan.h5')
+
+@pytest.fixture(scope='session')
+def output_maps_tmdir(tmpdir_factory):
+    return tmpdir_factory.mktemp('output_maps')
+
 @pytest.fixture(scope='session')
 def dst_filenames():
     return ['dst_6284_trigger1_0000_7920.h5']
