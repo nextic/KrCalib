@@ -6,35 +6,35 @@ import numpy  as np
 import glob
 import os
 
-from krcal.core.kr_types  import type_of_signal
-from krcal.core.kr_types                      import FitType
-from krcal.core.selection_functions           import selection_in_band
-from krcal.core.selection_functions           import select_xy_sectors_df
-from krcal.core.selection_functions           import event_map_df
-from krcal.core.fitmap_functions              import fit_map_xy_df
-from krcal.core.map_functions                 import amap_from_tsmap
-from krcal.core.map_functions                 import tsmap_from_fmap
-from krcal.core.map_functions                 import add_mapinfo
+from .. core.kr_types  import type_of_signal
+from .. core.kr_types                      import FitType
+from .. core.selection_functions           import selection_in_band
+from .. core.selection_functions           import select_xy_sectors_df
+from .. core.selection_functions           import event_map_df
+from .. core.fitmap_functions              import fit_map_xy_df
+from .. core.map_functions                 import amap_from_tsmap
+from .. core.map_functions                 import tsmap_from_fmap
+from .. core.map_functions                 import add_mapinfo
 
-from krcal.core.selection_functions           import get_time_series_df
-from krcal.core.kr_parevol_functions          import kr_time_evolution
-
-
-from krcal.core.map_functions             import amap_average
-from krcal.core.map_functions             import amap_replace_nan_by_mean
-from krcal.core.map_functions             import relative_errors
+from .. core.selection_functions           import get_time_series_df
+from .. core.kr_parevol_functions          import kr_time_evolution
 
 
-from krcal.core       .io_functions       import write_complete_maps
-from krcal.core       .histo_functions    import compute_and_save_hist_as_pd
-from krcal.core       .histo_functions    import compute_similar_histo
-from krcal.core       .histo_functions    import normalize_histo_and_poisson_error
-from krcal.core       .histo_functions    import ref_hist
+from .. core.map_functions             import amap_average
+from .. core.map_functions             import amap_replace_nan_by_mean
+from .. core.map_functions             import relative_errors
 
-from krcal.core       .kr_parevol_functions import get_number_of_time_bins
-from krcal.map_builder.checking_functions import check_if_values_in_interval
-from krcal.map_builder.checking_functions import check_failed_fits
-from krcal.map_builder.checking_functions import get_core
+
+from .. core       .io_functions       import write_complete_maps
+from .. core       .histo_functions    import compute_and_save_hist_as_pd
+from .. core       .histo_functions    import compute_similar_histo
+from .. core       .histo_functions    import normalize_histo_and_poisson_error
+from .. core       .histo_functions    import ref_hist
+
+from .. core       .kr_parevol_functions import get_number_of_time_bins
+from . checking_functions import check_if_values_in_interval
+from . checking_functions import check_failed_fits
+from . checking_functions import get_core
 
 
 from invisible_cities.core.core_functions  import in_range

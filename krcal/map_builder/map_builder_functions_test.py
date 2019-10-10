@@ -10,8 +10,8 @@ from invisible_cities.reco.corrections_new import read_maps
 from invisible_cities.reco.corrections_new import ASectorMap
 from invisible_cities.reco.corrections_new import maps_coefficient_getter
 
-from krcal.map_builder.map_builder_functions import map_builder
-from krcal.map_builder.checking_functions    import AbortingMapCreation
+from . map_builder_functions import map_builder
+from . checking_functions    import AbortingMapCreation
 
 from hypothesis            import settings
 from hypothesis            import given
