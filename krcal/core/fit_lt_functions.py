@@ -13,21 +13,27 @@ Documentation
 import numpy as np
 import warnings
 
-from typing  import List, Tuple, Iterable
-from numpy.linalg import LinAlgError
+from typing  import List
+from typing  import Tuple
+from typing  import Iterable
 
-from   invisible_cities.evm  .ic_containers  import Measurement
+from numpy           .linalg                import LinAlgError
+from invisible_cities.evm   .ic_containers  import Measurement
+from invisible_cities.core   .fit_functions  import fit
+from invisible_cities.core   .fit_functions  import expo
 
-from . import fit_functions_ic as fitf
-from . fit_functions   import   expo_seed, chi2f
-from . histo_functions import profile1d
-from . core_functions  import  NN
+from . fit_functions    import   expo_seed
+from . fit_functions    import   chi2f
+from . histo_functions  import profile1d
+from . core_functions   import  NN
 
 
 from . kr_types import FitPar
 from . kr_types import FitResult
 from . kr_types import HistoPar2
-from . kr_types import FitCollection, FitCollection2
+from . kr_types import FitCollection
+from . kr_types import FitCollection2
+
 
 
 from . kr_types       import FitType
@@ -35,7 +41,7 @@ from . kr_types       import FitType
 
 
 import logging
-log = logging.getLogger()
+log = logging.getLogger(__name__)
 
 
 def fit_lifetime(z       : np.array,
@@ -163,7 +169,7 @@ def fit_lifetime_profile(z : np.array,
 
     logging.debug(f' after profile: len (x) ={len(x)}, len (y) ={len(y)} ')
     try:
-        f      = fitf.fit(fitf.expo, x, y, seed, sigma=yu)
+        f      = fit(expo, x, y, seed, sigma=yu)
         c2     = f.chi2
         par    = np.array(f.values)
         par[1] = - par[1]
