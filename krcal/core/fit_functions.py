@@ -12,14 +12,13 @@ Documentation
 """
 import numpy as np
 import warnings
-from typing      import List, Tuple, Sequence, Iterable, Callable
+from typing      import Tuple, Callable
 
 import invisible_cities.core .fit_functions  as     fitf
 import invisible_cities.database.load_db     as     DB
 from   invisible_cities.core .core_functions import in_range
 from   invisible_cities.evm  .ic_containers  import Measurement
 from   invisible_cities.icaro.hst_functions  import shift_to_bin_centers
-from   invisible_cities.icaro.hst_functions  import labels
 from   invisible_cities.evm.ic_containers    import FitFunction
 from   invisible_cities.core.stat_functions  import poisson_sigma
 
@@ -322,8 +321,7 @@ def compute_drift_v(zdata    : np.array,
                     nbins    : int                               = 35,
                     zrange   : Tuple[float, float]               = (500, 640),
                     seed     : Tuple[float, float, float, float] = None,
-                    detector : str                               = 'new',
-                    plot_fit : bool                              = False)->Tuple[float, float]:
+                    detector : str                               = 'new')->Tuple[float, float]:
     """
     Computes the drift velocity for a given distribution
     using the sigmoid function to get the cathode edge.
@@ -361,11 +359,5 @@ def compute_drift_v(zdata    : np.array,
     z_cathode = DB.DetectorGeo(detector).ZMAX[0]
     dv        = z_cathode/f.values[1]
     dvu       = dv / f.values[1] * f.errors[1]
-
-    if plot_fit:
-        plt.figure();
-        plt.hist(zdata, nbins, zrange)
-        xx = np.linspace(zrange[0], zrange[1], nbins)
-        plt.plot(xx, sigmoid(xx, *f[1]), color='red');
 
     return dv, dvu
