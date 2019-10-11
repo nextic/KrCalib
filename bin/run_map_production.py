@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from invisible_cities.core.configure import configure
 from krcal.map_builder.map_builder_functions import map_builder
 import sys
