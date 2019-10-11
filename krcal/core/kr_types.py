@@ -42,15 +42,6 @@ class MapType(Enum):
     chi2 = 5
 
 @dataclass
-class KrFileName:
-    input_file_names : List[str]
-    output_file_name : str
-    map_file_name    : str
-    map_file_name_ts : str
-    emap_file_name   : str
-
-
-@dataclass
 class S1D:
     """S1 description"""
     E  : Measurement
@@ -69,6 +60,7 @@ class S2D:
     N  : Measurement # NSipm
     X  : Measurement
     Y  : Measurement
+
 @dataclass
 class HistoPar:
     var    : np.array
@@ -104,9 +96,9 @@ class GaussPar:
 
 @dataclass
 class FitResult:
-    par  : np.array
-    err  : np.array
-    chi2 : float
+    par   : np.array
+    err   : np.array
+    chi2  : float
     valid : bool
 
 
@@ -120,13 +112,6 @@ class FitCollection:
 @dataclass
 class FitCollection2(FitCollection):
     fp2   : FitPar
-
-
-@dataclass
-class PlotLabels:
-    x     : str
-    y     : str
-    title : str
 
 
 @dataclass
