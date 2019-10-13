@@ -4,14 +4,11 @@ Tests for analysis_functions
 See: https://github.com/nextic/KrCalibNB/blob/krypton/tutorials/TestsForMaps.ipynb
 """
 
-import numpy as np
-from   pandas.core.frame import DataFrame
+import numpy  as     np
+from   pandas import DataFrame
 
-
-from   invisible_cities.core.core_functions    import in_range
-
-from invisible_cities.core.testing_utils import  assert_dataframes_close
-
+from invisible_cities.core.core_functions    import in_range
+from invisible_cities.core.testing_utils     import  assert_dataframes_close
 
 from . selection_functions  import event_map_df
 from . selection_functions  import get_time_series_df

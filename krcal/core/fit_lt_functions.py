@@ -17,32 +17,25 @@ from typing  import List
 from typing  import Tuple
 from typing  import Iterable
 
-from numpy           .linalg                import LinAlgError
-from invisible_cities.evm   .ic_containers  import Measurement
+from numpy           .linalg                 import LinAlgError
+from invisible_cities.evm    .ic_containers  import Measurement
 from invisible_cities.core   .fit_functions  import fit
 from invisible_cities.core   .fit_functions  import expo
 
-from . fit_functions    import   expo_seed
-from . fit_functions    import   chi2f
+from . fit_functions    import expo_seed
+from . fit_functions    import chi2f
 from . histo_functions  import profile1d
-from . core_functions   import  NN
-
+from . core_functions   import NN
 
 from . kr_types import FitPar
 from . kr_types import FitResult
 from . kr_types import HistoPar2
 from . kr_types import FitCollection
 from . kr_types import FitCollection2
-
-
-
-from . kr_types       import FitType
-
-
+from . kr_types import FitType
 
 import logging
 log = logging.getLogger(__name__)
-
 
 def fit_lifetime(z       : np.array,
                  e       : np.array,

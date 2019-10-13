@@ -1,7 +1,8 @@
 import numpy as np
-from dataclasses import dataclass
+from dataclasses           import dataclass
+from typing                import Tuple
 from invisible_cities.core import fit_functions as fitf
-from typing import Tuple
+
 
 @dataclass
 class ref_hist:

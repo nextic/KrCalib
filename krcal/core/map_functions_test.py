@@ -2,8 +2,8 @@ import os
 import pytest
 
 
-from invisible_cities.reco.corrections_new          import read_maps
-from krcal.core.map_functions         import add_mapinfo
+from invisible_cities.reco.corrections_new  import read_maps
+from                 .map_functions         import add_mapinfo
 
 @pytest.fixture(scope='session')
 def MAPS(MAPSDIR):

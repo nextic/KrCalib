@@ -1,4 +1,4 @@
-import numpy as np
+import numpy  as np
 import pandas as pd
 from   invisible_cities.core.core_functions import shift_to_bin_centers
 from   typing         import Tuple

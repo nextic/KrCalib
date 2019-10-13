@@ -2,9 +2,11 @@ import numpy as np
 from typing import Tuple
 from typing import List
 
-from . fit_lt_functions    import fit_lifetime
-
-from . kr_types import FitType, Number, FitCollection2, Range
+from . fit_lt_functions   import fit_lifetime
+from . kr_types           import FitType
+from . kr_types           import Number
+from . kr_types           import FitCollection2
+from . kr_types           import Range
 
 def energy_lt(z : np.array, e0: float, lt: float)->np.array:
     """Energy attenuated by lifetime"""

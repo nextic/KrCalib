@@ -16,22 +16,22 @@ Last revised: Feb, 2019
 """
 import numpy as np
 import warnings
-from   pandas.core.frame import DataFrame
+from   pandas               import DataFrame
 
-from . core_functions  import  value_from_measurement
-from . core_functions  import  uncertainty_from_measurement
+from typing                 import List
+from typing                 import Tuple
+from typing                 import Dict
 
+from . core_functions       import value_from_measurement
+from . core_functions       import uncertainty_from_measurement
 from . fit_lt_functions     import fit_lifetime
 from . fit_lt_functions     import pars_from_fcs
 from . selection_functions  import get_time_series_df
-
 from . kr_types             import FitType, FitParTS
 
 
-from typing                 import List, Tuple, Dict
-
 import logging
-log = logging.getLogger()
+log = logging.getLogger(__name__)
 
 
 def time_fcs_df(ts      : np.array,

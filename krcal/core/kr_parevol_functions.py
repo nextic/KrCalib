@@ -8,7 +8,8 @@ from invisible_cities.reco .corrections_new import apply_all_correction
 from invisible_cities.reco .corrections_new import norm_strategy
 from invisible_cities.icaro.  hst_functions import resolution
 
-from   typing               import List, Tuple
+from typing import List
+from typing import Tuple
 
 import pandas as pd
 import numpy  as np

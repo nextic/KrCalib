@@ -12,17 +12,19 @@ Documentation
 """
 import numpy as np
 import warnings
-from typing      import Tuple, Callable
+import logging
+from typing      import Tuple
+from typing      import Callable
 
 import invisible_cities.core .fit_functions  as     fitf
 import invisible_cities.database.load_db     as     DB
 from   invisible_cities.core .core_functions import in_range
+from   invisible_cities.core .stat_functions import poisson_sigma
 from   invisible_cities.evm  .ic_containers  import Measurement
+from   invisible_cities.evm  .ic_containers  import FitFunction
 from   invisible_cities.icaro.hst_functions  import shift_to_bin_centers
-from   invisible_cities.evm.ic_containers    import FitFunction
-from   invisible_cities.core.stat_functions  import poisson_sigma
 
-
+log = logging.getLogger(__name__)
 
 def chi2f(f   : Callable,
           nfp : int,        # number of function parameters
