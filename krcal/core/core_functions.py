@@ -2,7 +2,7 @@ import time
 import numpy as np
 import logging
 from   typing      import Iterable
-from   numpy      import pi
+from   numpy       import pi
 from   invisible_cities.evm.ic_containers  import Measurement
 from . kr_types import Number
 
@@ -33,10 +33,6 @@ def uncertainty_from_measurement(mL : Iterable[Measurement]) -> np.array:
 
 def time_delta_from_time(T):
     return np.array([t - T[0] for t in T])
-    # dt = [(datetime.fromtimestamp(ts[i]) - datetime.fromtimestamp(ts[0])).total_seconds()
-    #         for i in range (len(ts))]
-    # return np.array(dt)
-
 
 def find_nearest(array : np.array, value : Number)->Number:
     """Return the array element nearest to value"""
