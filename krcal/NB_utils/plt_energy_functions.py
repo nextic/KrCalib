@@ -10,25 +10,21 @@ Documentation
 -------------
     Insert documentation https
 """
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from typing      import Tuple, Iterable
 import warnings
+import numpy             as np
+import pandas            as pd
+import matplotlib.pyplot as plt
+from pandas      import DataFrame
+from typing      import Tuple
+from typing      import Iterable
 
 from   invisible_cities.core.core_functions import in_range
 
 
-from pandas import DataFrame
-
-from . fit_energy_functions import fit_energy
-
-from ..core. kr_types import FitCollection
-
-from . plt_functions import plot_histo
-from ..core. stat_functions       import relative_error_ratio
-
-
+from .. core. kr_types       import FitCollection
+from .. core. stat_functions import relative_error_ratio
+from .  plt_functions        import plot_histo
+from .  fit_energy_functions import fit_energy
 
 
 def plot_fit_energy(fc : FitCollection):

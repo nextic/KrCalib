@@ -3,22 +3,18 @@ Tests for fit_functions
 """
 
 import numpy as np
-
-
-from pytest        import approx
-
-from hypothesis            import given, settings
+from pytest                import approx
+from hypothesis            import given
+from hypothesis            import settings
 from hypothesis.strategies import floats
-from invisible_cities.evm  .ic_containers      import Measurement
 
-from . fit_energy_functions       import gaussian_parameters
-from . fit_energy_functions       import fit_energy
-from ..core. stat_functions             import mean_and_std
-from ..core. testing_utils             import gaussian_experiments
-from . fit_energy_functions       import fit_gaussian_experiments
-from . fit_energy_functions       import gaussian_params_from_fcs
-
-
+from invisible_cities.evm.ic_containers import Measurement
+from .. core. stat_functions            import mean_and_std
+from .. core. testing_utils             import gaussian_experiments
+from .  fit_energy_functions            import gaussian_parameters
+from .  fit_energy_functions            import fit_energy
+from .  fit_energy_functions            import fit_gaussian_experiments
+from .  fit_energy_functions            import gaussian_params_from_fcs
 
 @given(floats(min_value = -100,
               max_value = +100),

@@ -1,32 +1,35 @@
-import matplotlib.pyplot as plt
-
-
-from ..core. kr_types             import HistoPar2, ProfilePar, FitPar
-
+import warnings
 import logging
-log = logging.getLogger()
-import numpy as np
-from   invisible_cities.evm  .ic_containers  import Measurement
-from   invisible_cities.core.system_of_units_c import units
 
+import matplotlib.pyplot as plt
+import numpy             as np
+
+from typing          import Tuple
+from typing          import Optional
+from pandas          import DataFrame
+
+from   invisible_cities.evm .ic_containers     import Measurement
+from   invisible_cities.core.system_of_units_c import units
 
 from ..core. stat_functions       import mean_and_std
 from ..core. core_functions       import divide_np_arrays
-from ..core. histo_functions       import profile1d
-
-from typing                 import Tuple
-from ..core. kr_types             import S1D, S2D
-from pandas.core.frame      import DataFrame
+from ..core. histo_functions      import profile1d
+from ..core. kr_types             import HistoPar2 
+from ..core. kr_types             import ProfilePar
+from ..core. kr_types             import FitPar
+from ..core. kr_types             import S1D
+from ..core. kr_types             import S2D
 from ..core. kr_types             import Array
-from typing                 import Optional
 
-import warnings
+
+
 
 
 
 from ..core. kr_types        import FitParTS
 from ..core. kr_types        import FitCollection
 
+log = logging.getLogger(__name__)
 def plot_fit_lifetime(fc : FitCollection):
     if fc.fr.valid:
         par  = fc.fr.par
@@ -404,7 +407,7 @@ def plot_selection_in_band(fpl    : FitPar,
     ax      = fig.add_subplot(1, 1, 1)
     ax.set_xlabel('Energy-like')
     ax.set_ylabel('Events')
-    plt.subtitle('true')
+    plt.suptitle('true')
     nevt, *_  = plt.hist2d (z, e, (zbins, ebins))
 
     plt.errorbar(zc, emean, esigma, zerror,
@@ -415,4 +418,4 @@ def plot_selection_in_band(fpl    : FitPar,
     plt.legend()
     ax.set_xlabel('Energy-like')
     ax.set_ylabel('Events')
-    plt.subtitle('true')
+    plt.suptitle('true')

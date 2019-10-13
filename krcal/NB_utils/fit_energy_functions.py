@@ -11,32 +11,31 @@ Documentation
     Insert documentation https
 """
 import numpy as np
-from typing      import List, Tuple, Iterable
-import warnings
+from typing      import List
+from typing      import Tuple
+from typing      import Iterable
+
 
 from   invisible_cities.core.core_functions import in_range
-import invisible_cities.core.fit_functions as fitf
+import invisible_cities.core.fit_functions  as     fitf
+from   invisible_cities.evm .ic_containers  import Measurement
+from invisible_cities.core  .stat_functions import poisson_sigma
+from invisible_cities.icaro . hst_functions import shift_to_bin_centers
+from invisible_cities.types .ic_types       import NN
 
-from   invisible_cities.evm  .ic_containers  import Measurement
-from ..core. fit_functions import chi2
+from .. core. fit_functions  import chi2
 from .. core. stat_functions import mean_and_std
+from .. core. kr_types       import GaussPar
+from .. core. kr_types       import FitPar
+from .. core. kr_types       import FitResult
+from .. core. kr_types       import HistoPar
+from .. core. kr_types       import FitCollection
+from .. core. kr_types       import Number
+from .. core. kr_types       import Range
 
-from ..core. kr_types import Number, Range
+from scipy.optimize          import OptimizeWarning
 
-from invisible_cities.core .stat_functions import poisson_sigma
-from invisible_cities.icaro. hst_functions import shift_to_bin_centers
-from invisible_cities.types.ic_types       import NN
-
-from ..core. kr_types import GaussPar
-from ..core. kr_types import FitPar
-from ..core. kr_types import FitResult
-from ..core. kr_types import HistoPar
-from ..core. kr_types import FitCollection
-
-
-from scipy.optimize import OptimizeWarning
-from numpy import sqrt, pi
-
+import warnings
 
 
 def gfit(x     : np.array,
@@ -62,20 +61,20 @@ def gaussian_parameters(x : np.array, range : Tuple[Number], bin_size : float = 
     """
     Return the parameters defining a Gaussian
     g = N * exp(x - mu)**2 / (2 * std**2)
-    where N is the normalization: N = 1 / (sqrt(2 * pi) * std)
+    where N is the normalization: N = 1 / (sqrt(2 * np.pi) * std)
     The parameters returned are the mean (mu), standard deviation (std)
     and the amplitude (inverse of N).
     """
     mu, std = mean_and_std(x, range)
-    ff     = sqrt(2 * pi) * std
+    ff     = np.sqrt(2 * np.pi) * std
 
     amp     = len(x) * bin_size / ff
 
     sel  = in_range(x, *range)
     N = len(x[sel])              # number of samples in range
-    mu_u  = std / sqrt(N)
-    std_u = std / sqrt(2 * (N -1))
-    amp_u = sqrt(2 * np.pi) * std_u
+    mu_u  = std / np.sqrt(N)
+    std_u = std / np.sqrt(2 * (N -1))
+    amp_u = np.sqrt(2 * np.pi) * std_u
 
     return GaussPar(mu  = Measurement(mu, mu_u),
                     std = Measurement(std, std_u),
