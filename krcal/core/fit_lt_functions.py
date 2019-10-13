@@ -309,17 +309,6 @@ def pars_from_fcs(fcs : List[FitCollection])->Tuple[List[Measurement],
             LT.append(Measurement(NN, NN))
             C2.append(NN)
     return E, LT, np.array(C2)
-#experiments
-def fit_lifetime_experiments(zs      : np.array,
-                             es      : np.array,
-                             nbins_z : int      ,
-                             nbins_e : int      ,
-                             range_z : Tuple[float,float],
-                             range_e : Tuple[float,float],
-                             fit     : FitType  = FitType.unbined)->List[FitCollection2]:
-
-    return [fit_lifetime(z, e, nbins_z, nbins_e, range_z, range_e, fit) for z,e in zip(zs,es)]
-
 
 def lt_params_from_fcs(fcs : Iterable[FitCollection])->Iterable[float]:
     e0s   = np.array([fc.fr.par[0] for fc in fcs])

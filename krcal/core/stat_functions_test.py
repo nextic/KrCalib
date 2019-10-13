@@ -4,16 +4,17 @@ Tests for stat_functions
 
 import numpy as np
 
-from pytest        import approx
+from pytest                import approx
 
 from hypothesis            import given, settings
 from hypothesis.strategies import floats
 
-from . stat_functions       import gaussian_experiment
-from . stat_functions       import mean_and_std
-from . stat_functions       import relative_error_ratio
+from . testing_utils       import gaussian_experiment
+from . stat_functions      import relative_error_ratio
+from . stat_functions      import mean_and_std
 
-from . core_functions import  NN
+from . core_functions      import  NN
+
 
 
 def test_simple_relative_error_ratio():
@@ -84,11 +85,11 @@ def test_mean_and_std_zero(mean, sigma):
     assert std  == approx(sigma,  abs=1e-1)
 
 def test_mean_and_std_nan():
-    x = [NN,NN,NN,NN]
+    x = np.array([NN,NN,NN,NN])
     y = mean_and_std(x, (0,10))
-    assert np.count_nonzero(np.isnan(y)) == 2 # returns (nan, nan)
+    assert all(np.isnan(y)) # returns (nan, nan)
 
-    y = [1,2,3,4, NN]
-    z = [1,2,3,4]
+    y = np.array([1,2,3,4, NN])
+    z = np.array([1,2,3,4])
     np.allclose(mean_and_std(y, (0,10)), mean_and_std(z, (0,10)), rtol=1e-05, atol=1e-05)
     
