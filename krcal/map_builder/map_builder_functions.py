@@ -46,6 +46,8 @@ from invisible_cities.reco.corrections_new import correct_geometry_
 from invisible_cities.reco.corrections_new import norm_strategy
 from invisible_cities.reco.corrections_new import get_normalization_factor
 
+from invisible_cities.icaro.hst_functions import measurement_string
+
 
 
 def e0_xy_correction(map        : ASectorMap                         ,
@@ -568,6 +570,12 @@ def add_krevol(maps         : ASectorMap,
                              nx_map = XYbins[0],
                              ny_map = XYbins[1])
 
+    e0par    = np.array([pars['e0'].mean(), pars['e0'].var()**0.5])
+    ltpar    = np.array([pars['lt'].mean(), pars['lt'].var()**0.5])
+    print("    Mean core E0: {0:.1f}+-{1:.1f} pes".format(*e0par))
+    print("    Mean core Lt: {0:.1f}+-{1:.1f} mus".format(*ltpar))
+
+
     maps.t_evol = pars
 
     return
@@ -647,19 +655,22 @@ def apply_cuts(dst              : pd.DataFrame       ,
                bootstrapmap     : ASectorMap         ,
                band_sel_params  : dict               ,
                ) -> pd.DataFrame:
-
+    n0    = dst.event.nunique()
     mask1 = selection_nS_mask_and_checking(dst = dst                  ,
                                            column = S1_signal         ,
                                            interval = nS1_eff_interval,
                                            output_f = store_hist_s1   ,
                                            **ns1_histo_params         )
+    nS1 = dst[mask1].event.nunique()
+    print("    1 S1 cut efficiency within the expectations ({0:2.2f}%)".format(nS1/n0*100))
     mask2 = selection_nS_mask_and_checking(dst = dst                  ,
                                            column = S2_signal         ,
                                            interval = nS2_eff_interval,
                                            output_f = store_hist_s2   ,
                                            input_mask = mask1         ,
                                            **ns2_histo_params         )
-
+    nS2 = dst[mask2].event.nunique()
+    print("    1 S2 cut efficiency within the expectations ({0:2.2f}%)".format(nS2/nS1*100))
     check_Z_dst(Z_vect   = dst[mask2].Z,
                 ref_hist = ref_Z_histo ,
                 n_sigmas = nsigmas_Zdst)
@@ -668,9 +679,19 @@ def apply_cuts(dst              : pd.DataFrame       ,
                                     boot_map   = bootstrapmap,
                                     input_mask = mask2       ,
                                     **band_sel_params        )
+    nZb = dst[mask3].event.nunique()
+    print("    Z band cut efficiency within the expectations ({0:2.2f}%)".format(nZb/nS2*100))
     return dst[mask3]
 
 def map_builder(config):
+
+    print("Map builder starting...")
+    print("Reading input files:")
+    print("    Input dst folder   : {}".format(config.folder))
+    print("    Input boostrap map : {}".format(config.file_bootstrap_map))
+    print("    Input histogram map: {}".format(config.ref_Z_histogram['ref_histo_file']))
+
+
     dst, bootstrapmap, ref_histos  = load_data(input_path         = config.folder            ,
                                                input_dsts         = config.file_in           ,
                                                file_bootstrap_map = config.file_bootstrap_map,
@@ -678,7 +699,10 @@ def map_builder(config):
                                                **config.ref_Z_histogram                      )
 
     with pd.HDFStore(config.file_out_hists, "w", complib=str("zlib"), complevel=4) as store_hist:
+        print("Checking the dst and appling 1S1, 1S2 and z-band selections:")
 
+        nev_before = dst.event.nunique()
+        print("    Number of events before any selection: {0}".format(nev_before))
         check_rate_and_hist(times      = dst.time         ,
                             output_f   = store_hist       ,
                             name_table = "rate_before_sel",
@@ -708,10 +732,17 @@ def map_builder(config):
                             n_dev      = config.n_dev_rate  ,
                             **config.rate_histo_params      )
 
+        nev_after = dst_passed_cut.event.nunique()
+        ratio     = nev_after/nev_before*100
+        print("    Number of events passing the cuts: {0} ({1:2.2f}%)".format(nev_after, ratio))
 
+
+    print("Map computation:")
     number_of_bins = get_binning_auto(nevt_sel                = dst_passed_cut.event.nunique()  ,
                                       thr_events_for_map_bins = config.thr_evts_for_sel_map_bins,
                                       n_bins                  = config.default_n_bins           )
+
+    print("    Number of bins: {0}x{0}".format(number_of_bins))
 
     final_map = compute_map(dst        = dst_passed_cut   ,
                             run_number = config.run_number,
@@ -721,3 +752,5 @@ def map_builder(config):
 
     write_complete_maps(asm      = final_map          ,
                         filename = config.file_out_map)
+    print("Map successfully computed and saved in : {0}".format(config.file_out_map))
+    print("Control histograms saved in            : {0}".format(config.file_out_hists))

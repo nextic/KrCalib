@@ -55,4 +55,5 @@ def check_failed_fits(maps      : ASectorMap,
         message += "exceeds max. allowed ({0}).".format(maxFailed)
         raise AbortingMapCreation(message)
     else:
+        print("    Number of failing fits: {0}".format(numFailed))
         return
