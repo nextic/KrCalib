@@ -74,7 +74,7 @@ def event_map_df(dstMap : Dict[int, List[DataFrame]])->DataFrame:
 def get_time_series_df(time_bins    : Number,
                        time_range   : Tuple[float, float],
                        dst          : DataFrame,
-                       time_column  : str = 'DT')->Tuple[np.array, List[np.array]]:
+                       time_column  : str = 'time')->Tuple[np.array, List[np.array]]:
     """
 
     Given a dst (DataFrame) with a time column specified by the name time,
