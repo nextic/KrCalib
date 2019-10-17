@@ -39,12 +39,14 @@ def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
     map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map.h5')
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo.h5')
     default_n_bins = 15
+    run_number     = 7517
     config = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
     config.update(dict(folder         = folder_test_dst,
                        file_in        = test_dst_file  ,
                        file_out_map   = map_file_out   ,
                        file_out_hists = histo_file_out ,
-                       default_n_bins = default_n_bins ))
+                       default_n_bins = default_n_bins ,
+                       run_number     = run_number     ))
     map_builder(config.as_namespace)
     maps = read_maps(map_file_out)
     assert type(maps)==ASectorMap
@@ -92,12 +94,14 @@ def test_exception_s1(folder_test_dst, test_dst_file, output_maps_tmdir):
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_s1.h5')
     min_eff_test = 0.
     max_eff_test = 0.8
+    run_number   = 7517
     conf.update(dict(folder         = folder_test_dst,
                      file_in        = test_dst_file  ,
                      file_out_map   = map_file_out   ,
                      file_out_hists = histo_file_out ,
                      nS1_eff_min    = min_eff_test   ,
-                     nS1_eff_max    = max_eff_test   ))
+                     nS1_eff_max    = max_eff_test   ,
+                     run_number     = run_number     ))
 
     assert_raises(AbortingMapCreation,
                   map_builder        ,
@@ -112,12 +116,14 @@ def test_exception_s2(folder_test_dst, test_dst_file, output_maps_tmdir):
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_s2.h5')
     min_eff_test = 0.
     max_eff_test = 0.9
+    run_number   = 7517
     conf.update(dict(folder         = folder_test_dst,
                      file_in        = test_dst_file  ,
                      file_out_map   = map_file_out   ,
                      file_out_hists = histo_file_out ,
                      nS2_eff_min    = min_eff_test   ,
-                     nS2_eff_max    = max_eff_test   ))
+                     nS2_eff_max    = max_eff_test   ,
+                     run_number     = run_number     ))
 
     assert_raises(AbortingMapCreation,
                   map_builder        ,
@@ -131,11 +137,13 @@ def test_exception_rate(folder_test_dst, test_dst_file, output_maps_tmdir):
     map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_rate.h5'  )
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_rate.h5')
     n_dev_rate = 0.5
+    run_number   = 7517
     conf.update(dict(folder         = folder_test_dst,
                      file_in        = test_dst_file  ,
                      file_out_map   = map_file_out   ,
                      file_out_hists = histo_file_out ,
-                     n_dev_rate     = n_dev_rate     ))
+                     n_dev_rate     = n_dev_rate     ,
+                     run_number     = run_number     ))
 
     assert_raises(AbortingMapCreation,
                   map_builder        ,
@@ -150,11 +158,13 @@ def test_exception_Zdst(folder_test_dst, test_dst_file, output_maps_tmdir):
     map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_Z.h5'  )
     histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_Z.h5')
     nsigmas_Zdst = 0.5
+    run_number   = 7517
     conf.update(dict(folder         = folder_test_dst,
                      file_in        = test_dst_file  ,
                      file_out_map   = map_file_out   ,
                      file_out_hists = histo_file_out ,
-                     nsigmas_Zdst   = nsigmas_Zdst   ))
+                     nsigmas_Zdst   = nsigmas_Zdst   ,
+                     run_number     = run_number     ))
 
     assert_raises(AbortingMapCreation,
                   map_builder        ,
@@ -171,11 +181,13 @@ def test_exception_bandsel(folder_test_dst, test_dst_file, output_maps_tmdir):
     band_sel_params_new = copy.copy(conf.as_namespace.band_sel_params)
     band_sel_params_new['eff_min'] = 0.
     band_sel_params_new['eff_max'] = 0.89
+    run_number = 7517
     conf.update(dict(folder         = folder_test_dst,
                      file_in        = test_dst_file  ,
                      file_out_map   = map_file_out   ,
                      file_out_hists = histo_file_out ,
-                     band_sel_params = band_sel_params_new))
+                     band_sel_params = band_sel_params_new,
+                     run_number     = run_number     ))
     assert_raises(AbortingMapCreation,
                   map_builder        ,
                   conf.as_namespace  )
