@@ -66,7 +66,6 @@ def e0_xy_correction(map        : ASectorMap                         ,
 class ref_hist_container:
     Z_dist_hist : ref_hist
 
-
 def quality_cut(dst : pd.DataFrame, r_max : float) -> pd.DataFrame:
     """
     Does basic quality cut : R inside the r_max
@@ -137,7 +136,6 @@ def load_data(input_path         : str ,
 
     return dst_filtered, bootstrap_map, ref_histos
 
-
 def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
                                    column     : type_of_signal              ,
                                    interval   : Tuple[float, float]         ,
@@ -203,7 +201,6 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
                                 raising_message = message      )
     return mask
 
-
 def check_Z_dst(Z_vect   : np.array     ,
                 ref_hist : pd.DataFrame ,
                 n_sigmas : int      = 10)->None:
@@ -238,7 +235,6 @@ def check_Z_dst(Z_vect   : np.array     ,
                                 up_lim          = n_sigmas ,
                                 raising_message = message  )
     return;
-
 
 def check_rate_and_hist(times      : np.array           ,
                         output_f   : pd.HDFStore        ,
@@ -297,7 +293,6 @@ def check_rate_and_hist(times      : np.array           ,
                                 up_lim          = n_dev            ,
                                 raising_message = message          )
     return;
-
 
 def band_selector_and_check(dst       : pd.DataFrame,
                            boot_map   : ASectorMap,
@@ -397,7 +392,6 @@ def get_binning_auto(nevt_sel: int,
     else: n_bins = 100
     return n_bins;
 
-
 def calculate_map(dst     : pd.DataFrame,
                   XYbins  : Tuple[int, int],
                   nbins_z : int,
@@ -453,9 +447,6 @@ def calculate_map(dst     : pd.DataFrame,
 
     return am
 
-
-
-
 def find_outliers(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2)):
     """
     For a given maps and deserved range, it returns a mask where values are
@@ -505,6 +496,7 @@ def regularize_map(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2) ):
     amap = amap_replace_nan_by_mean(amap, amMean=av)
 
     return amap
+
 def remove_peripheral(map       : ASectorMap,
                       nbins     : int   = 100,
                       rmax      : float = 200,
@@ -580,7 +572,6 @@ def add_krevol(maps         : ASectorMap,
 
     return
 
-
 def compute_map(dst          : pd.DataFrame,
                 run_number   : int,
                 XYbins       : Tuple[int, int],
@@ -629,7 +620,7 @@ def compute_map(dst          : pd.DataFrame,
                                 yr         = y_range,
                                 nx         = XYbins[0],
                                 ny         = XYbins[1],
-                                run_number = run_number)
+                                run_number = int(run_number))
 
     add_krevol(maps          = no_peripheral,
                dst           = dst,
