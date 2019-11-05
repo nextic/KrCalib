@@ -36,10 +36,11 @@ def check_if_values_in_interval(values          : np.array,
         raise AbortingMapCreation(raising_message)
 
 def get_core(nbins,rmax, rfid):
-    x      = np.linspace(-rmax, rmax, nbins)
-    xx, yy = np.meshgrid(x, x)
-    r      = np.sqrt(xx**2 + yy**2)
-    mask   = in_range(r, 0, rfid)
+    x        = np.linspace(-rmax, rmax, nbins)
+    xx, yy   = np.meshgrid(x, x)
+    r        = np.sqrt(xx**2 + yy**2)
+    bin_size = 2. * rmax / (nbins -1)
+    mask     = in_range(r, 0, rfid + bin_size)
     return mask
 
 def check_failed_fits(maps      : ASectorMap,
