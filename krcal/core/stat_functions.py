@@ -1,4 +1,7 @@
+import warnings
+
 import numpy as np
+
 from   numpy                                   import sqrt
 from   invisible_cities.core.core_functions    import in_range
 from   typing                                  import Tuple
@@ -23,7 +26,7 @@ def mean_and_std(x : np.array, range_ : Tuple[Number, Number])->Tuple[Number, Nu
         x_nonnan = x[np.isfinite(x)]
         y = x_nonnan[in_range(x_nonnan, *range_)]
         if len(y) == 0:
-            print(f'warning, empty slice of x = {x} in range = {range_}')
+            warnings.warn(f'warning, empty slice of x = {x} in range = {range_}')
             mu = NN
             std = NN
         else:
@@ -31,7 +34,3 @@ def mean_and_std(x : np.array, range_ : Tuple[Number, Number])->Tuple[Number, Nu
             std = np.std(y)
 
     return mu, std
-
-
-
-
