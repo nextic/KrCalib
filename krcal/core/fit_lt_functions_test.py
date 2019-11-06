@@ -3,7 +3,10 @@ Tests for fit_functions
 """
 
 import numpy as np
+
+from pytest                import mark
 from pytest                import approx
+from pytest                import warns
 
 from invisible_cities.core import fit_functions as fitf
 
@@ -13,8 +16,13 @@ from . testing_utils       import fit_lifetime_experiments
 from . fit_functions       import expo_seed
 from . stat_functions      import mean_and_std
 from . fit_lt_functions    import fit_lifetime_profile
+from . fit_lt_functions    import fit_lifetime_unbined
+from . fit_lt_functions    import pars_from_fcs
 from . fit_lt_functions    import lt_params_from_fcs
 from . kr_types            import FitType
+from . kr_types            import FitResult
+from . kr_types            import FitCollection
+
 
 def test_lt_profile_yields_same_result_expo_fit():
 
@@ -75,6 +83,15 @@ def test_lt_profile_yields_same_result_expo_fit():
 #     assert frp.chi2   == approx(fru.chi2,    rel=0.5)
 
 
+@mark.parametrize("length error_type".split(),
+                  ((0, "Type"       ),
+                   (1, "LinAlgError"),
+                   (2, "LinAlgError")))
+def test_fit_lifetime_unbined_warns_with_insufficient_data_points(caplog, length, error_type):
+    fit_lifetime_unbined(np.zeros(length), np.ones(length), 10, (0, 10))
+    assert f"{error_type} error found in fit_lifetime_unbined: not enough events for fit" in caplog.text
+
+
 def test_fit_lifetime_experiments_yield_good_pars_and_pulls():
     mexperiments = 1e+3
     nsample      = 1e+3
@@ -124,3 +141,12 @@ def test_fit_lifetime_experiments_yield_good_pars_and_pulls():
     assert p_mu   <= 0  # the pull is biased
     assert p_std  == approx(1,  rel=0.2)
     assert p_c2   == approx(1,   rel=0.5)
+
+
+def test_pars_from_fcs_warns_for_invalid_fits(caplog):
+    fitcol = FitCollection(fp = None,
+                           hp = None,
+                           fr = FitResult(par = None, err = None, chi2 = None, valid = False))
+
+    with warns(UserWarning, match="fit did not succeed, returning NaN"):
+        pars_from_fcs([fitcol])
