@@ -203,7 +203,7 @@ def test_fit_slices_2d_gauss_fixed_example():
     assert np.all(got_valid == expected_valid)
 
 
-@flaky(max_runs=5, min_passes=1)
+@flaky(max_runs=5, min_passes=3)
 def test_fit_slices_2d_gauss_statistics():
     nx, ny = 3, 4
     nz     = 10
@@ -225,8 +225,8 @@ def test_fit_slices_2d_gauss_statistics():
                                                 xbins, ybins, zbins,
                                                 min_entries=0)
 
-    assert np.all(np.abs(got_mean .value - means .reshape(nx, ny)) < 5 * got_mean .uncertainty)
-    assert np.all(np.abs(got_sigma.value - sigmas.reshape(nx, ny)) < 5 * got_sigma.uncertainty)
+    assert np.all(np.abs(got_mean .value - means .reshape(nx, ny)) < 10 * got_mean .uncertainty)
+    assert np.all(np.abs(got_sigma.value - sigmas.reshape(nx, ny)) < 10 * got_sigma.uncertainty)
     assert np.all(got_valid)
 
 
