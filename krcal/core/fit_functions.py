@@ -24,7 +24,11 @@ from   invisible_cities.evm  .ic_containers  import Measurement
 from   invisible_cities.evm  .ic_containers  import FitFunction
 from   invisible_cities.icaro.hst_functions  import shift_to_bin_centers
 
+
 log = logging.getLogger(__name__)
+
+_FIT_EXCEPTIONS = AssertionError, RuntimeError
+
 
 def chi2f(f   : Callable,
           nfp : int,        # number of function parameters
@@ -137,7 +141,9 @@ def fit_profile_1d_expo(xdata, ydata, nbins, *args, **kwargs):
     return f
 
 
-def fit_slices_1d_gauss(xdata, ydata, xbins, ybins, min_entries=1e2):
+def fit_slices_1d_gauss(xdata, ydata, xbins, ybins,
+                        min_entries   = 1e2,
+                        ignore_errors = _FIT_EXCEPTIONS):
     """
     Slice the data in x, histogram each slice, fit it to a gaussian
     and return the relevant values.
@@ -184,12 +190,15 @@ def fit_slices_1d_gauss(xdata, ydata, xbins, ybins, min_entries=1e2):
             sigmau[i] = f.errors[2]
             chi2  [i] = f.chi2
             valid [i] = True
-        except:
-            pass
+        except Exception as exc:
+            if not isinstance(exc, ignore_errors):
+                raise
     return Measurement(mean, meanu), Measurement(sigma, sigmau), chi2, valid
 
 
-def fit_slices_2d_gauss(xdata, ydata, zdata, xbins, ybins, zbins, min_entries=1e2):
+def fit_slices_2d_gauss(xdata, ydata, zdata, xbins, ybins, zbins,
+                        min_entries   = 1e2,
+                        ignore_errors = _FIT_EXCEPTIONS):
     """
     Slice the data in x and y, histogram each slice, fit it to a gaussian
     and return the relevant values.
@@ -241,14 +250,17 @@ def fit_slices_2d_gauss(xdata, ydata, zdata, xbins, ybins, zbins, min_entries=1e
                 sigmau[i, j] = f.errors[2]
                 chi2  [i, j] = f.chi2
                 valid [i, j] = True
-            except:
-                pass
+            except Exception as exc:
+                if not isinstance(exc, ignore_errors):
+                    raise
+
     return Measurement(mean, meanu), Measurement(sigma, sigmau), chi2, valid
 
 
 def fit_slices_2d_expo(xdata, ydata, zdata, tdata,
                        xbins, ybins, nbins_z, zrange=None,
-                       min_entries = 1e2):
+                       min_entries   = 1e2,
+                       ignore_errors = _FIT_EXCEPTIONS):
     """
     Slice the data in x and y, make the profile in z of t,
     fit it to a exponential and return the relevant values.
@@ -305,17 +317,19 @@ def fit_slices_2d_expo(xdata, ydata, zdata, tdata,
                 slopeu[i, j] = f.errors[1]
                 chi2  [i, j] = f.chi2
                 valid [i, j] = True
-            except:
-                pass
+            except Exception as exc:
+                if not isinstance(exc, ignore_errors):
+                    raise
+
     return Measurement(const, constu), Measurement(slope, slopeu), chi2, valid
-    
-    
+
+
 def sigmoid(x          : np.array,
             scale      : float,
             inflection : float,
             slope      : float,
             offset     : float)->np.array:
-    
+
     return scale / ( 1 + np.exp( - slope * ( x - inflection ) ) ) + offset
 
 
