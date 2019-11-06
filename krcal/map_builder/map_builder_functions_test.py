@@ -74,15 +74,17 @@ def test_maps_nans_outside_rmax(xy_pos, output_maps_tmdir):
 
     emaps = read_maps(map_file_out)
     get_coef = maps_coefficient_getter(emaps.mapinfo, emaps.e0)
-    r_max = emaps.mapinfo.xmax
-    nbins = emaps.mapinfo.nx
-    bins  = np.linspace(-200, 200, nbins)
-    xs = bins[np.digitize(xs, bins, right = True)]
-    ys = bins[np.digitize(ys, bins, right = True)]
+    r_max    = emaps.mapinfo.xmax
+    nbins    = emaps.mapinfo.nx
+    bins     = np.linspace(-200, 200, nbins)
+    xs       = bins[np.digitize(xs, bins, right = True)]
+    ys       = bins[np.digitize(ys, bins, right = True)]
     coefs    = get_coef(xs, ys)
-    mask = np.sqrt(xs**2+ys**2)>=r_max
-    assert all(np.isnan(coefs[mask]))
-    assert all(np.isfinite(coefs[np.logical_not(mask)]))
+    maskin   = np.sqrt(xs**2 + ys**2) <  r_max
+    maskout  = np.sqrt(xs**2 + ys**2) >= r_max + 2 * r_max / nbins
+
+    assert all(np.isnan   (coefs[maskout]))
+    assert all(np.isfinite(coefs[maskin ]))
 
 
 def test_exception_s1(folder_test_dst, test_dst_file, output_maps_tmdir):
