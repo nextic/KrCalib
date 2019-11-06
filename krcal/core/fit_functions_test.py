@@ -209,16 +209,16 @@ def test_fit_slices_2d_gauss_statistics():
     nz     = 10
     ndata  = 1000
     nxy    = nx * ny
-    nxyz   = nx * ny * ndata
-    means  = np.random.uniform(1000, 1100, nxy )
-    sigmas = np.random.uniform(  50,   80, nxy )
-    xdata  = np.concatenate([np.random.uniform( -10 + i/nx *  20, -10 + (i+1)/nx *  20, size=ndata) for i in range(nx) for j in range(ny)])
-    ydata  = np.concatenate([np.random.uniform( -50 + j/ny * 150, -50 + (j+1)/ny * 150, size=ndata) for i in range(nx) for j in range(ny)])
-    zdata  = np.concatenate([np.random.normal (                m,                    s, size=ndata) for m, s in zip(means, sigmas)]       )
 
     xbins = np.linspace( -10,   10, nx + 1)
     ybins = np.linspace( -50,  100, ny + 1)
     zbins = np.linspace( 800, 1300, nz + 1)
+
+    means  = np.random.uniform(1000, 1100, nxy)
+    sigmas = np.random.uniform(  50,   80, nxy)
+    xdata  = np.concatenate([np.random.uniform(*xbins[i:i+2], size=ndata) for i in range(nx) for j in range(ny)])
+    ydata  = np.concatenate([np.random.uniform(*ybins[j:j+2], size=ndata) for i in range(nx) for j in range(ny)])
+    zdata  = np.concatenate([np.random.normal (     m,     s, size=ndata) for m, s in zip(means, sigmas)]       )
 
     (got_mean, got_sigma,
      got_chi2, got_valid) = fit_slices_2d_gauss(xdata, ydata, zdata,
