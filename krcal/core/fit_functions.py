@@ -37,13 +37,11 @@ def chi2f(f   : Callable,
     """
 
     assert len(x) == len(y) == len(yu)
-    fitx = f(x)
-    n    = nfp
-    c2 = [abs(yi - fi)/syi for yi, fi, syi in zip(y, fitx, yu)]
-    chi2_ =np.sum(np.array(c2))
+    fitx  = f(x)
+    chi2_ = np.sum(((y - fitx) / yu)**2)
 
-    if len(x) > n:
-        return chi2_/(len(x)-n)
+    if len(x) > nfp:
+        return chi2_/(len(x)-nfp)
     else:
         warnings.warn('nof = 0 in chi2 calculation, return chi2 = {chi2_}', UserWarning)
         return chi2_
