@@ -191,7 +191,7 @@ def amap_average(amap : ASectorMap)->FitMapValue:
                       lt    = amap.lt.mean().mean(),
                       e0u   = amap.e0u.mean().mean(),
                       ltu   = amap.ltu.mean().mean(),
-                      mapinfo   = None)
+                      mapinfo   = amap.mapinfo)
 
 
 def amap_max(amap : ASectorMap)->FitMapValue:
@@ -200,7 +200,7 @@ def amap_max(amap : ASectorMap)->FitMapValue:
                       lt    = amap.lt.max().max(),
                       e0u   = amap.e0u.max().max(),
                       ltu   = amap.ltu.max().max(),
-                      mapinfo   = None)
+                      mapinfo   = amap.mapinfo)
 
 
 def amap_min(amap : ASectorMap)->FitMapValue:
@@ -209,7 +209,7 @@ def amap_min(amap : ASectorMap)->FitMapValue:
                       lt    = amap.lt.min().min(),
                       e0u   = amap.e0u.min().min(),
                       ltu   = amap.ltu.min().min(),
-                      mapinfo   = None)
+                      mapinfo   = amap.mapinfo)
 
 
 def amap_replace_nan_by_mean(amap : ASectorMap, amMean : FitMapValue)->ASectorMap:
@@ -218,8 +218,7 @@ def amap_replace_nan_by_mean(amap : ASectorMap, amMean : FitMapValue)->ASectorMa
                       lt    = amap.lt.copy().fillna(amMean.lt),
                       e0u   = amap.e0u.copy().fillna(amMean.e0u),
                       ltu   = amap.ltu.copy().fillna(amMean.ltu),
-                      mapinfo   = None)
-
+                      mapinfo   = amap.mapinfo)
 
 
 def amap_replace_nan_by_value(amap : ASectorMap, val : float = 0)->ASectorMap:
@@ -228,8 +227,7 @@ def amap_replace_nan_by_value(amap : ASectorMap, val : float = 0)->ASectorMap:
                       lt    = amap.lt.copy().fillna(val),
                       e0u   = amap.e0u.copy().fillna(val),
                       ltu   = amap.ltu.copy().fillna(val),
-                      mapinfo   = None)
-
+                      mapinfo   = amap.mapinfo)
 
 
 def relative_errors(am : ASectorMap)->ASectorMap:
@@ -238,5 +236,4 @@ def relative_errors(am : ASectorMap)->ASectorMap:
                       lt    = am.lt,
                       e0u   = 100 * am.e0u / am.e0,
                       ltu   = 100 * am.ltu / am.lt,
-                      mapinfo   = None)
-
+                      mapinfo   = am.mapinfo)
