@@ -72,10 +72,11 @@ def test_sigmoid_values_at_abscissa_axis(A, B, C, D):
     test  = A / (1 + np.exp(B*C)) + D
     assert value == test
 
-@given(floats(min_value = 530,
-              max_value = 570))
-def test_compute_drift_v_when_moving_edge(edge):
-    Nevents = 100*1000
+
+@flaky(max_runs=10, min_passes=9)
+def test_compute_drift_v_when_moving_edge():
+    edge    = np.random.uniform(530, 570)
+    Nevents = 100 * 1000
     data    = np.random.uniform(450, edge, Nevents)
     data    = np.random.normal(data, 1)
     dv, dvu = compute_drift_v(data, 60, [500,600],
