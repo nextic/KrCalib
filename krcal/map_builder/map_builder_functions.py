@@ -491,9 +491,9 @@ def regularize_map(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2) ):
     amap.ltu[outliers] = np.nan
     amap.e0 [outliers] = np.nan
     amap.e0u[outliers] = np.nan
-
-    av = amap_average(amap)
-    amap = amap_replace_nan_by_mean(amap, amMean=av)
+    asm  = relative_errors(amap)
+    av   = amap_average(asm)
+    amap = amap_replace_nan_by_mean(asm, amMean=av)
 
     return amap
 
@@ -611,9 +611,11 @@ def compute_map(dst          : pd.DataFrame,
                       rfid      = r_max)
     regularized_maps = regularize_map(maps    = maps,
                                       x2range = chi2_range)
-    asm = relative_errors(regularized_maps)
 
-    no_peripheral = remove_peripheral(asm, XYbins[0], r_max, r_max)
+    no_peripheral = remove_peripheral(regularized_maps,
+                                      XYbins[0]       ,
+                                      r_max           ,
+                                      r_max)
 
     no_peripheral = add_mapinfo(asm        = no_peripheral,
                                 xr         = x_range,
