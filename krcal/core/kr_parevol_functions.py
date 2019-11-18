@@ -1,8 +1,12 @@
 from . fit_lt_functions     import fit_lifetime_profile
 from . correction_functions import e0_xy_correction
 from . fit_functions        import compute_drift_v
+from . fit_functions        import quick_gauss_fit
 from . map_functions        import amap_max
 from . kr_types             import ASectorMap
+
+from invisible_cities.reco.corrections_new import apply_all_correction
+from invisible_cities.icaro. hst_functions import resolution
 
 from   typing               import List, Tuple
 
@@ -51,8 +55,8 @@ def computing_kr_parameters(data       : pd.DataFrame,
                             plot_fit   : bool                = False)->pd.DataFrame:
 
     """
-    Computes some average parameters (e0, lt, drift v,
-    S1w, S1h, S1e, S2w, S2h, S2e, S2q, Nsipm, 'Xrms, Yrms)
+    Computes some average parameters (e0, lt, drift v, energy
+    resolution, S1w, S1h, S1e, S2w, S2h, S2e, S2q, Nsipm, 'Xrms, Yrms)
     for a given krypton distribution. Returns a DataFrame.
 
     Parameters
@@ -110,6 +114,18 @@ def computing_kr_parameters(data       : pd.DataFrame,
                                zrange=zrange_dv, detector=detector,
                                plot_fit=plot_fit)
 
+  ## energy resolution and error
+    tot_corr_factor = apply_all_correction(maps = emaps,
+                                           apply_temp=False)
+    nbins = int((len(data.S2e))**0.5)
+    f = quick_gauss_fit(data.S2e.values*tot_corr_factor(
+                                  data.X.values,
+                                  data.Y.values,
+                                  data.Z.values,
+                                  data.time.values),
+                        bins=nbins)
+    R = resolution(f.values, f.errors, 41.5)
+    resol, err_resol = R[0][0], R[0][1]
     ## average values
     parameters = ['S1w', 'S1h', 'S1e',
                   'S2w', 'S2h', 'S2e', 'S2q',
@@ -125,6 +141,7 @@ def computing_kr_parameters(data       : pd.DataFrame,
                          'e0'   : [e0]             , 'e0u'   : [e0u]           ,
                          'lt'   : [lt]             , 'ltu'   : [ltu]           ,
                          'dv'   : [dv]             , 'dvu'   : [dvu]           ,
+                         'resol': [resol]          , 'resolu': [err_resol]     ,
                          's1w'  : [mean_d['S1w']]  , 's1wu'  : [var_d['S1w']]  ,
                          's1h'  : [mean_d['S1h']]  , 's1hu'  : [var_d['S1h']]  ,
                          's1e'  : [mean_d['S1e']]  , 's1eu'  : [var_d['S1e']]  ,
