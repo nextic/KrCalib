@@ -220,13 +220,14 @@ def amap_min(amap : ASectorMap)->FitMapValue:
                        mapinfo   = amap.mapinfo)
 
 
-def amap_replace_nan_by_mean(amap : ASectorMap, amMean : FitMapValue)->ASectorMap:
-    return ASectorMap(chi2  = amap.chi2.copy().fillna(amMean.chi2),
-                      e0    = amap.e0.copy().fillna(amMean.e0),
-                      lt    = amap.lt.copy().fillna(amMean.lt),
-                      e0u   = amap.e0u.copy().fillna(amMean.e0u),
-                      ltu   = amap.ltu.copy().fillna(amMean.ltu),
-                      mapinfo   = amap.mapinfo)
+def amap_replace_nan_by_mean(amap : ASectorMap)->ASectorMap:
+    amap_mean = amap_average(amap)
+    return ASectorMap(chi2    = amap.chi2.fillna(amap_mean.chi2),
+                      e0      = amap.e0  .fillna(amap_mean.e0  ),
+                      lt      = amap.lt  .fillna(amap_mean.lt  ),
+                      e0u     = amap.e0u .fillna(amap_mean.e0u ),
+                      ltu     = amap.ltu .fillna(amap_mean.ltu ),
+                      mapinfo = amap.mapinfo)
 
 
 def amap_replace_nan_by_value(amap : ASectorMap, val : float = 0)->ASectorMap:
