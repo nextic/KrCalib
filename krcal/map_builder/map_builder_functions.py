@@ -21,7 +21,6 @@ from .. core.selection_functions           import get_time_series_df
 from .. core.kr_parevol_functions          import kr_time_evolution
 
 
-from .. core.map_functions             import amap_average
 from .. core.map_functions             import amap_replace_nan_by_mean
 from .. core.map_functions             import relative_errors
 
@@ -478,8 +477,7 @@ def regularize_map(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2) ):
     amap.e0 [outliers] = np.nan
     amap.e0u[outliers] = np.nan
     asm  = relative_errors(amap)
-    av   = amap_average(asm)
-    amap = amap_replace_nan_by_mean(asm, amMean=av)
+    amap = amap_replace_nan_by_mean(asm)
 
     return amap
 

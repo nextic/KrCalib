@@ -78,11 +78,11 @@ def test_amap_replace_nan_by_value(MAPS, value):
     assert np.all(filled_nans.ltu [indices] == value)
 
 
-@mark.parametrize("replace_nans value".split(),
-                  ((amap_replace_nan_by_mean, FitMapValue(0, 0, 0, 0, 0)),
-                   (amap_replace_nan_by_value, 0)))
-def test_amap_replace_nan_by_something_still_contains_mapinfo(MAPS, replace_nans, value):
+@mark.parametrize("replace_nans args".split(),
+                  ((amap_replace_nan_by_mean , ()  ),
+                   (amap_replace_nan_by_value, (0,))))
+def test_amap_replace_nan_by_something_still_contains_mapinfo(MAPS, replace_nans, args):
     maps        = add_mapinfo(MAPS, (-200, 200), (-200,200), 100, 100, 1)
-    filled_nans = replace_nans(maps, value)
+    filled_nans = replace_nans(maps, *args)
 
     assert np.all(maps.mapinfo == filled_nans.mapinfo)
