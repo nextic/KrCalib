@@ -25,7 +25,9 @@ from typing           import Dict
 
 import logging
 
+
 log = logging.getLogger(__name__)
+
 
 def tsmap_from_fmap(fMap : Dict[int, List[FitParTS]])->SectorMapTS:
     """
@@ -63,18 +65,18 @@ def tsmap_from_fmap(fMap : Dict[int, List[FitParTS]])->SectorMapTS:
 
     """
     logging.debug(f' --tsmap_from_fmap')
-    tmChi2  = {}
-    tmE0    = {}
-    tmLT    = {}
-    tmE0u   = {}
-    tmLTu   = {}
+    tmChi2 = {}
+    tmE0   = {}
+    tmLT   = {}
+    tmE0u  = {}
+    tmLTu  = {}
 
     for sector, fps in fMap.items():
         logging.debug(f' filling maps for sector {sector}')
 
-        tCHI2 = [fp.c2 for fp in fps]
-        tE0   = [fp.e0 for fp in fps]
-        tLT   = [fp.lt for fp in fps]
+        tCHI2 = [fp.c2  for fp in fps]
+        tE0   = [fp.e0  for fp in fps]
+        tLT   = [fp.lt  for fp in fps]
         tE0u  = [fp.e0u for fp in fps]
         tLTu  = [fp.ltu for fp in fps]
 
@@ -84,18 +86,18 @@ def tsmap_from_fmap(fMap : Dict[int, List[FitParTS]])->SectorMapTS:
         tmE0u [sector]  = tE0u
         tmLTu [sector]  = tLTu
 
-    return SectorMapTS(chi2  = tmChi2,
-                       e0    = tmE0,
-                       lt    = tmLT,
-                       e0u   = tmE0u,
-                       ltu   = tmLTu)
+    return SectorMapTS(chi2 = tmChi2,
+                       e0   = tmE0  ,
+                       lt   = tmLT  ,
+                       e0u  = tmE0u ,
+                       ltu  = tmLTu )
 
 
 def amap_from_tsmap(tsMap      : SectorMapTS,
-                    ts         : int  = 0,
+                    ts         : int                 =             0,
                     range_e    : Tuple[float, float] = (5000, 13000),
-                    range_chi2 : Tuple[float, float] = (0,3),
-                    range_lt   : Tuple[float, float] = (1800, 3000)) ->ASectorMap:
+                    range_chi2 : Tuple[float, float] = (   0,     3),
+                    range_lt   : Tuple[float, float] = (1800,  3000)) -> ASectorMap:
     """
     Obtain the correction maps for time bin ts.
 
@@ -136,18 +138,18 @@ def amap_from_tsmap(tsMap      : SectorMapTS,
             M[sector] = [v[ts] for v in w]
         return M
 
-    if ts >=0:
-        mChi2  = fill_map_ts(tsMap.chi2, ts)
-        mE0    = fill_map_ts(tsMap.e0, ts)
-        mLT    = fill_map_ts(tsMap.lt, ts)
-        mE0u   = fill_map_ts(tsMap.e0u, ts)
-        mLTu   = fill_map_ts(tsMap.ltu, ts)
-    return ASectorMap(chi2      = pd.DataFrame.from_dict(mChi2),
-                      e0        = pd.DataFrame.from_dict(mE0),
-                      lt        = pd.DataFrame.from_dict(mLT),
-                      e0u       = pd.DataFrame.from_dict(mE0u),
-                      ltu       = pd.DataFrame.from_dict(mLTu),
-                      mapinfo   = None)
+    if ts >= 0:
+        mChi2 = fill_map_ts(tsMap.chi2, ts)
+        mE0   = fill_map_ts(tsMap.e0  , ts)
+        mLT   = fill_map_ts(tsMap.lt  , ts)
+        mE0u  = fill_map_ts(tsMap.e0u , ts)
+        mLTu  = fill_map_ts(tsMap.ltu , ts)
+    return ASectorMap(chi2    = pd.DataFrame.from_dict(mChi2),
+                      e0      = pd.DataFrame.from_dict(mE0  ),
+                      lt      = pd.DataFrame.from_dict(mLT  ),
+                      e0u     = pd.DataFrame.from_dict(mE0u ),
+                      ltu     = pd.DataFrame.from_dict(mLTu ),
+                      mapinfo = None)
 
 
 def add_mapinfo(asm        : ASectorMap,
@@ -155,7 +157,7 @@ def add_mapinfo(asm        : ASectorMap,
                 yr         : Tuple[float, float],
                 nx         : int,
                 ny         : int,
-                run_number : int) ->ASectorMap:
+                run_number : int) -> ASectorMap:
     """
     Add metadata to a ASectorMap
 
@@ -175,52 +177,48 @@ def add_mapinfo(asm        : ASectorMap,
             A new ASectorMap containing metadata (in the variable mapinfo)
 
     """
-    return ASectorMap(chi2  = asm.chi2,
-                      e0    =  asm.e0,
-                      lt    =  asm.lt,
-                      e0u   =  asm.e0u,
-                      ltu   =  asm.ltu,
-                      mapinfo   = pd.Series([*xr, *yr, nx, ny, run_number],
-                                           index=['xmin','xmax',
-                                                  'ymin','ymax','nx','ny','run_number']))
+    mapinfo = pd.Series([*xr, *yr, nx, ny, run_number],
+                         index=['xmin','xmax',
+                                'ymin','ymax',
+                                'nx'  , 'ny' ,
+                                'run_number'])
 
+    return ASectorMap(chi2    = asm.chi2,
+                      e0      = asm.e0  ,
+                      lt      = asm.lt  ,
+                      e0u     = asm.e0u ,
+                      ltu     = asm.ltu ,
+                      mapinfo = mapinfo )
 
-def amap_average(amap : ASectorMap)->FitMapValue:
-    return ASectorMap(chi2  = amap.chi2.mean().mean(),
-                      e0    = amap.e0.mean().mean(),
-                      lt    = amap.lt.mean().mean(),
-                      e0u   = amap.e0u.mean().mean(),
-                      ltu   = amap.ltu.mean().mean(),
-                      mapinfo   = amap.mapinfo)
 
 def amap_average(amap : ASectorMap) -> FitMapValue:
-    return FitMapValue(chi2  = amap.chi2.mean().mean(),
-                       e0    = amap.e0.mean().mean(),
-                       lt    = amap.lt.mean().mean(),
-                       e0u   = amap.e0u.mean().mean(),
-                       ltu   = amap.ltu.mean().mean(),
-                       mapinfo   = amap.mapinfo)
+    return FitMapValue(chi2    = amap.chi2.mean().mean(),
+                       e0      = amap.e0  .mean().mean(),
+                       lt      = amap.lt  .mean().mean(),
+                       e0u     = amap.e0u .mean().mean(),
+                       ltu     = amap.ltu .mean().mean(),
+                       mapinfo = amap.mapinfo)
 
 
 def amap_max(amap : ASectorMap) -> FitMapValue:
-    return FitMapValue(chi2  = amap.chi2.max().max(),
-                       e0    = amap.e0.max().max(),
-                       lt    = amap.lt.max().max(),
-                       e0u   = amap.e0u.max().max(),
-                       ltu   = amap.ltu.max().max(),
-                       mapinfo   = amap.mapinfo)
+    return FitMapValue(chi2    = amap.chi2.max().max(),
+                       e0      = amap.e0  .max().max(),
+                       lt      = amap.lt  .max().max(),
+                       e0u     = amap.e0u .max().max(),
+                       ltu     = amap.ltu .max().max(),
+                       mapinfo = amap.mapinfo)
 
 
-def amap_min(amap : ASectorMap)->FitMapValue:
-    return FitMapValue(chi2  = amap.chi2.min().min(),
-                       e0    = amap.e0.min().min(),
-                       lt    = amap.lt.min().min(),
-                       e0u   = amap.e0u.min().min(),
-                       ltu   = amap.ltu.min().min(),
-                       mapinfo   = amap.mapinfo)
+def amap_min(amap : ASectorMap) -> FitMapValue:
+    return FitMapValue(chi2    = amap.chi2.min().min(),
+                       e0      = amap.e0  .min().min(),
+                       lt      = amap.lt  .min().min(),
+                       e0u     = amap.e0u .min().min(),
+                       ltu     = amap.ltu .min().min(),
+                       mapinfo = amap.mapinfo)
 
 
-def amap_replace_nan_by_mean(amap : ASectorMap)->ASectorMap:
+def amap_replace_nan_by_mean(amap : ASectorMap) -> ASectorMap:
     amap_mean = amap_average(amap)
     return ASectorMap(chi2    = amap.chi2.fillna(amap_mean.chi2),
                       e0      = amap.e0  .fillna(amap_mean.e0  ),
@@ -230,19 +228,19 @@ def amap_replace_nan_by_mean(amap : ASectorMap)->ASectorMap:
                       mapinfo = amap.mapinfo)
 
 
-def amap_replace_nan_by_value(amap : ASectorMap, val : float = 0)->ASectorMap:
-    return ASectorMap(chi2  = amap.chi2.copy().fillna(val),
-                      e0    = amap.e0.copy().fillna(val),
-                      lt    = amap.lt.copy().fillna(val),
-                      e0u   = amap.e0u.copy().fillna(val),
-                      ltu   = amap.ltu.copy().fillna(val),
-                      mapinfo   = amap.mapinfo)
+def amap_replace_nan_by_value(amap : ASectorMap, val : float = 0) -> ASectorMap:
+    return ASectorMap(chi2    = amap.chi2.fillna(val),
+                      e0      = amap.e0  .fillna(val),
+                      lt      = amap.lt  .fillna(val),
+                      e0u     = amap.e0u .fillna(val),
+                      ltu     = amap.ltu .fillna(val),
+                      mapinfo = amap.mapinfo)
 
 
-def relative_errors(am : ASectorMap)->ASectorMap:
-    return ASectorMap(chi2  = am.chi2,
-                      e0    = am.e0,
-                      lt    = am.lt,
-                      e0u   = 100 * am.e0u / am.e0,
-                      ltu   = 100 * am.ltu / am.lt,
-                      mapinfo   = am.mapinfo)
+def relative_errors(am : ASectorMap) -> ASectorMap:
+    return ASectorMap(chi2    = am.chi2,
+                      e0      = am.e0,
+                      lt      = am.lt,
+                      e0u     = 100 * am.e0u / am.e0,
+                      ltu     = 100 * am.ltu / am.lt,
+                      mapinfo = am.mapinfo)
