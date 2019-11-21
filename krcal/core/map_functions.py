@@ -193,23 +193,31 @@ def amap_average(amap : ASectorMap)->FitMapValue:
                       ltu   = amap.ltu.mean().mean(),
                       mapinfo   = amap.mapinfo)
 
+def amap_average(amap : ASectorMap) -> FitMapValue:
+    return FitMapValue(chi2  = amap.chi2.mean().mean(),
+                       e0    = amap.e0.mean().mean(),
+                       lt    = amap.lt.mean().mean(),
+                       e0u   = amap.e0u.mean().mean(),
+                       ltu   = amap.ltu.mean().mean(),
+                       mapinfo   = amap.mapinfo)
 
-def amap_max(amap : ASectorMap)->FitMapValue:
-    return ASectorMap(chi2  = amap.chi2.max().max(),
-                      e0    = amap.e0.max().max(),
-                      lt    = amap.lt.max().max(),
-                      e0u   = amap.e0u.max().max(),
-                      ltu   = amap.ltu.max().max(),
-                      mapinfo   = amap.mapinfo)
+
+def amap_max(amap : ASectorMap) -> FitMapValue:
+    return FitMapValue(chi2  = amap.chi2.max().max(),
+                       e0    = amap.e0.max().max(),
+                       lt    = amap.lt.max().max(),
+                       e0u   = amap.e0u.max().max(),
+                       ltu   = amap.ltu.max().max(),
+                       mapinfo   = amap.mapinfo)
 
 
 def amap_min(amap : ASectorMap)->FitMapValue:
-    return ASectorMap(chi2  = amap.chi2.min().min(),
-                      e0    = amap.e0.min().min(),
-                      lt    = amap.lt.min().min(),
-                      e0u   = amap.e0u.min().min(),
-                      ltu   = amap.ltu.min().min(),
-                      mapinfo   = amap.mapinfo)
+    return FitMapValue(chi2  = amap.chi2.min().min(),
+                       e0    = amap.e0.min().min(),
+                       lt    = amap.lt.min().min(),
+                       e0u   = amap.e0u.min().min(),
+                       ltu   = amap.ltu.min().min(),
+                       mapinfo   = amap.mapinfo)
 
 
 def amap_replace_nan_by_mean(amap : ASectorMap, amMean : FitMapValue)->ASectorMap:
