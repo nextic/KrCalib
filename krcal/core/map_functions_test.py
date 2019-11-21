@@ -78,13 +78,6 @@ def test_amap_replace_nan_by_value(MAPS, value):
     assert np.all(filled_nans.ltu [indices] == value)
 
 
-@mark.parametrize("amap_op", (amap_min, amap_max))
-def test_amap_op_still_contains_mapinfo(MAPS, amap_op):
-    amap = amap_op(MAPS)
-
-    assert np.all(MAPS.mapinfo == amap.mapinfo)
-
-
 @mark.parametrize("replace_nans value".split(),
                   ((amap_replace_nan_by_mean, FitMapValue(0, 0, 0, 0, 0)),
                    (amap_replace_nan_by_value, 0)))

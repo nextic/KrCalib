@@ -196,8 +196,7 @@ def amap_average(amap : ASectorMap) -> FitMapValue:
                        e0      = amap.e0  .mean().mean(),
                        lt      = amap.lt  .mean().mean(),
                        e0u     = amap.e0u .mean().mean(),
-                       ltu     = amap.ltu .mean().mean(),
-                       mapinfo = amap.mapinfo)
+                       ltu     = amap.ltu .mean().mean())
 
 
 def amap_max(amap : ASectorMap) -> FitMapValue:
@@ -205,8 +204,7 @@ def amap_max(amap : ASectorMap) -> FitMapValue:
                        e0      = amap.e0  .max().max(),
                        lt      = amap.lt  .max().max(),
                        e0u     = amap.e0u .max().max(),
-                       ltu     = amap.ltu .max().max(),
-                       mapinfo = amap.mapinfo)
+                       ltu     = amap.ltu .max().max())
 
 
 def amap_min(amap : ASectorMap) -> FitMapValue:
@@ -214,8 +212,7 @@ def amap_min(amap : ASectorMap) -> FitMapValue:
                        e0      = amap.e0  .min().min(),
                        lt      = amap.lt  .min().min(),
                        e0u     = amap.e0u .min().min(),
-                       ltu     = amap.ltu .min().min(),
-                       mapinfo = amap.mapinfo)
+                       ltu     = amap.ltu .min().min())
 
 
 def amap_replace_nan_by_mean(amap : ASectorMap) -> ASectorMap:
