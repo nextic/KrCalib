@@ -41,12 +41,15 @@ def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
     default_n_bins = 15
     run_number     = 7517
     config = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    map_params_new = copy.copy(config.as_namespace.map_params)
+    map_params_new['nmin'] = 100
     config.update(dict(folder         = folder_test_dst,
                        file_in        = test_dst_file  ,
                        file_out_map   = map_file_out   ,
                        file_out_hists = histo_file_out ,
                        default_n_bins = default_n_bins ,
-                       run_number     = run_number     ))
+                       run_number     = run_number     ,
+                       map_params     = map_params_new ))
     map_builder(config.as_namespace)
     maps = read_maps(map_file_out)
     assert type(maps)==ASectorMap
