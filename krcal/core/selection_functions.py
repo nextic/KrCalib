@@ -91,8 +91,8 @@ def get_time_series_df(time_bins    : Number,
 
     """
     #Add small number to right edge to be included with in_range function
-    eps = 1e-12
-    ip = np.linspace(time_range[0], time_range[-1] + eps, time_bins+1)
+    modified_right_limit = np.nextafter(time_range[-1], np.inf)
+    ip = np.linspace(time_range[0], modified_right_limit, time_bins+1)
     masks = np.array([in_range(dst[time_column].values, ip[i], ip[i + 1]) for i in range(len(ip) -1)])
     return shift_to_bin_centers(ip), masks
 
