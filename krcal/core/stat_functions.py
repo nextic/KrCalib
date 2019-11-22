@@ -16,21 +16,21 @@ def relative_error_ratio(a : float, sigma_a: float, b :float, sigma_b : float) -
 def mean_and_std(x : np.array, range_ : Tuple[Number, Number])->Tuple[Number, Number]:
     """Computes mean and std for an array within a range: takes into account nans"""
 
-    mu = NN
+    mu  = NN
     std = NN
 
     if all(np.isnan(x)):  # all elements are nan
         mu  = NN
-        std  = NN
+        std = NN
     else:
         x_nonnan = x[np.isfinite(x)]
         y = x_nonnan[in_range(x_nonnan, *range_)]
         if len(y) == 0:
             warnings.warn(f'warning, empty slice of x = {x} in range = {range_}')
-            mu = NN
+            mu  = NN
             std = NN
         else:
-            mu = np.mean(y)
+            mu  = np.mean(y)
             std = np.std(y)
 
     return mu, std

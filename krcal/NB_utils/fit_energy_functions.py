@@ -174,7 +174,7 @@ def par_and_err_from_seed(seed : GaussPar) ->Tuple[np.array, np.array]:
     err[1] = seed.mu.uncertainty
     err[2] = seed.std.uncertainty
     return par, err
-def gaussian_params_from_fcs(fcs : FitCollection) ->Iterable[float]:
+def gaussian_params_from_fcs(fcs : FitCollection) ->Iterable[np.array]:
     mus   = np.array([fc.fr.par[1] for fc in fcs])
     umus  = np.array([fc.fr.err[1] for fc in fcs])
     stds  = np.array([fc.fr.par[2] for fc in fcs])
