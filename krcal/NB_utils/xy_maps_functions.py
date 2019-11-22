@@ -13,16 +13,13 @@ Documentation
 import matplotlib.pyplot as plt
 from matplotlib.colors import Colormap
 
-import numpy as np
-import pandas as pd
 import seaborn as sns
-from . kr_types        import MapType
-from . kr_types        import ASectorMap
+from ..core. kr_types        import MapType
+from ..core. kr_types        import ASectorMap
 
-from typing            import List, Tuple, Dict, Sequence, Iterable
+from typing            import List, Tuple
 from typing            import Optional
 
-from numpy import sqrt
 from pandas import DataFrame
 
 import logging
@@ -200,8 +197,8 @@ def draw_xy_maps_ts(aMaps   : List[ASectorMap],
 
     for i,  _ in enumerate(aMaps):
         ax = fig.add_subplot(ix, iy, i+1)
-        xymap, title = which_map(aMaps[i], wmap, index = i)
-        vmin, vmax = get_limits(ltlims)
+        xymap, title = which_map_(aMaps[i], wmap, index = i)
+        vmin, vmax = get_limits_(ltlims)
         sns.heatmap(xymap.fillna(0), vmin=vmin, vmax=vmax, cmap=cmap, square=True)
         plt.title(title)
     plt.tight_layout()

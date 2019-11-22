@@ -4,26 +4,18 @@ Tests for stat_functions
 
 import numpy as np
 
-from pytest        import mark
-from pytest        import approx
-from pytest        import raises
-from flaky         import flaky
-from numpy.testing import assert_array_equal
-from numpy.testing import assert_allclose
+from pytest                import approx
+from pytest                import warns
 
 from hypothesis            import given, settings
-from hypothesis.strategies import integers
 from hypothesis.strategies import floats
-from invisible_cities.core.testing_utils       import exactly
-from invisible_cities.core.testing_utils       import float_arrays
-from invisible_cities.core.testing_utils       import FLOAT_ARRAY
-from invisible_cities.core.testing_utils       import random_length_float_arrays
 
-from . stat_functions       import gaussian_experiment
-from . stat_functions       import mean_and_std
-from . stat_functions       import relative_error_ratio
+from . testing_utils       import gaussian_experiment
+from . stat_functions      import relative_error_ratio
+from . stat_functions      import mean_and_std
 
-from . core_functions import  NN
+from . core_functions      import  NN
+
 
 
 def test_simple_relative_error_ratio():
@@ -85,6 +77,7 @@ def test_mean_and_std_positive(mean, sigma):
               max_value = + 10))
 @settings(max_examples=10)
 
+
 def test_mean_and_std_zero(mean, sigma):
     Nevt  = int(1e5)
     e = gaussian_experiment(nevt=Nevt, mean=mean, std=sigma)
@@ -93,12 +86,17 @@ def test_mean_and_std_zero(mean, sigma):
     assert mu   == approx(mean  , abs=1e-1)
     assert std  == approx(sigma,  abs=1e-1)
 
-def test_mean_and_std_nan():
-    x = [NN,NN,NN,NN]
-    y = mean_and_std(x, (0,10))
-    assert np.count_nonzero(np.isnan(y)) == 2 # returns (nan, nan)
 
-    y = [1,2,3,4, NN]
-    z = [1,2,3,4]
+def test_mean_and_std_nan():
+    x = np.array([NN,NN,NN,NN])
+    y = mean_and_std(x, (0,10))
+    assert all(np.isnan(y)) # returns (nan, nan)
+
+    y = np.array([1,2,3,4, NN])
+    z = np.array([1,2,3,4])
     np.allclose(mean_and_std(y, (0,10)), mean_and_std(z, (0,10)), rtol=1e-05, atol=1e-05)
-    
+
+
+def test_mean_and_std_warns_empty_slice():
+    with warns(UserWarning, match="warning, empty slice of x = "):
+        mean_and_std(np.arange(5), range_=(5, 10))

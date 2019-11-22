@@ -15,18 +15,18 @@ from .. core.fitmap_functions              import fit_map_xy_df
 from .. core.map_functions                 import amap_from_tsmap
 from .. core.map_functions                 import tsmap_from_fmap
 from .. core.map_functions                 import add_mapinfo
+from .. core.correction_functions          import e0_xy_correction
 
 from .. core.selection_functions           import get_time_series_df
 from .. core.kr_parevol_functions          import kr_time_evolution
 
 
-from .. core.map_functions             import amap_average
 from .. core.map_functions             import amap_replace_nan_by_mean
 from .. core.map_functions             import relative_errors
 
 
 from .. core       .io_functions       import write_complete_maps
-from .. core       .histo_functions    import compute_and_save_hist_as_pd
+from .. core       .io_functions       import compute_and_save_hist_as_pd
 from .. core       .histo_functions    import compute_similar_histo
 from .. core       .histo_functions    import normalize_histo_and_poisson_error
 from .. core       .histo_functions    import ref_hist
@@ -41,26 +41,11 @@ from invisible_cities.core.core_functions  import in_range
 from invisible_cities.io  .dst_io          import load_dsts
 from invisible_cities.reco.corrections_new import ASectorMap
 from invisible_cities.reco.corrections_new import read_maps
-from invisible_cities.reco.corrections_new import maps_coefficient_getter
-from invisible_cities.reco.corrections_new import correct_geometry_
 from invisible_cities.reco.corrections_new import norm_strategy
-from invisible_cities.reco.corrections_new import get_normalization_factor
 
 from invisible_cities.icaro.hst_functions import measurement_string
 
 
-
-def e0_xy_correction(map        : ASectorMap                         ,
-                     norm_strat : norm_strategy   = norm_strategy.max):
-    """
-    Temporal function to perfrom IC geometric corrections only
-    """
-    normalization   = get_normalization_factor(map        , norm_strat)
-    get_xy_corr_fun = maps_coefficient_getter (map.mapinfo, map.e0)
-    def geo_correction_factor(x : np.array,
-                              y : np.array) -> np.array:
-        return correct_geometry_(get_xy_corr_fun(x,y))* normalization
-    return geo_correction_factor
 
 @dataclass
 class ref_hist_container:
@@ -492,8 +477,7 @@ def regularize_map(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2) ):
     amap.e0 [outliers] = np.nan
     amap.e0u[outliers] = np.nan
     asm  = relative_errors(amap)
-    av   = amap_average(asm)
-    amap = amap_replace_nan_by_mean(asm, amMean=av)
+    amap = amap_replace_nan_by_mean(asm)
 
     return amap
 

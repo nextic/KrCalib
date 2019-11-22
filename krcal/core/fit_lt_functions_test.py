@@ -4,40 +4,25 @@ Tests for fit_functions
 
 import numpy as np
 
-from pytest        import mark
-from pytest        import approx
-from pytest        import raises
-from flaky         import flaky
-from numpy.testing import assert_array_equal
-from numpy.testing import assert_allclose
+from pytest                import mark
+from pytest                import approx
+from pytest                import warns
 
-from hypothesis            import given, settings
-from hypothesis.strategies import integers
-from hypothesis.strategies import floats
-from invisible_cities.core.testing_utils       import exactly
-from invisible_cities.core.testing_utils       import float_arrays
-from invisible_cities.core.testing_utils       import FLOAT_ARRAY
-from invisible_cities.core.testing_utils       import random_length_float_arrays
-from invisible_cities.icaro. hst_functions     import shift_to_bin_centers
+from invisible_cities.core import fit_functions as fitf
 
-from invisible_cities.core .stat_functions     import poisson_sigma
-from invisible_cities.core.core_functions      import in_range
-from invisible_cities.evm  .ic_containers      import Measurement
-
-from .                     import fit_functions_ic as fitf
-
-from . fit_functions       import chi2, expo_seed
+from . testing_utils       import energy_lt_experiment
+from . testing_utils       import energy_lt_experiments
+from . testing_utils       import fit_lifetime_experiments
+from . fit_functions       import expo_seed
 from . stat_functions      import mean_and_std
-from . stat_functions      import energy_lt_experiment
-from . stat_functions      import energy_lt_experiments
-
-from . fit_lt_functions    import fit_lifetime
 from . fit_lt_functions    import fit_lifetime_profile
 from . fit_lt_functions    import fit_lifetime_unbined
-from . fit_lt_functions    import fit_lifetime_experiments
-from . fit_lt_functions    import fit_lifetime_unbined
+from . fit_lt_functions    import pars_from_fcs
 from . fit_lt_functions    import lt_params_from_fcs
-from . kr_types import FitType
+from . kr_types            import FitType
+from . kr_types            import FitResult
+from . kr_types            import FitCollection
+
 
 def test_lt_profile_yields_same_result_expo_fit():
 
@@ -58,7 +43,6 @@ def test_lt_profile_yields_same_result_expo_fit():
     seed = expo_seed(x, y)
     f    = fitf.fit(fitf.expo, x, y, seed, sigma=yu)
 
-    c2   = chi2(f, x, y, yu)
     par  = np.array(f.values)
     err  = np.array(f.errors)
     e0   = par[0]
@@ -71,9 +55,8 @@ def test_lt_profile_yields_same_result_expo_fit():
     assert lt   == approx(fr.par[1],  rel=0.05)
     assert e0_u == approx(fr.err[0],  rel=0.05)
     assert lt_u == approx(fr.err[1],  rel=0.05)
-    #assert c2   == approx(fr.chi2,  rel=0.1)
 
-#@flaky(max_runs=5, min_passes=2)
+# @flaky(max_runs=5, min_passes=2)
 # @given(floats(min_value = 0.01,
 #               max_value = 0.1),
 #        floats(min_value = 100,
@@ -89,16 +72,25 @@ def test_lt_profile_yields_same_result_expo_fit():
 #     nbins_z = 12
 #     range_z = (1, 500)
 #     z, es = energy_lt_experiment(Nevt, e0, lt, std)
-#
+
 #     _, _,  frp = fit_lifetime_profile(z, es, nbins_z, range_z)
 #     _, _,  fru = fit_lifetime_unbined(z, es, nbins_z, range_z)
-#
+
 #     assert frp.par[0] == approx(fru.par[0],  rel=0.2)
 #     assert frp.par[1] == approx(fru.par[1],  rel=0.2)
 #     assert frp.err[0] == approx(fru.err[0],  rel=0.2)
 #     assert frp.err[1] == approx(fru.err[1],  rel=0.5)
 #     assert frp.chi2   == approx(fru.chi2,    rel=0.5)
-#
+
+
+@mark.parametrize("length error_type".split(),
+                  ((0, "Type"       ),
+                   (1, "LinAlgError"),
+                   (2, "LinAlgError")))
+def test_fit_lifetime_unbined_warns_with_insufficient_data_points(caplog, length, error_type):
+    fit_lifetime_unbined(np.zeros(length), np.ones(length), 10, (0, 10))
+    assert f"{error_type} error found in fit_lifetime_unbined: not enough events for fit" in caplog.text
+
 
 def test_fit_lifetime_experiments_yield_good_pars_and_pulls():
     mexperiments = 1e+3
@@ -149,4 +141,12 @@ def test_fit_lifetime_experiments_yield_good_pars_and_pulls():
     assert p_mu   <= 0  # the pull is biased
     assert p_std  == approx(1,  rel=0.2)
     assert p_c2   == approx(1,   rel=0.5)
-    #assert p_c2u  == approx(0.2, rel=0.5)
+
+
+def test_pars_from_fcs_warns_for_invalid_fits(caplog):
+    fitcol = FitCollection(fp = None,
+                           hp = None,
+                           fr = FitResult(par = None, err = None, chi2 = None, valid = False))
+
+    with warns(UserWarning, match="fit did not succeed, returning NaN"):
+        pars_from_fcs([fitcol])

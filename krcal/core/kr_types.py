@@ -12,17 +12,16 @@ from enum        import auto
 from dataclasses import dataclass
 from pandas import DataFrame, Series
 
-from invisible_cities.types.ic_types      import minmax
 from invisible_cities.types.ic_types      import AutoNameEnumBase
 from invisible_cities.evm  .ic_containers import Measurement
 from invisible_cities.evm  .ic_containers import FitFunction
+
 
 Number = TypeVar('Number', None, int, float)
 Str   = TypeVar('Str', None, str)
 Range = TypeVar('Range', None, Tuple[float, float])
 Array = TypeVar('Array', List, np.array)
-#Sel   = TypeVar('Sel',   None, np.array)  # where np.array is array of bool
-#LMeasurement =  List[Measurement]
+
 Int = TypeVar('Int', None, int)
 
 
@@ -43,15 +42,6 @@ class MapType(Enum):
     chi2 = 5
 
 @dataclass
-class KrFileName:
-    input_file_names : List[str]
-    output_file_name : str
-    map_file_name    : str
-    map_file_name_ts : str
-    emap_file_name   : str
-
-
-@dataclass
 class S1D:
     """S1 description"""
     E  : Measurement
@@ -70,90 +60,6 @@ class S2D:
     N  : Measurement # NSipm
     X  : Measurement
     Y  : Measurement
-
-
-@dataclass
-class CPoint:
-    """Represent a cartesian point"""
-    X   : np.array
-    Y   : np.array
-    Z   : np.array
-
-
-@dataclass
-class Point(CPoint):
-    """Add polar representation"""
-    R   : np.array
-    Phi : np.array
-
-
-@dataclass
-class KrEvent(Point):
-    """Adds raw energy/time"""
-    S2e  : Array
-    S1e  : Array
-    S2q  : Array
-    T    : Array  # time
-    DT   : Array  # time difference in seconds
-    E    : Array
-    Q    : Array
-
-
-@dataclass
-class  KrTimes:
-    times      : List[float]
-    timeStamps : List[float]
-    TL         : List[Tuple[float]]
-
-
-@dataclass
-class KrBins:
-    S2e  : Array
-    S1e  : Array
-    S2q : Array
-    X    : Array
-    Y    : Array
-    Xsi  : Array
-    Ysi  : Array
-    Z    : Array
-    Xc   : Array
-    Yc   : Array
-    T    : Array
-    Xp   : Number
-    Yp   : Number
-
-
-@dataclass
-class KrNBins:
-    S2e  : Int
-    S1e  : Int
-    S2q  : Int
-    X    : Int
-    Y    : Int
-    Xsi  : Int
-    Ysi  : Int
-    Z    : Int
-    T    : Int
-
-
-@dataclass
-class KrRanges:
-    S2e  : Range
-    S1e  : Range
-    S2q  : Range
-    X    : Range
-    Y    : Range
-    Z    : Range
-    T    : Range
-
-
-@dataclass
-class KrSector:
-    rmin    : float
-    rmax    : float
-    phimin  : float
-    phimax  : float
-
 
 @dataclass
 class HistoPar:
@@ -190,9 +96,9 @@ class GaussPar:
 
 @dataclass
 class FitResult:
-    par  : np.array
-    err  : np.array
-    chi2 : float
+    par   : np.array
+    err   : np.array
+    chi2  : float
     valid : bool
 
 
@@ -206,13 +112,6 @@ class FitCollection:
 @dataclass
 class FitCollection2(FitCollection):
     fp2   : FitPar
-
-
-@dataclass
-class PlotLabels:
-    x     : str
-    y     : str
-    title : str
 
 
 @dataclass
@@ -272,55 +171,3 @@ class FitMapValue:  # A ser of values of a FitMap
     lt    : float
     e0u   : float
     ltu   : float
-
-#------
-
-
-# @dataclass
-# class KrLTSlices:
-#     Es    : np.array
-#     LT    : np.array
-#     chi2  : np.array
-#     valid : np.array
-#
-#
-# @dataclass
-# class KrLTLimits:
-#     Es  : minmax
-#     LT  : minmax
-#     Eu  : minmax
-#     LTu : minmax
-#
-#
-#
-#
-# @dataclass
-# class KrMean:
-#     mu    : float
-#     mu_u  : float
-#
-#
-# @dataclass
-# class KrMeanAndStd(KrMean):
-#     std   : float
-#     std_u : float
-#
-#
-# @dataclass
-# class KrMeanStdMinMax(KrMeanAndStd):
-#     min     : float
-#     max     : float
-#     min_u   : float
-#     max_u   : float
-#
-#
-# @dataclass
-# class KrMeans:
-#     mu    : np.array
-#     mu_u  : np.array
-#
-#
-# @dataclass
-# class KrMeansAndStds(KrMeans):
-#     std   : np.array
-#     std_u : np.array

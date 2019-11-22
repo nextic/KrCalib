@@ -15,32 +15,23 @@ Last revised: Feb, 2019
 
 """
 import numpy as np
-import pandas as pd
-import datetime
 import warnings
-from   pandas.core.frame import DataFrame
+from   pandas               import DataFrame
 
-from . core_functions  import  value_from_measurement
-from . core_functions  import  uncertainty_from_measurement
-from . core_functions  import  NN
+from typing                 import List
+from typing                 import Tuple
+from typing                 import Dict
 
+from . core_functions       import value_from_measurement
+from . core_functions       import uncertainty_from_measurement
 from . fit_lt_functions     import fit_lifetime
 from . fit_lt_functions     import pars_from_fcs
-from . fit_functions        import fit_slices_1d_gauss
 from . selection_functions  import get_time_series_df
+from . kr_types             import FitType, FitParTS
 
-from . kr_types             import Number, Int, Range, Array
-from . kr_types             import KrBins, KrNBins, KrRanges, KrTimes
-from . kr_types             import KrEvent, FitType, FitParTS
-from . kr_types             import HistoPar2, ProfilePar, FitPar, KrSector
-from . core_functions       import phirad_to_deg
-from . histo_functions      import h1, h1d, h2, h2d, plot_histo
 
-from typing                 import List, Tuple, Sequence, Iterable, Dict
-
-import sys
 import logging
-log = logging.getLogger()
+log = logging.getLogger(__name__)
 
 
 def time_fcs_df(ts      : np.array,

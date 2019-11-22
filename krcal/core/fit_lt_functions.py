@@ -11,48 +11,31 @@ Documentation
     Insert documentation https
 """
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.dates  as md
 import warnings
 
-from   pandas.core.frame import DataFrame
-from typing  import Dict, List, Tuple, Sequence, Iterable, Optional
-from numpy.linalg import LinAlgError
+from typing  import List
+from typing  import Tuple
+from typing  import Iterable
 
-from   invisible_cities.core.core_functions import in_range
-from   invisible_cities.evm  .ic_containers  import Measurement
+from numpy           .linalg                 import LinAlgError
+from invisible_cities.evm    .ic_containers  import Measurement
+from invisible_cities.core   .fit_functions  import fit
+from invisible_cities.core   .fit_functions  import expo
 
-from . import fit_functions_ic as fitf
-from . fit_functions   import   expo_seed, chi2, chi2f
-from . histo_functions import profile1d
-from . stat_functions  import  mean_and_std
-from . core_functions  import  value_from_measurement
-from . core_functions  import  uncertainty_from_measurement
-from . core_functions  import  NN
-
-from invisible_cities.core .stat_functions import poisson_sigma
-from invisible_cities.icaro. hst_functions import shift_to_bin_centers
+from . fit_functions    import expo_seed
+from . fit_functions    import chi2f
+from . histo_functions  import profile1d
+from . core_functions   import NN
 
 from . kr_types import FitPar
-from . kr_types import FitParTS
 from . kr_types import FitResult
-from . kr_types import HistoPar, HistoPar2
-from . kr_types import FitCollection, FitCollection2
+from . kr_types import HistoPar2
+from . kr_types import FitCollection
+from . kr_types import FitCollection2
+from . kr_types import FitType
 
-
-from . kr_types       import FitType, MapType
-from . kr_types       import Number, Range
-from . kr_types       import KrEvent
-
-from scipy.optimize    import OptimizeWarning
-from . histo_functions import labels
-from numpy import sqrt, pi
-
-import sys
 import logging
-log = logging.getLogger()
-
+log = logging.getLogger(__name__)
 
 def fit_lifetime(z       : np.array,
                  e       : np.array,
@@ -179,7 +162,7 @@ def fit_lifetime_profile(z : np.array,
 
     logging.debug(f' after profile: len (x) ={len(x)}, len (y) ={len(y)} ')
     try:
-        f      = fitf.fit(fitf.expo, x, y, seed, sigma=yu)
+        f      = fit(expo, x, y, seed, sigma=yu)
         c2     = f.chi2
         par    = np.array(f.values)
         par[1] = - par[1]
@@ -300,143 +283,6 @@ def fit_lifetime_unbined(z       : np.array,
     return fp, fp2, fr
 
 
-def time_fcs(ts      : np.array,
-             masks   : List[np.array],
-             kre     : KrEvent,
-             nbins_z : int,
-             nbins_e : int,
-             range_z : Tuple[float, float],
-             range_e : Tuple[float, float],
-             energy  : str                 = 'S2e',
-             fit     : FitType             = FitType.profile)->FitParTS:
-    """
-    Fit lifetime of a time series.
-
-    Parameters
-    ----------
-        ts
-            A vector of floats with the (central) values of the time series.
-        masks
-            A list of boolean vectors specifying the selection masks that define the time series.
-        kre
-            A kr_event (a subset of dst).
-        range_z
-            Range in Z for fit.
-        nbins_z
-            Number of bins in Z for the fit.
-        nbins_e
-            Number of bins in energy.
-        range_z
-            Range in Z for fit.
-        range_e
-            Range in energy.
-        energy:
-            Takes two values: S2e (uses S2e field in kre) or E (used E field on kre).
-            This field allows to select fits over uncorrected (S2e) or corrected (E) energies.
-        fit
-            Selects fit type.
-
-
-    Returns
-    -------
-        A FitParTs:
-
-    @dataclass
-    class FitParTS:             # Fit parameters Time Series
-        ts   : np.array          # contains the time series (integers expressing time differences)
-        e0   : np.array          # e0 fitted in time series
-        lt   : np.array
-        c2   : np.array
-        e0u  : np.array          # e0 error fitted in time series
-        ltu  : np.array
-
-    """
-
-    kcts = [KrEvent(X   = kre.X[sel_mask],
-                    Y   = kre.Y[sel_mask],
-                    Z   = kre.Z[sel_mask],
-                    R   = kre.R[sel_mask],
-                    Phi = kre.Phi[sel_mask],
-                    T   = kre.T[sel_mask],
-                    DT  = kre.DT[sel_mask],
-                    S2e = kre.S2e[sel_mask],
-                    S1e = kre.S1e[sel_mask],
-                    S2q = kre.S2q[sel_mask],
-                    E   = kre.E[sel_mask],
-                    Q   = kre.Q[sel_mask]) for sel_mask in masks]
-
-    logging.debug('function:time_fcs ')
-    logging.debug(f' list of kre_event has length {len(kcts)}')
-    [logging.debug(f' mask {i} has length {len(mask)}') for i, mask in enumerate(masks)]
-    [logging.debug(f' mask {i} has {np.count_nonzero(mask)} True elements')
-                   for i, mask in enumerate(masks)]
-
-    if energy == 'S2e':
-        #print('S2e')
-        fcs =[fit_lifetime(kct.Z, kct.S2e,
-                           nbins_z, nbins_e, range_z, range_e, fit) for kct in kcts]
-    else:
-        #print('E')
-        fcs =[fit_lifetime(kct.Z, kct.E,
-                           nbins_z, nbins_e, range_z, range_e, fit) for kct in kcts]
-
-    e0s, lts, c2s = pars_from_fcs(fcs)
-    #print(value_from_measurement(e0s))
-    return FitParTS(ts  = np.array(ts),
-                    e0  = value_from_measurement(e0s),
-                    lt  = value_from_measurement(lts),
-                    c2  = c2s,
-                    e0u = uncertainty_from_measurement(e0s),
-                    ltu = uncertainty_from_measurement(lts))
-
-
-def get_time_series(time_bins    : Number,
-                    time_range   : Tuple[float, float],
-                    kre          : KrEvent)->Tuple[np.array, List[np.array]]:
-    """
-
-    Returns a time series (ts) and a list of masks which are used to divide
-    the event in time tranches.
-
-        Parameters
-        ----------
-            time_bins
-                Number of time bines.
-            time_range
-                Time range.
-            kre
-                A kr_event (a subset of dst).
-
-        Returns
-        -------
-            A Tuple with:
-            np.array       : This is the ts vector
-            List[np.array] : This are the list of masks defining the events in the time series.
-
-    """
-
-    logging.debug(f'function: get_time_series')
-    nt = time_bins
-    x = int((time_range[-1] -  time_range[0]) / nt)
-    tfirst = int(time_range[0])
-    tlast  = int(time_range[-1])
-    if x == 1:
-        indx = [(tfirst, tlast)]
-    else:
-        indx = [(i, i + x) for i in range(tfirst, int(tlast - x), x) ]
-        indx.append((x * (nt -1), tlast))
-
-    ts = [(indx[i][0] + indx[i][1]) / 2 for i in range(len(indx))]
-
-    logging.debug(f' number of time bins = {nt}, t_first = {tfirst} t_last = {tlast}')
-    logging.debug(f'indx = {indx}')
-    logging.debug(f'ts = {ts}')
-
-    masks = [in_range(kre.DT, indx[i][0], indx[i][1]) for i in range(len(indx))]
-
-    return np.array(ts), masks
-
-
 def pars_from_fcs(fcs : List[FitCollection])->Tuple[List[Measurement],
                                                     List[Measurement],
                                                     np.array]:
@@ -456,257 +302,6 @@ def pars_from_fcs(fcs : List[FitCollection])->Tuple[List[Measurement],
             LT.append(Measurement(NN, NN))
             C2.append(NN)
     return E, LT, np.array(C2)
-
-# Fitting maps
-def fit_map_rphi(selection_map : Dict[int, List[KrEvent]],
-                 event_map     : DataFrame,
-                 n_time_bins   : int,
-                 time_diffs    : np.array,
-                 nbins_z       : int,
-                 nbins_e       : int,
-                 range_z       : Tuple[float, float],
-                 range_e      : Tuple[float, float],
-                 energy        : str                 = 'S2e',
-                 fit           : FitType             = FitType.profile,
-                 n_min         : int                 = 100)->Dict[int, List[FitParTS]]:
-
-    logging.debug(f'function: fit_map_rphi')
-    fMAP = {}
-    nsectors = len(selection_map.keys())
-    for sector in range(nsectors):
-        logging.debug(f'Fitting sector {sector}')
-
-        fps = fit_fcs_in_rphi_sectors(sector, selection_map, event_map, n_time_bins, time_diffs,
-                                 nbins_z, nbins_e, range_z, range_e, energy, fit, n_min)
-
-        logging.debug(f' number of wedges fitted in sector {len(fps)}')
-
-        fMAP[sector] = fps
-
-    return fMAP
-
-
-def fit_map_xy(selection_map : Dict[int, List[KrEvent]],
-               event_map     : DataFrame,
-               n_time_bins   : int,
-               time_diffs     : np.array,
-               nbins_z       : int,
-               nbins_e       : int,
-               range_z       : Tuple[float, float],
-               range_e       : Tuple[float, float],
-               energy        : str                 = 'S2e',
-               fit           : FitType             = FitType.profile,
-               n_min         : int                 = 100)->Dict[int, List[FitParTS]]:
-    """
-    Produce a XY map of fits (in time series).
-
-    Parameters
-    ----------
-        selection_map
-            A Dict[int, List[KrEvent]], defining a selection of events.
-        event_map
-            A DataFrame, containing the events in each XY bin.
-        n_time_bins
-            Number of time bins for the time series.
-        time_diffs
-            Vector of time differences for the time series.
-        nbins_z
-            Number of bins in Z for the fit.
-        nbins_e
-            Number of bins in energy.
-        range_z
-            Range in Z for fit.
-        range_e
-            Range in energy.
-        energy:
-            Takes two values: S2e (uses S2e field in kre) or E (used E field on kre).
-            This field allows to select fits over uncorrected (S2e) or corrected (E) energies.
-        fit
-            Selects fit type.
-        n_min
-            Minimum number of events for fit.
-
-
-    Returns
-    -------
-        A Dict[int, List[FitParTS]]
-        @dataclass
-        class FitParTS:             # Fit parameters Time Series
-            ts   : np.array          # contains the time series (integers expressing time differences)
-            e0   : np.array          # e0 fitted in time series
-            lt   : np.array
-            c2   : np.array
-            e0u  : np.array          # e0 error fitted in time series
-            ltu  : np.array
-
-    """
-
-    logging.debug(f'function: fit_map_xy')
-    fMAP = {}
-    r, c = event_map.shape
-
-    logging.debug(f'event map has {r} bins in x {c} bins in y')
-    for i in range(r):
-        fMAP[i] = [fit_fcs_in_xy_bin((i,j), selection_map, event_map, n_time_bins, time_diffs,
-                                     nbins_z, nbins_e, range_z,range_e, energy, fit, n_min)
-                                     for j in range(c) ]
-    return fMAP
-
-
-def fit_fcs_in_xy_bin (xybin         : Tuple[int, int],
-                       selection_map : Dict[int, List[KrEvent]],
-                       event_map     : DataFrame,
-                       n_time_bins   : int,
-                       time_diffs    : np.array,
-                       nbins_z       : int,
-                       nbins_e       : int,
-                       range_z       : Tuple[float, float],
-                       range_e       : Tuple[float, float],
-                       energy        : str                 = 'S2e',
-                       fit           : FitType             = FitType.profile,
-                       n_min         : int                 = 100)->FitParTS:
-    """Returns fits in the bin specified by xybin"""
-
-
-    i = xybin[0]
-    j = xybin[1]
-    nevt = event_map[i][j]
-    tlast = time_diffs[-1]
-    tfrst = time_diffs[0]
-    KRE = selection_map
-    ts, masks =  get_time_series(n_time_bins, (tfrst, tlast), selection_map[i][j]) # pass one KRE for tsel
-
-    logging.debug(f' --fit_fcs_in_xy_bin called: xy bin = ({i},{j}), with events ={nevt}')
-
-    if nevt > n_min:
-        return time_fcs(ts, masks, selection_map[i][j],
-                        nbins_z, nbins_e, range_z, range_e, energy, fit)
-    else:
-        warnings.warn(f'Cannot fit: events in bin[{i}][{j}] ={event_map[i][j]} < {n_min}',
-                     UserWarning)
-
-        dum = np.zeros(len(ts), dtype=float)
-        dum.fill(np.nan)
-        return FitParTS(ts, dum, dum, dum, dum, dum)
-
-
-def fit_fcs_in_rphi_sectors(sector        : int,
-                            selection_map : Dict[int, List[KrEvent]],
-                            event_map     : DataFrame,
-                            n_time_bins   : int,
-                            time_diffs    : np.array,
-                            nbins_z       : int,
-                            nbins_e       : int,
-                            range_z       : Tuple[float, float],
-                            range_e       : Tuple[float, float],
-                            energy        : str                 = 'S2e',
-                            fit           : FitType             = FitType.unbined,
-                            n_min         : int                 = 100)->List[FitParTS]:
-    """
-    Returns fits to a (radial) sector of a RPHI-time series map
-
-        Parameters
-        ----------
-            sector
-                Radial sector where the fit is performed.
-            selection_map
-                A map of selected events defined as Dict[int, List[KrEvent]]
-            event_map
-                An event map defined as a DataFrame
-            n_time_bins
-                Number of time bins for the time series.
-            time_diffs
-                Vector of time differences for the time series.
-            nbins_z
-                Number of bins in Z for the fit.
-            nbins_e
-                Number of bins in energy.
-            range_z
-                Range in Z for fit.
-            range_e
-                Range in energy.
-            energy:
-                Takes two values: S2e (uses S2e field in kre) or E (used E field on kre).
-                This field allows to select fits over uncorrected (S2e) or corrected (E) energies.
-            fit
-                Selects fit type.
-            n_min
-                Minimum number of events for fit.
-
-        Returns
-        -------
-            A List[FitParTS], one FitParTs per PHI sector.
-
-        @dataclass
-        class FitParTS:             # Fit parameters Time Series
-            ts   : np.array          # contains the time series (integers expressing time differences)
-            e0   : np.array          # e0 fitted in time series
-            lt   : np.array
-            c2   : np.array
-            e0u  : np.array          # e0 error fitted in time series
-            ltu  : np.array
-
-    """
-
-    wedges    =[len(kre) for kre in selection_map.values() ]  # number of wedges per sector
-    tfrst     = time_diffs[0]
-    tlast     = time_diffs[-1]
-
-    fps =[]
-    for i in range(wedges[sector]):
-        if event_map[sector][i] > n_min:
-            logging.debug(f'fitting sector/wedge ({sector},{i}) with {event_map[sector][i]} events')
-            ts, masks =  get_time_series(n_time_bins, (tfrst, tlast), selection_map[sector][i])
-
-            fp  = time_fcs(ts, masks, selection_map[sector][i],
-                           nbins_z, nbins_e, range_z, range_e, energy, fit)
-        else:
-            warnings.warn(f'Cannot fit: events in s/w[{sector}][{i}] ={event_map[sector][i]} < {n_min}',
-                         UserWarning)
-
-            dum = np.zeros(len(ts), dtype=float)
-            dum.fill(np.nan)
-            fp  = FitParTS(ts, dum, dum, dum, dum, dum)
-
-        fps.append(fp)
-    return fps
-
-
-def fb_fits(n_time_bins : int,
-            time_diffs  : np.array,
-            kre         : KrEvent,
-            nbins_z     : int,
-            nbins_e     : int,
-            range_z     : Tuple[float, float] = (50,550),
-            range_zf    : Tuple[float, float] = (50,300),
-            range_zb    : Tuple[float, float] = (300,550),
-            range_e     : Tuple[float, float] = (7000, 12000),
-            energy      : str                 = 'S2e',
-            fit         : FitType             = FitType.profile)->Iterable[FitParTS]:
-    """Returns fits to full/forward/backward chamber"""
-
-    tfrst     = time_difs[0]
-    tlast     = time_difs[-1]
-    ts, masks = get_time_series(n_time_bins, (tfrst, tlast), selection_map)
-
-    fp        = time_fcs(masks, kre, nbins_z, nbins_e, range_z, range_e, energy, fit)
-    fpf       = time_fcs(masks, kre,  nbins_z, nbins_e, range_zf, range_e, energy, fit)
-    fpb       = time_fcs(masks, kre,  nbins_z, nbins_e, range_zb, range_e, energy, fit)
-
-    return fp, fpf, fpb
-
-
-#experiments
-def fit_lifetime_experiments(zs      : np.array,
-                             es      : np.array,
-                             nbins_z : int      ,
-                             nbins_e : int      ,
-                             range_z : Tuple[float,float],
-                             range_e : Tuple[float,float],
-                             fit     : FitType  = FitType.unbined)->List[FitCollection2]:
-
-    return [fit_lifetime(z, e, nbins_z, nbins_e, range_z, range_e, fit) for z,e in zip(zs,es)]
-
 
 def lt_params_from_fcs(fcs : Iterable[FitCollection])->Iterable[float]:
     e0s   = np.array([fc.fr.par[0] for fc in fcs])
