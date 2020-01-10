@@ -179,8 +179,8 @@ def fit_map_xy_df(selection_map : Dict[int, List[DataFrame]],
         i = xybin[0]
         j = xybin[1]
         nevt = event_map[i][j]
-        tlast = time_diffs[-1]
-        tfrst = time_diffs[0]
+        tlast = time_diffs.max()
+        tfrst = time_diffs.min()
         ts, masks =  get_time_series_df(n_time_bins, (tfrst, tlast), selection_map[i][j])
 
         logging.debug(f' ****fit_fcs_in_xy_bin: bins ={i,j}')
