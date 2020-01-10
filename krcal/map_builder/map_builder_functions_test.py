@@ -1,6 +1,6 @@
 import os
 import copy
-import numpy as np
+import numpy  as np
 import tables as tb
 from pytest        import mark
 from numpy.testing import assert_raises
