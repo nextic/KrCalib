@@ -1,9 +1,11 @@
 import os
 import copy
 import numpy as np
+import tables as tb
 from pytest        import mark
 from numpy.testing import assert_raises
 
+from invisible_cities.io  .dst_io          import load_dst
 from invisible_cities.core.testing_utils   import assert_dataframes_close
 from invisible_cities.core.configure       import configure
 from invisible_cities.reco.corrections_new import read_maps
@@ -89,6 +91,50 @@ def test_maps_nans_outside_rmax(xy_pos, output_maps_tmdir):
     assert all(np.isnan   (coefs[maskout]))
     assert all(np.isfinite(coefs[maskin ]))
 
+@mark.dependency(depends="test_scrip_runs_and_produces_correct_outputs")
+def test_correct_map_with_unsorted_dst(folder_test_dst  ,
+                                       test_dst_file    ,
+                                       output_maps_tmdir):
+    """
+    This test shuffles the input dst, and checks that the map is the same
+    as the one created with the same sorted dst.
+    """
+    map_file_sort   = os.path.join(output_maps_tmdir, 'test_out_map.h5')
+    map_file_unsort = os.path.join(output_maps_tmdir, 'test_out_unsort.h5')
+    histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo.h5')
+
+    dst = load_dst(folder_test_dst+test_dst_file, 'DST', 'Events')
+    if "index" in dst:del dst["index"]
+    dst = dst.sort_values(by=['S2e'])
+    tmp_unsorted_dst = 'unsorted_dst.h5'
+    dst.to_hdf(output_maps_tmdir+tmp_unsorted_dst,
+               key     = "DST"  , mode         = "w",
+               format  = "table", data_columns = True,
+               complib = "zlib" , complevel    = 4)
+    with tb.open_file(output_maps_tmdir+tmp_unsorted_dst, "r+") as file:
+        file.rename_node(file.root.DST.table, "Events")
+        file.root.DST.Events.title = "Events"
+
+    default_n_bins = 15
+    run_number     = 7517
+    config = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    map_params_new = config.as_namespace.map_params
+    map_params_new['nmin'] = 100
+    config.update(dict(folder         = output_maps_tmdir,
+                       file_in        = tmp_unsorted_dst ,
+                       file_out_map   = map_file_unsort  ,
+                       file_out_hists = histo_file_out   ,
+                       default_n_bins = default_n_bins   ,
+                       run_number     = run_number       ,
+                       map_params     = map_params_new   ))
+    map_builder(config.as_namespace)
+    unsorted_maps = read_maps(map_file_unsort)
+    sorted_maps   = read_maps(map_file_sort)
+
+    assert_dataframes_close(unsorted_maps.e0 , sorted_maps.e0 , rtol=1e-5)
+    assert_dataframes_close(unsorted_maps.e0u, sorted_maps.e0u, rtol=1e-5)
+    assert_dataframes_close(unsorted_maps.lt , sorted_maps.lt , rtol=1e-5)
+    assert_dataframes_close(unsorted_maps.ltu, sorted_maps.ltu, rtol=1e-5)
 
 def test_exception_s1(folder_test_dst, test_dst_file, output_maps_tmdir):
     """
