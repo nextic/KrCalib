@@ -1,12 +1,13 @@
 from typing      import Tuple
 from dataclasses import dataclass
 from copy        import deepcopy
+
 import pandas as pd
 import numpy  as np
 import glob
 import os
 
-from .. core.kr_types  import type_of_signal
+from .. core.kr_types                      import type_of_signal
 from .. core.kr_types                      import FitType
 from .. core.selection_functions           import selection_in_band
 from .. core.selection_functions           import select_xy_sectors_df
@@ -16,25 +17,20 @@ from .. core.map_functions                 import amap_from_tsmap
 from .. core.map_functions                 import tsmap_from_fmap
 from .. core.map_functions                 import add_mapinfo
 from .. core.correction_functions          import e0_xy_correction
-
 from .. core.selection_functions           import get_time_series_df
 from .. core.kr_parevol_functions          import kr_time_evolution
+from .. core.map_functions                 import amap_replace_nan_by_mean
+from .. core.map_functions                 import relative_errors
+from .. core.io_functions                  import write_complete_maps
+from .. core.io_functions                  import compute_and_save_hist_as_pd
+from .. core.histo_functions               import compute_similar_histo
+from .. core.histo_functions               import normalize_histo_and_poisson_error
+from .. core.histo_functions               import ref_hist
+from .. core.kr_parevol_functions          import get_number_of_time_bins
 
-
-from .. core.map_functions             import amap_replace_nan_by_mean
-from .. core.map_functions             import relative_errors
-
-
-from .. core       .io_functions       import write_complete_maps
-from .. core       .io_functions       import compute_and_save_hist_as_pd
-from .. core       .histo_functions    import compute_similar_histo
-from .. core       .histo_functions    import normalize_histo_and_poisson_error
-from .. core       .histo_functions    import ref_hist
-
-from .. core       .kr_parevol_functions import get_number_of_time_bins
-from . checking_functions import check_if_values_in_interval
-from . checking_functions import check_failed_fits
-from . checking_functions import get_core
+from . checking_functions                  import check_if_values_in_interval
+from . checking_functions                  import check_failed_fits
+from . checking_functions                  import get_core
 
 
 from invisible_cities.core.core_functions  import in_range
@@ -42,9 +38,6 @@ from invisible_cities.io  .dst_io          import load_dsts
 from invisible_cities.reco.corrections_new import ASectorMap
 from invisible_cities.reco.corrections_new import read_maps
 from invisible_cities.reco.corrections_new import norm_strategy
-
-from invisible_cities.icaro.hst_functions import measurement_string
-
 
 
 @dataclass
@@ -103,22 +96,22 @@ def load_data(input_path         : str ,
         To be completed
     """
 
-    input_path = os.path.expandvars(input_path)
-    dst_files = glob.glob(input_path + input_dsts)
-    dst_full  = load_dsts(dst_files, "DST", "Events")
-    dst_full  = dst_full.sort_values(by=['time'])
-    mask_quality = quality_cut(dst_full, **quality_ranges)
-    dst_filtered = dst_full[mask_quality]
+    input_path         = os.path.expandvars(input_path)
+    dst_files          = glob.glob(input_path + input_dsts)
+    dst_full           = load_dsts(dst_files, "DST", "Events")
+    dst_full           = dst_full.sort_values(by=['time'])
+    mask_quality       = quality_cut(dst_full, **quality_ranges)
+    dst_filtered       = dst_full[mask_quality]
 
     file_bootstrap_map = os.path.expandvars(file_bootstrap_map)
-    bootstrap_map = read_maps(file_bootstrap_map)
+    bootstrap_map      = read_maps(file_bootstrap_map)
 
-    ref_histo_file = os.path.expandvars(ref_histo_file)
-    z_pd       = pd.read_hdf(ref_histo_file, key=key_Z_histo)
-    z_histo    = ref_hist(bin_centres     = z_pd.bin_centres,
-                          bin_entries     = z_pd.bin_entries,
-                          err_bin_entries = z_pd.err_bin_entries)
-    ref_histos =  ref_hist_container(Z_dist_hist = z_histo)
+    ref_histo_file     = os.path.expandvars(ref_histo_file)
+    z_pd               = pd.read_hdf(ref_histo_file, key=key_Z_histo)
+    z_histo            = ref_hist(bin_centres     = z_pd.bin_centres,
+                                  bin_entries     = z_pd.bin_entries,
+                                  err_bin_entries = z_pd.err_bin_entries)
+    ref_histos         =  ref_hist_container(Z_dist_hist = z_histo)
 
     return dst_filtered, bootstrap_map, ref_histos
 
@@ -177,7 +170,7 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
                                 range_hist = range_hist,
                                 norm       = norm)
 
-    message = "Selection efficiency of "
+    message  = "Selection efficiency of "
     message += column.value
     message += "==1 ({0}) out of range ".format(np.round(eff, 3))
     message += "({0} - {1}).".format(interval[0], interval[1])
@@ -211,11 +204,11 @@ def check_Z_dst(Z_vect   : np.array     ,
     N_Z, err_N = normalize_histo_and_poisson_error(N = N_Z,
                                                    b = z_Z)
 
-    diff     = N_Z - ref_hist.bin_entries
-    diff_sig = diff / np.sqrt(err_N**2+ref_hist.err_bin_entries**2)
+    diff       = N_Z - ref_hist.bin_entries
+    diff_sig   = diff / np.sqrt(err_N**2+ref_hist.err_bin_entries**2)
 
-    message = "Z distribution very different to reference one. "
-    message += "At least 1 point out of {0} sigmas region. ".format(n_sigmas)
+    message    = "Z distribution very different to reference one. "
+    message   += "At least 1 point out of {0} sigmas region. ".format(n_sigmas)
     check_if_values_in_interval(values          = diff_sig ,
                                 low_lim         = -n_sigmas,
                                 up_lim          = n_sigmas ,
@@ -266,13 +259,13 @@ def check_rate_and_hist(times      : np.array           ,
                                              max_time) ,
                                 norm      = normed     )
 
-    n, _ = np.histogram(times, bins=ntimebins,
-                        range = (min_time, max_time))
-    mean    = np.mean(n)
-    dev     = np.std(n, ddof = 1)
-    rel_dev = dev / mean * 100
+    n, _     = np.histogram(times, bins=ntimebins,
+                            range = (min_time, max_time))
+    mean     = np.mean(n)
+    dev      = np.std(n, ddof = 1)
+    rel_dev  = dev / mean * 100
 
-    message = "Relative deviation ({0}) greater ".format(rel_dev)
+    message  = "Relative deviation ({0}) greater ".format(rel_dev)
     message += "than the allowed one ({0}).".format(n_dev)
     check_if_values_in_interval(values          = np.array(rel_dev),
                                 low_lim         = 0                ,
@@ -332,7 +325,8 @@ def band_selector_and_check(dst       : pd.DataFrame,
     else: pass;
 
     emaps = e0_xy_correction(boot_map, norm_strat  = norm_strat)
-    E0 = dst[input_mask].S2e.values * emaps(dst[input_mask].X.values, dst[input_mask].Y.values)
+    E0    = dst[input_mask].S2e.values * emaps(dst[input_mask].X.values,
+                                               dst[input_mask].Y.values)
 
     sel_krband = np.zeros_like(input_mask)
     sel_krband[input_mask], _, _, _, _ = selection_in_band(dst[input_mask].Z,
@@ -343,8 +337,8 @@ def band_selector_and_check(dst       : pd.DataFrame,
                                                            nbins_e = nbins_e,
                                                            nsigma  = nsigma_sel)
 
-    effsel = dst[sel_krband].event.nunique()/dst[input_mask].event.nunique()
-    message = "Band selection efficiency {0} ".format(np.round(effsel, 3))
+    effsel   = dst[sel_krband].event.nunique()/dst[input_mask].event.nunique()
+    message  = "Band selection efficiency {0} ".format(np.round(effsel, 3))
     message += "out of range: ({0} - {1}).".format(eff_min, eff_max)
     check_if_values_in_interval(values          = np.array(effsel),
                                 low_lim         = eff_min         ,
@@ -410,26 +404,26 @@ def calculate_map(dst     : pd.DataFrame,
     """
     xbins = np.linspace(*x_range, XYbins[0]+1)
     ybins = np.linspace(*y_range, XYbins[1]+1)
-    KXY = select_xy_sectors_df(dst, xbins, ybins)
-    nXY = event_map_df(KXY)
-    fmxy = fit_map_xy_df(selection_map = KXY,
-                         event_map     = nXY,
-                         n_time_bins   = 1,
-                         time_diffs    = dst.time.values,
-                         nbins_z       = nbins_z,
-                         nbins_e       = nbins_e,
-                         range_z       = z_range,
-                         range_e       = e_range,
-                         energy        = 'S2e',
-                         z             = 'Z',
-                         fit           = fit_type,
-                         n_min         = nmin)
-    tsm = tsmap_from_fmap(fmxy)
-    am  = amap_from_tsmap(tsm,
-                          ts         = 0,
-                          range_e    = e_range,
-                          range_chi2 = chi2_range,
-                          range_lt   = lt_range)
+    KXY   = select_xy_sectors_df(dst, xbins, ybins)
+    nXY   = event_map_df(KXY)
+    fmxy  = fit_map_xy_df(selection_map = KXY,
+                          event_map     = nXY,
+                          n_time_bins   = 1,
+                          time_diffs    = dst.time.values,
+                          nbins_z       = nbins_z,
+                          nbins_e       = nbins_e,
+                          range_z       = z_range,
+                          range_e       = e_range,
+                          energy        = 'S2e',
+                          z             = 'Z',
+                          fit           = fit_type,
+                          n_min         = nmin)
+    tsm   = tsmap_from_fmap(fmxy)
+    am    = amap_from_tsmap(tsm,
+                            ts         = 0,
+                            range_e    = e_range,
+                            range_chi2 = chi2_range,
+                            range_lt   = lt_range)
 
     return am
 
@@ -470,15 +464,15 @@ def regularize_map(maps : ASectorMap, x2range : Tuple[float, float] = (0, 2) ):
     amap: ASectorMap
         Regularized map
     """
-    amap     = deepcopy(maps)
-    outliers = np.logical_not(find_outliers(amap, x2range))
+    amap               = deepcopy(maps)
+    outliers           = np.logical_not(find_outliers(amap, x2range))
 
     amap.lt [outliers] = np.nan
     amap.ltu[outliers] = np.nan
     amap.e0 [outliers] = np.nan
     amap.e0u[outliers] = np.nan
-    asm  = relative_errors(amap)
-    amap = amap_replace_nan_by_mean(asm)
+    asm                = relative_errors(amap)
+    amap               = amap_replace_nan_by_mean(asm)
 
     return amap
 
@@ -534,21 +528,21 @@ def add_krevol(maps         : ASectorMap,
                                          tstart        = min_time,
                                          tfinal        = max_time)
 
-    ts, masks = get_time_series_df(time_bins  = ntimebins,
-                                   time_range = (min_time, max_time),
-                                   dst        = dstf)
+    ts, masks   = get_time_series_df(time_bins  = ntimebins,
+                                     time_range = (min_time, max_time),
+                                     dst        = dstf)
 
-    pars = kr_time_evolution(ts     = ts,
-                             masks  = masks,
-                             dst    = dstf,
-                             emaps  = maps,
-                             xr_map = x_range,
-                             yr_map = y_range,
-                             nx_map = XYbins[0],
-                             ny_map = XYbins[1])
+    pars        = kr_time_evolution(ts     = ts,
+                                    masks  = masks,
+                                    dst    = dstf,
+                                    emaps  = maps,
+                                    xr_map = x_range,
+                                    yr_map = y_range,
+                                    nx_map = XYbins[0],
+                                    ny_map = XYbins[1])
 
-    e0par    = np.array([pars['e0'].mean(), pars['e0'].var()**0.5])
-    ltpar    = np.array([pars['lt'].mean(), pars['lt'].var()**0.5])
+    e0par       = np.array([pars['e0'].mean(), pars['e0'].var()**0.5])
+    ltpar       = np.array([pars['lt'].mean(), pars['lt'].var()**0.5])
     print("    Mean core E0: {0:.1f}+-{1:.1f} pes".format(*e0par))
     print("    Mean core Lt: {0:.1f}+-{1:.1f} mus".format(*ltpar))
 
@@ -597,17 +591,17 @@ def compute_map(dst          : pd.DataFrame,
     regularized_maps = regularize_map(maps    = maps,
                                       x2range = chi2_range)
 
-    no_peripheral = remove_peripheral(regularized_maps,
-                                      XYbins[0]       ,
-                                      r_max           ,
-                                      r_max)
+    no_peripheral    = remove_peripheral(regularized_maps,
+                                         XYbins[0]       ,
+                                         r_max           ,
+                                         r_max)
 
-    no_peripheral = add_mapinfo(asm        = no_peripheral,
-                                xr         = x_range,
-                                yr         = y_range,
-                                nx         = XYbins[0],
-                                ny         = XYbins[1],
-                                run_number = int(run_number))
+    no_peripheral    = add_mapinfo(asm        = no_peripheral,
+                                   xr         = x_range,
+                                   yr         = y_range,
+                                   nx         = XYbins[0],
+                                   ny         = XYbins[1],
+                                   run_number = int(run_number))
 
     add_krevol(maps          = no_peripheral,
                dst           = dst,
@@ -639,7 +633,7 @@ def apply_cuts(dst              : pd.DataFrame       ,
                                            interval = nS1_eff_interval,
                                            output_f = store_hist_s1   ,
                                            **ns1_histo_params         )
-    nS1 = dst[mask1].event.nunique()
+    nS1   = dst[mask1].event.nunique()
     print("    1 S1 cut efficiency within the expectations ({0:2.2f}%)".format(nS1/n0*100))
     mask2 = selection_nS_mask_and_checking(dst = dst                  ,
                                            column = S2_signal         ,
@@ -647,7 +641,7 @@ def apply_cuts(dst              : pd.DataFrame       ,
                                            output_f = store_hist_s2   ,
                                            input_mask = mask1         ,
                                            **ns2_histo_params         )
-    nS2 = dst[mask2].event.nunique()
+    nS2   = dst[mask2].event.nunique()
     print("    1 S2 cut efficiency within the expectations ({0:2.2f}%)".format(nS2/nS1*100))
     check_Z_dst(Z_vect   = dst[mask2].Z,
                 ref_hist = ref_Z_histo ,
@@ -657,17 +651,18 @@ def apply_cuts(dst              : pd.DataFrame       ,
                                     boot_map   = bootstrapmap,
                                     input_mask = mask2       ,
                                     **band_sel_params        )
-    nZb = dst[mask3].event.nunique()
+    nZb   = dst[mask3].event.nunique()
     print("    Z band cut efficiency within the expectations ({0:2.2f}%)".format(nZb/nS2*100))
+
     return dst[mask3]
 
 def map_builder(config):
 
     print("Map builder starting...")
     print("Reading input files:")
-    print("    Input dst folder   : {}".format(config.folder))
-    print("    Input boostrap map : {}".format(config.file_bootstrap_map))
-    print("    Input histogram map: {}".format(config.ref_Z_histogram['ref_histo_file']))
+    print("    Input dst folder   : {}".format(config.folder))
+    print("    Input boostrap map : {}".format(config.file_bootstrap_map))
+    print("    Input histogram map: {}".format(config.ref_Z_histogram['ref_histo_file']))
 
 
     dst, bootstrapmap, ref_histos  = load_data(input_path         = config.folder            ,
@@ -722,11 +717,11 @@ def map_builder(config):
 
     print("    Number of bins: {0}x{0}".format(number_of_bins))
 
-    final_map = compute_map(dst        = dst_passed_cut   ,
-                            run_number = config.run_number,
-                            XYbins     = (number_of_bins  ,
-                                          number_of_bins) ,
-                            **config.map_params           )
+    final_map      = compute_map(dst        = dst_passed_cut   ,
+                                 run_number = config.run_number,
+                                 XYbins     = (number_of_bins  ,
+                                               number_of_bins) ,
+                                 **config.map_params           )
 
     write_complete_maps(asm      = final_map          ,
                         filename = config.file_out_map)
