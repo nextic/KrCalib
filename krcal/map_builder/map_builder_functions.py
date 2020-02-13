@@ -9,6 +9,7 @@ import os
 
 from .. core.kr_types                      import type_of_signal
 from .. core.kr_types                      import FitType
+from .. core.kr_types                      import masks_container
 from .. core.selection_functions           import selection_in_band
 from .. core.selection_functions           import select_xy_sectors_df
 from .. core.selection_functions           import event_map_df
@@ -654,7 +655,10 @@ def apply_cuts(dst              : pd.DataFrame       ,
     nZb   = dst[mask3].event.nunique()
     print("    Z band cut efficiency within the expectations ({0:2.2f}%)".format(nZb/nS2*100))
 
-    return dst[mask3]
+    masks = masks_container(s1   = mask1,
+                            s2   = mask2,
+                            band = mask3)
+    return dst[mask3], masks
 
 def map_builder(config):
 
@@ -682,7 +686,7 @@ def map_builder(config):
                             n_dev      = config.n_dev_rate,
                             **config.rate_histo_params    )
 
-        dst_passed_cut = apply_cuts(dst              = dst                    ,
+        dst_passed_cut, masks = apply_cuts(dst       = dst                    ,
                                     S1_signal        = type_of_signal.nS1     ,
                                     nS1_eff_interval = (config.nS1_eff_min    ,
                                                         config.nS1_eff_max)   ,
