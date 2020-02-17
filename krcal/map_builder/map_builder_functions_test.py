@@ -87,6 +87,14 @@ def test_time_evol_table_correct_elements(output_maps_tmdir):
     for element in elements:
         assert element in columns
 
+@mark.dependency(depends="test_scrip_runs_and_produces_correct_outputs")
+def test_time_evol_eff_less_one(output_maps_tmdir):
+    map_file_out = os.path.join(output_maps_tmdir, 'test_out_map.h5')
+    emaps        = read_maps(map_file_out)
+    assert np.all(emaps.t_evol.S1eff   <= 1.)
+    assert np.all(emaps.t_evol.S2eff   <= 1.)
+    assert np.all(emaps.t_evol.Bandeff <= 1.)
+
 @composite
 def xy_pos(draw, elements=floats(min_value=-200, max_value=200)):
     size = draw(integers(min_value=1, max_value=10))
