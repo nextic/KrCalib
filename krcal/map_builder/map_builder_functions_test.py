@@ -62,6 +62,31 @@ def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
     assert_dataframes_close(maps.lt , old_maps.lt , rtol=1e-5 )
     assert_dataframes_close(maps.ltu, old_maps.ltu, rtol=1e-5)
 
+@mark.dependency(depends="test_scrip_runs_and_produces_correct_outputs")
+def test_time_evol_table_correct_elements(output_maps_tmdir):
+    map_file_out = os.path.join(output_maps_tmdir, 'test_out_map.h5')
+    emaps        = read_maps(map_file_out)
+    time_table   = emaps.t_evol
+    columns      = time_table.columns
+    elements     =['ts'   ,
+                   'e0'   , 'e0u'   ,
+                   'lt'   , 'ltu'   ,
+                   'dv'   , 'dvu'   ,
+                   'resol', 'resolu',
+                   's1w'  , 's1wu'  ,
+                   's1h'  , 's1hu'  ,
+                   's1e'  , 's1eu'  ,
+                   's2w'  , 's2wu'  ,
+                   's2h'  , 's2hu'  ,
+                   's2e'  , 's2eu'  ,
+                   's2q'  , 's2qu'  ,
+                   'Nsipm', 'Nsipmu',
+                   'Xrms' , 'Xrmsu' ,
+                   'Yrms' , 'Yrmsu' ,
+                   'S1eff' , 'S2eff', 'Bandeff']
+    for element in elements:
+        assert element in columns
+
 @composite
 def xy_pos(draw, elements=floats(min_value=-200, max_value=200)):
     size = draw(integers(min_value=1, max_value=10))
