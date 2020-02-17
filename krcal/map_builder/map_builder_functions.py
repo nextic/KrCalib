@@ -20,6 +20,7 @@ from .. core.map_functions                 import add_mapinfo
 from .. core.correction_functions          import e0_xy_correction
 from .. core.selection_functions           import get_time_series_df
 from .. core.kr_parevol_functions          import kr_time_evolution
+from .. core.kr_parevol_functions          import cut_time_evolution
 from .. core.map_functions                 import amap_replace_nan_by_mean
 from .. core.map_functions                 import relative_errors
 from .. core.io_functions                  import write_complete_maps
@@ -534,10 +535,10 @@ def add_krevol(maps         : ASectorMap,
 
     ts, masks   = get_time_series_df(time_bins  = ntimebins,
                                      time_range = (min_time, max_time),
-                                     dst        = dstf)
-
+                                     dst        = dst)
+    masks_f     =  [mask[fmask] for mask in masks]
     pars        = kr_time_evolution(ts     = ts,
-                                    masks  = masks,
+                                    masks  = masks_f,
                                     dst    = dstf,
                                     emaps  = maps,
                                     xr_map = x_range,
@@ -545,13 +546,17 @@ def add_krevol(maps         : ASectorMap,
                                     nx_map = XYbins[0],
                                     ny_map = XYbins[1])
 
+    pars_ec     = cut_time_evolution(masks_time = masks,
+                                     dst        = dst,
+                                     masks_cuts = masks_cuts,
+                                     pars_table = pars)
     e0par       = np.array([pars['e0'].mean(), pars['e0'].var()**0.5])
     ltpar       = np.array([pars['lt'].mean(), pars['lt'].var()**0.5])
     print("    Mean core E0: {0:.1f}+-{1:.1f} pes".format(*e0par))
     print("    Mean core Lt: {0:.1f}+-{1:.1f} mus".format(*ltpar))
 
 
-    maps.t_evol = pars
+    maps.t_evol = pars_ec
 
     return
 
