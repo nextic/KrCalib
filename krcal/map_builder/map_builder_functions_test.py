@@ -2,7 +2,9 @@ import os
 import copy
 import numpy  as np
 import tables as tb
+import pandas as pd
 from pytest        import mark
+from pytest        import fixture
 from numpy.testing import assert_raises
 
 from invisible_cities.io  .dst_io          import load_dst
@@ -29,6 +31,10 @@ logging.disable(logging.DEBUG)
 this_script_logger = logging.getLogger(__name__)
 this_script_logger.setLevel(logging.INFO)
 
+@fixture(scope="module")
+def t_evol_table(MAPSDIR):
+    return os.path.join(MAPSDIR, 'time_evol_table.h5')
+
 @mark.timeout(None)
 @mark.dependency()
 def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
@@ -44,7 +50,8 @@ def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
     run_number     = 7517
     config = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
     map_params_new = copy.copy(config.as_namespace.map_params)
-    map_params_new['nmin'] = 100
+    map_params_new['nmin']          = 100
+    map_params_new['nStimeprofile'] = 1200
     config.update(dict(folder         = folder_test_dst,
                        file_in        = test_dst_file  ,
                        file_out_map   = map_file_out   ,
@@ -94,6 +101,13 @@ def test_time_evol_eff_less_one(output_maps_tmdir):
     assert np.all(emaps.t_evol.S1eff   <= 1.)
     assert np.all(emaps.t_evol.S2eff   <= 1.)
     assert np.all(emaps.t_evol.Bandeff <= 1.)
+
+@mark.dependency(depends="test_scrip_runs_and_produces_correct_outputs")
+def test_time_evol_table_exact_numbers(t_evol_table, output_maps_tmdir):
+    map_file_out = os.path.join(output_maps_tmdir, 'test_out_map.h5')
+    emaps        = read_maps(map_file_out)
+    t_evol = pd.pandas.read_hdf(t_evol_table, 't_evol')
+    assert_dataframes_close(emaps.t_evol, t_evol, rtol=1e-5)
 
 @composite
 def xy_pos(draw, elements=floats(min_value=-200, max_value=200)):
