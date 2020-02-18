@@ -525,31 +525,34 @@ def add_krevol(maps         : ASectorMap,
     ---------
     Nothing
     """
-    fmask      = (dst.R < r_fid) & masks_cuts.s1 & masks_cuts.s2 & masks_cuts.band
-    dstf       = dst[fmask]
-    min_time   = dstf.time.min()
-    max_time   = dstf.time.max()
-    ntimebins  = get_number_of_time_bins(nStimeprofile = nStimeprofile,
-                                         tstart        = min_time,
-                                         tfinal        = max_time)
 
-    ts, masks   = get_time_series_df(time_bins  = ntimebins,
-                                     time_range = (min_time, max_time),
-                                     dst        = dst)
-    masks_f     =  [mask[fmask] for mask in masks]
-    pars        = kr_time_evolution(ts     = ts,
-                                    masks  = masks_f,
-                                    dst    = dstf,
-                                    emaps  = maps,
-                                    xr_map = x_range,
-                                    yr_map = y_range,
-                                    nx_map = XYbins[0],
-                                    ny_map = XYbins[1])
+    fmask     = (dst.R < r_fid) & masks_cuts.s1 & masks_cuts.s2 & masks_cuts.band
+    dstf      = dst[fmask]
+    min_time  = dstf.time.min()
+    max_time  = dstf.time.max()
+    ntimebins = get_number_of_time_bins(nStimeprofile = nStimeprofile,
+                                        tstart        = min_time,
+                                        tfinal        = max_time)
 
-    pars_ec     = cut_time_evolution(masks_time = masks,
-                                     dst        = dst,
-                                     masks_cuts = masks_cuts,
-                                     pars_table = pars)
+    ts, masks_time = get_time_series_df(time_bins  = ntimebins,
+                                        time_range = (min_time, max_time),
+                                        dst        = dst)
+
+    masks_timef    = [mask[fmask] for mask in masks_time]
+    pars           = kr_time_evolution(ts         = ts,
+                                       masks_time = masks_timef,
+                                       dst        = dstf,
+                                       emaps      = maps,
+                                       xr_map     = x_range,
+                                       yr_map     = y_range,
+                                       nx_map     = XYbins[0],
+                                       ny_map     = XYbins[1])
+
+    pars_ec        = cut_time_evolution(masks_time = masks_time,
+                                        dst        = dst,
+                                        masks_cuts = masks_cuts,
+                                        pars_table = pars)
+
     e0par       = np.array([pars['e0'].mean(), pars['e0'].var()**0.5])
     ltpar       = np.array([pars['lt'].mean(), pars['lt'].var()**0.5])
     print("    Mean core E0: {0:.1f}+-{1:.1f} pes".format(*e0par))

@@ -149,7 +149,7 @@ def computing_kr_parameters(data       : pd.DataFrame,
 
 
 def kr_time_evolution(ts         : np.array,
-                      masks      : List[np.array],
+                      masks_time : List[np.array],
                       dst        : pd.DataFrame,
                       emaps      : ASectorMap,
                       xr_map     : Tuple[float, float],
@@ -171,7 +171,7 @@ def kr_time_evolution(ts         : np.array,
     ----------
     ts: np.array of floats
         Sequence of central times for the different time slices.
-    masks: list of boolean lists
+    masks_time: list of boolean lists
         Allows dividing the distribution into time slices.
     data: DataFrame
         Kdst distribution to analyze.
@@ -205,8 +205,8 @@ def kr_time_evolution(ts         : np.array,
     """
 
     frames = []
-    for index in range(len(masks)):
-        sel_dst = dst[masks[index]]
+    for index in range(len(masks_time)):
+        sel_dst = dst[masks_time[index]]
         pars    = computing_kr_parameters(sel_dst, ts[index],
                                           emaps,
                                           zslices_lt, zrange_lt,
