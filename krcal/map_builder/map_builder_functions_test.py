@@ -64,9 +64,9 @@ def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
     assert type(maps)==ASectorMap
 
     old_maps = read_maps(test_map_file)
-    assert_dataframes_close(maps.e0 , old_maps.e0 , rtol=1e-5 )
+    assert_dataframes_close(maps.e0 , old_maps.e0 , rtol=1e-5)
     assert_dataframes_close(maps.e0u, old_maps.e0u, rtol=1e-5)
-    assert_dataframes_close(maps.lt , old_maps.lt , rtol=1e-5 )
+    assert_dataframes_close(maps.lt , old_maps.lt , rtol=1e-5)
     assert_dataframes_close(maps.ltu, old_maps.ltu, rtol=1e-5)
 
 @mark.dependency(depends="test_scrip_runs_and_produces_correct_outputs")

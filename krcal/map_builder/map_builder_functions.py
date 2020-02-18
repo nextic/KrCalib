@@ -13,22 +13,22 @@ from .. core.kr_types                      import masks_container
 from .. core.selection_functions           import selection_in_band
 from .. core.selection_functions           import select_xy_sectors_df
 from .. core.selection_functions           import event_map_df
+from .. core.selection_functions           import get_time_series_df
 from .. core.fitmap_functions              import fit_map_xy_df
 from .. core.map_functions                 import amap_from_tsmap
 from .. core.map_functions                 import tsmap_from_fmap
 from .. core.map_functions                 import add_mapinfo
-from .. core.correction_functions          import e0_xy_correction
-from .. core.selection_functions           import get_time_series_df
-from .. core.kr_parevol_functions          import kr_time_evolution
-from .. core.kr_parevol_functions          import cut_time_evolution
 from .. core.map_functions                 import amap_replace_nan_by_mean
 from .. core.map_functions                 import relative_errors
+from .. core.correction_functions          import e0_xy_correction
+from .. core.kr_parevol_functions          import kr_time_evolution
+from .. core.kr_parevol_functions          import cut_time_evolution
+from .. core.kr_parevol_functions          import get_number_of_time_bins
 from .. core.io_functions                  import write_complete_maps
 from .. core.io_functions                  import compute_and_save_hist_as_pd
 from .. core.histo_functions               import compute_similar_histo
 from .. core.histo_functions               import normalize_histo_and_poisson_error
 from .. core.histo_functions               import ref_hist
-from .. core.kr_parevol_functions          import get_number_of_time_bins
 
 from . checking_functions                  import check_if_values_in_interval
 from . checking_functions                  import check_failed_fits

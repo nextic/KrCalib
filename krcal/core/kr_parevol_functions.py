@@ -3,7 +3,7 @@ from . correction_functions import e0_xy_correction
 from . fit_functions        import compute_drift_v
 from . fit_functions        import quick_gauss_fit
 from . kr_types             import ASectorMap
-from .kr_types              import masks_container
+from . kr_types             import masks_container
 
 
 from invisible_cities.reco .corrections_new import apply_all_correction
@@ -248,10 +248,10 @@ def cut_time_evolution(masks_time : List[np.array],
     """
 
     len_ts = len(masks_time)
-    n0    = np.zeros(len_ts)
-    nS1   = np.zeros(len_ts)
-    nS2   = np.zeros(len_ts)
-    nBand = np.zeros(len_ts)
+    n0     = np.zeros(len_ts)
+    nS1    = np.zeros(len_ts)
+    nS2    = np.zeros(len_ts)
+    nBand  = np.zeros(len_ts)
     for index in range(len_ts):
         t_mask       = masks_time[index]
         n0   [index] = dst[t_mask].event.nunique()
