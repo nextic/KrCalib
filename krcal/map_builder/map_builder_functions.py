@@ -106,6 +106,7 @@ def load_data(input_path         : str ,
     input_path = os.path.expandvars(input_path)
     dst_files = glob.glob(input_path + input_dsts)
     dst_full  = load_dsts(dst_files, "DST", "Events")
+    dst_full  = dst_full.sort_values(by=['time'])
     mask_quality = quality_cut(dst_full, **quality_ranges)
     dst_filtered = dst_full[mask_quality]
 
