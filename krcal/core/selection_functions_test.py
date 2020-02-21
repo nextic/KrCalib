@@ -4,16 +4,18 @@ Tests for analysis_functions
 See: https://github.com/nextic/KrCalibNB/blob/krypton/tutorials/TestsForMaps.ipynb
 """
 
-import numpy  as     np
-from   pandas import DataFrame
+import numpy  as np
+import pandas as pd
 
 from invisible_cities.core.core_functions    import in_range
-from invisible_cities.core.testing_utils     import  assert_dataframes_close
-
+from invisible_cities.core.testing_utils     import assert_dataframes_close
+from invisible_cities.core.testing_utils     import assert_dataframes_equal
+from invisible_cities.io.dst_io              import load_dst
 from . selection_functions  import event_map_df
 from . selection_functions  import get_time_series_df
 from . selection_functions  import select_xy_sectors_df
 
+from pytest import mark
 
 def test_event_map_df(dstData):
     dst, xb, yb, nbx, nby, _, _, _, _, _, _ = dstData
@@ -46,7 +48,17 @@ def test_get_time_series_df(dstData):
         assert np.count_nonzero(masks[i]) == 4
 
 
-def x_and_y_ranges(data : DataFrame, xb : np.array, yb : np.array, nbx :int, nby : int):
+
+
+@mark.parametrize('n', [2, 5, 10])
+def test_get_time_series_df_pandas(folder_test_dst, test_dst_file, n):
+    kdst = load_dst(folder_test_dst+ test_dst_file, 'DST', 'Events')
+    time_indx = pd.cut(kdst.time, n, labels=np.arange(n))
+    ts, masks = get_time_series_df(n, (kdst.time.min(), kdst.time.max()),kdst)
+    for i, mask in enumerate(masks):
+        assert_dataframes_equal(kdst[mask], kdst[time_indx==i])
+
+def x_and_y_ranges(data : pd.DataFrame, xb : np.array, yb : np.array, nbx :int, nby : int):
     r = True
     for i in range(nbx):
         dstx = data[in_range(data.X, *xb[i: i+2])]
