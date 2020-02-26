@@ -493,12 +493,13 @@ def remove_peripheral(map       : ASectorMap,
 
 def add_krevol(maps         : ASectorMap,
                dst          : pd.DataFrame,
+               masks_cuts   : masks_container,
                r_fid        : float,
                nStimeprofile: int,
                x_range      : Tuple[float, float],
                y_range      : Tuple[float, float],
-               XYbins       : Tuple[int, int]
-                                                    ) -> None:
+               XYbins       : Tuple[int, int],
+               **kwargs                          ) -> None:
     """
     Adds time evolution dataframe to the map
 
@@ -508,6 +509,8 @@ def add_krevol(maps         : ASectorMap,
         Map to check the outliers
     dst: pd.DataFrame
         Dst where to stract the data from
+    masks_cuts: masks_container
+        Container for the S1, S2 and Band cuts masks
     r_fid: float
         Maximum radius for fiducial sample
     nStimeprofile: int
@@ -521,8 +524,8 @@ def add_krevol(maps         : ASectorMap,
     ---------
     Nothing
     """
-
-    dstf       = dst[dst.R < r_fid]
+    fmask      = (dst.R < r_fid) & masks_cuts.s1 & masks_cuts.s2 & masks_cuts.band
+    dstf       = dst[fmask]
     min_time   = dstf.time.min()
     max_time   = dstf.time.max()
     ntimebins  = get_number_of_time_bins(nStimeprofile = nStimeprofile,
@@ -565,11 +568,9 @@ def compute_map(dst          : pd.DataFrame,
                 nmin         : int     = 100,
                 maxFailed    : int = 600,
                 r_max        : float = 200,
-                r_fid        : float = 100,
-                nStimeprofile: int = 1800,
                 x_range      : Tuple[float, float] = (-200,200),
-                y_range      : Tuple[float, float] = (-200,200)
-                                                                ) -> ASectorMap:
+                y_range      : Tuple[float, float] = (-200,200),
+                **kwargs                                       ) -> ASectorMap:
 
     maps = calculate_map (dst      = dst,
                           XYbins   = XYbins,
@@ -603,14 +604,6 @@ def compute_map(dst          : pd.DataFrame,
                                    nx         = XYbins[0],
                                    ny         = XYbins[1],
                                    run_number = int(run_number))
-
-    add_krevol(maps          = no_peripheral,
-               dst           = dst,
-               r_fid         = r_fid,
-               nStimeprofile = nStimeprofile,
-               x_range       = x_range,
-               y_range       = y_range,
-               XYbins        = XYbins)
 
     return no_peripheral
 
@@ -726,6 +719,13 @@ def map_builder(config):
                                  XYbins     = (number_of_bins  ,
                                                number_of_bins) ,
                                  **config.map_params           )
+
+    add_krevol(maps  = final_map,
+               dst   = dst,
+               masks_cuts = masks,
+               XYbins     = (number_of_bins  ,
+                             number_of_bins) ,
+               **config.map_params)
 
     write_complete_maps(asm      = final_map          ,
                         filename = config.file_out_map)
