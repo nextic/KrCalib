@@ -66,3 +66,32 @@ def test_cut_time_evolution_different_time_bins(folder_test_dst,
     pars_out               = cut_time_evolution(masks_time, dst, mask_cut, pars)
 
     assert_dataframes_close(pars_expected, pars_out, atol=5e-2)
+
+
+def test_cut_time_evolution_multievents(folder_test_dst,
+                                        test_dst_file ):
+    dst          = load_dst(folder_test_dst+test_dst_file, "DST", "Events").iloc[:1000]
+    dst_uniquevs = dst.drop_duplicates('event')
+    #make sure that the dataframe repeated 3x gives the same results as the original one
+    mask_S1_ue   = np.random.choice([True, False], len(dst_uniquevs))
+    dst_multievs = dst_uniquevs.append([dst_uniquevs]*2, ignore_index=True)
+    mask_S1_me   = np.tile(mask_S1_ue, 3)
+    mask_cut_ue  = masks_container(s1   = mask_S1_ue,
+                                   s2   = mask_S1_ue,
+                                   band = mask_S1_ue)
+    mask_cut_me  = masks_container(s1   = mask_S1_me,
+                                   s2   = mask_S1_me,
+                                   band = mask_S1_me)
+    min_time        = dst_uniquevs.time.min()
+    max_time        = dst_uniquevs.time.max()
+    ts_ue, masks_ue = get_time_series_df(time_bins  = 1,
+                                         time_range = (min_time, max_time),
+                                         dst        = dst_uniquevs)
+    ts_me, masks_me = get_time_series_df(time_bins  = 1,
+                                         time_range = (min_time, max_time),
+                                         dst        = dst_multievs)
+    pars_ue      = pd.DataFrame({'ts'   : ts_ue})
+    pars_me      = pd.DataFrame({'ts'   : ts_me})
+    pars_out_ue  = cut_time_evolution(masks_ue, dst_uniquevs, mask_cut_ue, pars_ue)
+    pars_out_me  = cut_time_evolution(masks_me, dst_multievs, mask_cut_me, pars_me)
+    assert_dataframes_close(pars_out_ue, pars_out_me)
