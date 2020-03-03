@@ -171,3 +171,9 @@ class FitMapValue:  # A ser of values of a FitMap
     lt    : float
     e0u   : float
     ltu   : float
+
+@dataclass
+class masks_container:
+    s1   : np.array
+    s2   : np.array
+    band : np.array

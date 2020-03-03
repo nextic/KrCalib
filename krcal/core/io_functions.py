@@ -23,7 +23,7 @@ def compute_and_save_hist_as_pd(values     : np.array           ,
                                 hist_name  : str                ,
                                 n_bins     : int                ,
                                 range_hist : Tuple[float, float],
-                                norm       : bool               )->None:
+                                norm       : bool = False       )->None:
     """
     Computes 1d-histogram and saves it in a file.
     The name of the table inside the file must be provided.

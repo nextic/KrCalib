@@ -2,7 +2,9 @@ import os
 import copy
 import numpy  as np
 import tables as tb
+import pandas as pd
 from pytest        import mark
+from pytest        import fixture
 from numpy.testing import assert_raises
 
 from invisible_cities.io  .dst_io          import load_dst
@@ -29,6 +31,10 @@ logging.disable(logging.DEBUG)
 this_script_logger = logging.getLogger(__name__)
 this_script_logger.setLevel(logging.INFO)
 
+@fixture(scope="module")
+def t_evol_table(MAPSDIR):
+    return os.path.join(MAPSDIR, 'time_evol_table.h5')
+
 @mark.timeout(None)
 @mark.dependency()
 def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
@@ -44,7 +50,8 @@ def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
     run_number     = 7517
     config = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
     map_params_new = copy.copy(config.as_namespace.map_params)
-    map_params_new['nmin'] = 100
+    map_params_new['nmin']          = 100
+    map_params_new['nStimeprofile'] = 1200
     config.update(dict(folder         = folder_test_dst,
                        file_in        = test_dst_file  ,
                        file_out_map   = map_file_out   ,
@@ -57,10 +64,50 @@ def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
     assert type(maps)==ASectorMap
 
     old_maps = read_maps(test_map_file)
-    assert_dataframes_close(maps.e0 , old_maps.e0 , rtol=1e-5 )
+    assert_dataframes_close(maps.e0 , old_maps.e0 , rtol=1e-5)
     assert_dataframes_close(maps.e0u, old_maps.e0u, rtol=1e-5)
-    assert_dataframes_close(maps.lt , old_maps.lt , rtol=1e-5 )
+    assert_dataframes_close(maps.lt , old_maps.lt , rtol=1e-5)
     assert_dataframes_close(maps.ltu, old_maps.ltu, rtol=1e-5)
+
+@mark.dependency(depends="test_scrip_runs_and_produces_correct_outputs")
+def test_time_evol_table_correct_elements(output_maps_tmdir):
+    map_file_out = os.path.join(output_maps_tmdir, 'test_out_map.h5')
+    emaps        = read_maps(map_file_out)
+    time_table   = emaps.t_evol
+    columns      = time_table.columns
+    elements     =['ts'   ,
+                   'e0'   , 'e0u'   ,
+                   'lt'   , 'ltu'   ,
+                   'dv'   , 'dvu'   ,
+                   'resol', 'resolu',
+                   's1w'  , 's1wu'  ,
+                   's1h'  , 's1hu'  ,
+                   's1e'  , 's1eu'  ,
+                   's2w'  , 's2wu'  ,
+                   's2h'  , 's2hu'  ,
+                   's2e'  , 's2eu'  ,
+                   's2q'  , 's2qu'  ,
+                   'Nsipm', 'Nsipmu',
+                   'Xrms' , 'Xrmsu' ,
+                   'Yrms' , 'Yrmsu' ,
+                   'S1eff' , 'S2eff', 'Bandeff']
+    for element in elements:
+        assert element in columns
+
+@mark.dependency(depends="test_scrip_runs_and_produces_correct_outputs")
+def test_time_evol_eff_less_one(output_maps_tmdir):
+    map_file_out = os.path.join(output_maps_tmdir, 'test_out_map.h5')
+    emaps        = read_maps(map_file_out)
+    assert np.all(emaps.t_evol.S1eff   <= 1.)
+    assert np.all(emaps.t_evol.S2eff   <= 1.)
+    assert np.all(emaps.t_evol.Bandeff <= 1.)
+
+@mark.dependency(depends="test_scrip_runs_and_produces_correct_outputs")
+def test_time_evol_table_exact_numbers(t_evol_table, output_maps_tmdir):
+    map_file_out = os.path.join(output_maps_tmdir, 'test_out_map.h5')
+    emaps        = read_maps(map_file_out)
+    t_evol = pd.pandas.read_hdf(t_evol_table, 't_evol')
+    assert_dataframes_close(emaps.t_evol, t_evol, rtol=1e-5)
 
 @composite
 def xy_pos(draw, elements=floats(min_value=-200, max_value=200)):

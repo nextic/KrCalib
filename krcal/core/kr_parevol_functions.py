@@ -3,6 +3,8 @@ from . correction_functions import e0_xy_correction
 from . fit_functions        import compute_drift_v
 from . fit_functions        import quick_gauss_fit
 from . kr_types             import ASectorMap
+from . kr_types             import masks_container
+
 
 from invisible_cities.reco .corrections_new import apply_all_correction
 from invisible_cities.reco .corrections_new import norm_strategy
@@ -147,7 +149,7 @@ def computing_kr_parameters(data       : pd.DataFrame,
 
 
 def kr_time_evolution(ts         : np.array,
-                      masks      : List[np.array],
+                      masks_time : List[np.array],
                       dst        : pd.DataFrame,
                       emaps      : ASectorMap,
                       xr_map     : Tuple[float, float],
@@ -169,7 +171,7 @@ def kr_time_evolution(ts         : np.array,
     ----------
     ts: np.array of floats
         Sequence of central times for the different time slices.
-    masks: list of boolean lists
+    masks_time: list of boolean lists
         Allows dividing the distribution into time slices.
     data: DataFrame
         Kdst distribution to analyze.
@@ -203,8 +205,8 @@ def kr_time_evolution(ts         : np.array,
     """
 
     frames = []
-    for index in range(len(masks)):
-        sel_dst = dst[masks[index]]
+    for index in range(len(masks_time)):
+        sel_dst = dst[masks_time[index]]
         pars    = computing_kr_parameters(sel_dst, ts[index],
                                           emaps,
                                           zslices_lt, zrange_lt,
@@ -215,3 +217,52 @@ def kr_time_evolution(ts         : np.array,
     total_pars = pd.concat(frames, ignore_index=True)
 
     return total_pars
+
+def cut_time_evolution(masks_time : List[np.array],
+                       dst        : pd.DataFrame,
+                       masks_cuts : masks_container,
+                       pars_table : pd.DataFrame):
+
+    """
+    Computes the efficiency evolution in time for a given krypton distribution
+    for different time slices.
+    Returns the input DataFrame updated with new 3 columns.
+
+    Parameters
+    ----------
+    masks: list of boolean lists
+        Allows dividing the distribution into time slices.
+    data: DataFrame
+        Kdst distribution to analyze.
+    masks_cuts: masks_container
+        Container for the S1, S2 and Band cuts masks.
+        The masks don't have to be inclusive.
+    pars: DataFrame
+        Each column corresponds to the average value for a given parameter.
+        Each row corresponds to the parameters for a given time slice.
+
+    Returns
+    -------
+    parspars_table_out: DataFrame
+        pars Table imput updated with 3 new columns, one for each cut.
+    """
+
+    len_ts = len(masks_time)
+    n0     = np.zeros(len_ts)
+    nS1    = np.zeros(len_ts)
+    nS2    = np.zeros(len_ts)
+    nBand  = np.zeros(len_ts)
+    for index in range(len_ts):
+        t_mask       = masks_time[index]
+        n0   [index] = dst[t_mask].event.nunique()
+        nS1mask      = t_mask  & masks_cuts.s1
+        nS1  [index] = dst[nS1mask].event.nunique()
+        nS2mask      = nS1mask & masks_cuts.s2
+        nS2  [index] = dst[nS2mask].event.nunique()
+        nBandmask    = nS2mask & masks_cuts.band
+        nBand[index] = dst[nBandmask].event.nunique()
+
+    pars_table_out = pars_table.assign(S1eff   = nS1   / n0,
+                                       S2eff   = nS2   / nS1,
+                                       Bandeff = nBand / nS2)
+    return pars_table_out
