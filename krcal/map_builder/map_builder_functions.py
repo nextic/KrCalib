@@ -26,6 +26,7 @@ from .. core.kr_parevol_functions          import cut_time_evolution
 from .. core.kr_parevol_functions          import get_number_of_time_bins
 from .. core.io_functions                  import write_complete_maps
 from .. core.io_functions                  import compute_and_save_hist_as_pd
+from .. core.io_functions                  import compute_and_save_hist_as_pdf
 from .. core.histo_functions               import compute_similar_histo
 from .. core.histo_functions               import normalize_histo_and_poisson_error
 from .. core.histo_functions               import ref_hist
@@ -121,6 +122,7 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
                                    column     : type_of_signal              ,
                                    interval   : Tuple[float, float]         ,
                                    output_f   : pd.HDFStore                 ,
+                                   monitoring : str                 = None  ,
                                    input_mask : np.array            = None  ,
                                    nbins_hist : int                 = 10    ,
                                    range_hist : Tuple[float, float] = (0,10),
@@ -141,6 +143,8 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
         (given by the config file) the map production will abort.
     output_f: pd.HDFStore
         File where histogram will be saved.
+    monitoring: str (optional)
+        If specified (with a file name) a histogram will be save with that name.
     input_mask: np.array (Optional)
         Selection mask of the previous cut. If this is the first selection
         cut, input_mask is set to be an all True array.
@@ -171,6 +175,17 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
                                 n_bins     = nbins_hist,
                                 range_hist = range_hist,
                                 norm       = norm)
+
+    if monitoring:
+        compute_and_save_hist_as_pdf(values     = getattr(mod_dst,
+                                                          column.value),
+                                     out_file   = monitoring,
+                                     n_bins     = nbins_hist,
+                                     range_hist = range_hist,
+                                     title      = column.value,
+                                     x_label    = column.value,
+                                     y_range    = (0,1),
+                                     norm       = norm)
 
     message  = "Selection efficiency of "
     message += column.value
@@ -220,6 +235,8 @@ def check_Z_dst(Z_vect   : np.array     ,
 def check_rate_and_hist(times      : np.array           ,
                         output_f   : pd.HDFStore        ,
                         name_table : str                ,
+                        hist_title : str                ,
+                        monitoring : str         = None ,
                         n_dev      : float       = 5    ,
                         bin_size   : int         = 180  ,
                         normed     : bool        = False)->None:
@@ -234,6 +251,10 @@ def check_rate_and_hist(times      : np.array           ,
         File where histogram will be saved.
     name_table: string
         Name for the histogram table inside file.
+    hist_title: sting
+        Name for the histogram title.
+    monitoring: str (optional)
+        If specified, histogram plots will be save with given name.
     n_dev: float
         Relative standard deviation to judge if
         distribution is correct.
@@ -260,6 +281,16 @@ def check_rate_and_hist(times      : np.array           ,
                                 range_hist= (min_time  ,
                                              max_time) ,
                                 norm      = normed     )
+    if monitoring:
+        compute_and_save_hist_as_pdf(values     = times,
+                                     out_file   = monitoring,
+                                     n_bins     = ntimebins,
+                                     range_hist = (min_time  ,
+                                                   max_time),
+                                     title      = hist_title,
+                                     x_label    = 'Time (s)',
+                                     y_range    = (0,6000),
+                                     norm       = normed)
 
     n, _     = np.histogram(times, bins=ntimebins,
                             range = (min_time, max_time))
@@ -628,12 +659,14 @@ def apply_cuts(dst              : pd.DataFrame       ,
                nsigmas_Zdst     : float              ,
                bootstrapmap     : ASectorMap         ,
                band_sel_params  : dict               ,
+               monitoring       : str                ,
                ) -> pd.DataFrame:
     n0    = dst.event.nunique()
     mask1 = selection_nS_mask_and_checking(dst = dst                  ,
                                            column = S1_signal         ,
                                            interval = nS1_eff_interval,
                                            output_f = store_hist_s1   ,
+                                           monitoring = monitoring    ,
                                            **ns1_histo_params         )
     nS1   = dst[mask1].event.nunique()
     print("    1 S1 cut efficiency within the expectations ({0:2.2f}%)".format(nS1/n0*100))
@@ -641,6 +674,7 @@ def apply_cuts(dst              : pd.DataFrame       ,
                                            column = S2_signal         ,
                                            interval = nS2_eff_interval,
                                            output_f = store_hist_s2   ,
+                                           monitoring = monitoring    ,
                                            input_mask = mask1         ,
                                            **ns2_histo_params         )
     nS2   = dst[mask2].event.nunique()
