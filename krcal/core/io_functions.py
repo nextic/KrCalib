@@ -1,5 +1,6 @@
 import numpy  as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from   invisible_cities.core.core_functions import shift_to_bin_centers
 from   typing         import Tuple
 from . kr_types       import ASectorMap
@@ -48,5 +49,49 @@ def compute_and_save_hist_as_pd(values     : np.array           ,
     table = pd.DataFrame({'entries': n,
                           'magnitude': shift_to_bin_centers(b)})
     out_file.put(hist_name, table, format='table', data_columns=True)
+
+    return
+
+
+
+def compute_and_save_hist_as_pdf(values     : np.array           ,
+                                 out_file   : str                ,
+                                 n_bins     : int                ,
+                                 range_hist : Tuple[float, float],
+                                 title      : str                ,
+                                 x_label    : str                ,
+                                 y_range    : Tuple[float, float],
+                                 norm       : bool = False       )->None:
+    """
+    Computes 1d-histogram and saves it as a pdf image.
+    Parameters
+    ----------
+    values : np.array
+        Array with values to be plotted.
+    out_file: string
+        File where histogram will be saved.
+    n_bins: int
+        Number of bins to make the histogram.
+    range_hist: length-2 tuple (optional)
+        Range of the histogram.
+    title: str
+        Title for the plot.
+    x_label: str
+        Label for X-axis.
+    y_range: length-2 tuple
+        Limit fot Y-axis.
+    norm: bool
+        If True, histogram will be normalized.
+    """
+    fig = plt.figure();
+    plt.hist(values, bins = n_bins,
+             range = range_hist, density = norm,
+             histtype='step', linewidth=2);
+    plt.ylabel('Entries');
+    plt.xlabel(x_label);
+    plt.title(title);
+    plt.ylim(y_range);
+    plt.grid(True, alpha=0.5, color='k', linestyle=':');
+    fig.savefig(out_file.format(title).replace(" ", ""), bbox_inches='tight')
 
     return
