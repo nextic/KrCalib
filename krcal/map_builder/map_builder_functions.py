@@ -29,6 +29,7 @@ from .. core.io_functions                  import compute_and_save_hist_as_pdf
 from .. core.histo_functions               import compute_similar_histo
 from .. core.histo_functions               import normalize_histo_and_poisson_error
 from .. core.histo_functions               import ref_hist
+from .. core.plot_utils                    import par_selection_to_plot_vs_time
 
 from . checking_functions                  import check_if_values_in_interval
 from . checking_functions                  import check_failed_fits
@@ -746,4 +747,8 @@ def map_builder(config):
     write_complete_maps(asm      = final_map          ,
                         filename = config.file_out_map)
     print("Map successfully computed and saved in : {0}".format(config.file_out_map))
-    print("Control histograms saved in            : {0}".format(config.file_out_hists))
+    if monitoring:
+        par_selection_to_plot_vs_time(evol_table = final_map.t_evol,
+                                      file_name  = monitoring              )
+        print("Control histograms saved in            : {0}".format(monitoring.
+                    replace(monitoring.split('/', -1)[-1], '')))
