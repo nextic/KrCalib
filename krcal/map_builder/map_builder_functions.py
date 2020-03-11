@@ -25,7 +25,6 @@ from .. core.kr_parevol_functions          import kr_time_evolution
 from .. core.kr_parevol_functions          import cut_time_evolution
 from .. core.kr_parevol_functions          import get_number_of_time_bins
 from .. core.io_functions                  import write_complete_maps
-from .. core.io_functions                  import compute_and_save_hist_as_pd
 from .. core.io_functions                  import compute_and_save_hist_as_pdf
 from .. core.histo_functions               import compute_similar_histo
 from .. core.histo_functions               import normalize_histo_and_poisson_error
@@ -121,7 +120,6 @@ def load_data(input_path         : str ,
 def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
                                    column     : type_of_signal              ,
                                    interval   : Tuple[float, float]         ,
-                                   output_f   : pd.HDFStore                 ,
                                    monitoring : str                 = None  ,
                                    input_mask : np.array            = None  ,
                                    nbins_hist : int                 = 10    ,
@@ -141,8 +139,6 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
     interval: length-2 tuple
         If the selection efficiency is out of this interval
         (given by the config file) the map production will abort.
-    output_f: pd.HDFStore
-        File where histogram will be saved.
     monitoring: str (optional)
         If specified (with a file name) a histogram will be save with that name.
     input_mask: np.array (Optional)
@@ -168,13 +164,6 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
     eff              = nevts_after / nevts_before
 
     mod_dst = dst[['event', column.value]].drop_duplicates()
-    compute_and_save_hist_as_pd(values     = getattr(mod_dst,
-                                                     column.value),
-                                out_file   = output_f,
-                                hist_name  = column.value,
-                                n_bins     = nbins_hist,
-                                range_hist = range_hist,
-                                norm       = norm)
 
     if monitoring:
         compute_and_save_hist_as_pdf(values     = getattr(mod_dst,
@@ -233,8 +222,6 @@ def check_Z_dst(Z_vect   : np.array     ,
     return;
 
 def check_rate_and_hist(times      : np.array           ,
-                        output_f   : pd.HDFStore        ,
-                        name_table : str                ,
                         hist_title : str                ,
                         monitoring : str         = None ,
                         n_dev      : float       = 5    ,
@@ -247,10 +234,6 @@ def check_rate_and_hist(times      : np.array           ,
     ----------
     times: np.array
         Time of the events.
-    output_f: pd.HDFStore
-        File where histogram will be saved.
-    name_table: string
-        Name for the histogram table inside file.
     hist_title: sting
         Name for the histogram title.
     monitoring: str (optional)
@@ -274,13 +257,6 @@ def check_rate_and_hist(times      : np.array           ,
                                          min_time,
                                          max_time)
 
-    compute_and_save_hist_as_pd(values    = times      ,
-                                out_file  = output_f   ,
-                                hist_name = name_table ,
-                                n_bins    = ntimebins  ,
-                                range_hist= (min_time  ,
-                                             max_time) ,
-                                norm      = normed     )
     if monitoring:
         compute_and_save_hist_as_pdf(values     = times,
                                      out_file   = monitoring,
@@ -649,11 +625,9 @@ def compute_map(dst          : pd.DataFrame,
 def apply_cuts(dst              : pd.DataFrame       ,
                S1_signal        : type_of_signal     ,
                nS1_eff_interval : Tuple[float, float],
-               store_hist_s1    : pd.HDFStore        ,
                ns1_histo_params : dict               ,
                S2_signal        : type_of_signal     ,
                nS2_eff_interval : Tuple[float, float],
-               store_hist_s2    : pd.HDFStore        ,
                ns2_histo_params : dict               ,
                ref_Z_histo      : pd.DataFrame       ,
                nsigmas_Zdst     : float              ,
@@ -665,7 +639,6 @@ def apply_cuts(dst              : pd.DataFrame       ,
     mask1 = selection_nS_mask_and_checking(dst = dst                  ,
                                            column = S1_signal         ,
                                            interval = nS1_eff_interval,
-                                           output_f = store_hist_s1   ,
                                            monitoring = monitoring    ,
                                            **ns1_histo_params         )
     nS1   = dst[mask1].event.nunique()
@@ -673,7 +646,6 @@ def apply_cuts(dst              : pd.DataFrame       ,
     mask2 = selection_nS_mask_and_checking(dst = dst                  ,
                                            column = S2_signal         ,
                                            interval = nS2_eff_interval,
-                                           output_f = store_hist_s2   ,
                                            monitoring = monitoring    ,
                                            input_mask = mask1         ,
                                            **ns2_histo_params         )
@@ -710,43 +682,45 @@ def map_builder(config):
                                                quality_ranges     = config.quality_ranges    ,
                                                **config.ref_Z_histogram                      )
 
-    with pd.HDFStore(config.file_out_hists, "w", complib=str("zlib"), complevel=4) as store_hist:
-        print("Checking the dst and appling 1S1, 1S2 and z-band selections:")
+    monitoring = config.monitoring_path
+    if monitoring:
+        monitoring = monitoring + 'Run{0}_{{0}}_plot.pdf'.format(config.run_number)
 
-        nev_before = dst.event.nunique()
-        print("    Number of events before any selection: {0}".format(nev_before))
-        check_rate_and_hist(times      = dst.time         ,
-                            output_f   = store_hist       ,
-                            name_table = "rate_before_sel",
-                            n_dev      = config.n_dev_rate,
-                            **config.rate_histo_params    )
+    print("Checking the dst and appling 1S1, 1S2 and z-band selections:")
 
-        dst_passed_cut, masks = apply_cuts(dst       = dst                    ,
-                                    S1_signal        = type_of_signal.nS1     ,
-                                    nS1_eff_interval = (config.nS1_eff_min    ,
-                                                        config.nS1_eff_max)   ,
-                                    store_hist_s1    = store_hist             ,
-                                    ns1_histo_params = config.ns1_histo_params,
-                                    S2_signal        = type_of_signal.nS2     ,
-                                    nS2_eff_interval = (config.nS2_eff_min    ,
-                                                        config.nS2_eff_max)   ,
-                                    store_hist_s2    = store_hist             ,
-                                    ns2_histo_params = config.ns2_histo_params,
-                                    nsigmas_Zdst     = config.nsigmas_Zdst    ,
-                                    ref_Z_histo      = ref_histos.
-                                                           Z_dist_hist,
-                                    bootstrapmap     = bootstrapmap           ,
-                                    band_sel_params  = config.band_sel_params )
+    nev_before = dst.event.nunique()
+    print("    Number of events before any selection: {0}".format(nev_before))
+    check_rate_and_hist(times      = dst.time         ,
+                        hist_title = "Rate Before Selection",
+                        monitoring = monitoring,
+                        n_dev      = config.n_dev_rate,
+                        **config.rate_histo_params    )
 
-        check_rate_and_hist(times      = dst_passed_cut.time,
-                            output_f   = store_hist         ,
-                            name_table = "rate_after_sel"   ,
-                            n_dev      = config.n_dev_rate  ,
-                            **config.rate_histo_params      )
+    dst_passed_cut, masks = apply_cuts(dst       = dst                    ,
+                                S1_signal        = type_of_signal.nS1     ,
+                                nS1_eff_interval = (config.nS1_eff_min    ,
+                                                    config.nS1_eff_max)   ,
+                                ns1_histo_params = config.ns1_histo_params,
+                                S2_signal        = type_of_signal.nS2     ,
+                                nS2_eff_interval = (config.nS2_eff_min    ,
+                                                    config.nS2_eff_max)   ,
+                                ns2_histo_params = config.ns2_histo_params,
+                                nsigmas_Zdst     = config.nsigmas_Zdst    ,
+                                ref_Z_histo      = ref_histos.
+                                                       Z_dist_hist        ,
+                                bootstrapmap     = bootstrapmap           ,
+                                band_sel_params  = config.band_sel_params ,
+                                monitoring       = monitoring             )
 
-        nev_after = dst_passed_cut.event.nunique()
-        ratio     = nev_after/nev_before*100
-        print("    Number of events passing the cuts: {0} ({1:2.2f}%)".format(nev_after, ratio))
+    check_rate_and_hist(times      = dst_passed_cut.time         ,
+                        hist_title = "Rate After Selection",
+                        monitoring = monitoring,
+                        n_dev      = config.n_dev_rate,
+                        **config.rate_histo_params    )
+
+    nev_after = dst_passed_cut.event.nunique()
+    ratio     = nev_after/nev_before*100
+    print("    Number of events passing the cuts: {0} ({1:2.2f}%)".format(nev_after, ratio))
 
 
     print("Map computation:")
