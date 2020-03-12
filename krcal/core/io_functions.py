@@ -122,6 +122,11 @@ def plot_and_save_evolution_figure(time        : np.array   ,
         Array with uncertainty values.
     units : string
         Units to be shown in x-label.
+    file_name : string
+        Name of file for plots. It must contain '{0}' to be name after
+        the plotted parameter.
+    n_sigmas_lim : int (optional)
+        Number of sigmas to set the Y-axis limits in plots.
 
     Returns
     ----------

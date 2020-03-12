@@ -235,7 +235,7 @@ def check_rate_and_hist(times      : np.array           ,
     ----------
     times: np.array
         Time of the events.
-    hist_title: sting
+    hist_title: string
         Name for the histogram title.
     monitoring: str (optional)
         If specified, histogram plots will be save with given name.
