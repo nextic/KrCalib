@@ -19,7 +19,7 @@ def par_selection_to_plot_vs_time(evol_table: pd.DataFrame,
     ----------
     Nothing
     """
-    time_ = list(map(datetime.datetime.fromtimestamp, evol_table.ts))
+    time_      = list(map(datetime.datetime.fromtimestamp, evol_table.ts))
     units_vect = ['pes', 'mus', 'mm/mus', '%', 'ns', 'pes',
                   'pes', 'mus', 'pes', 'pes', 'pes', '# SiPM']
 

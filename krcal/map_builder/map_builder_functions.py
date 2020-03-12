@@ -167,7 +167,7 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
     mod_dst = dst[['event', column.value]].drop_duplicates()
 
     if monitoring:
-        compute_and_save_hist_as_pdf(values     = getattr(mod_dst,
+        compute_and_save_hist_as_pdf(values     = getattr(mod_dst      ,
                                                           column.value),
                                      out_file   = monitoring,
                                      n_bins     = nbins_hist,
@@ -259,15 +259,15 @@ def check_rate_and_hist(times      : np.array           ,
                                          max_time)
 
     if monitoring:
-        compute_and_save_hist_as_pdf(values     = times,
+        compute_and_save_hist_as_pdf(values     = times     ,
                                      out_file   = monitoring,
-                                     n_bins     = ntimebins,
-                                     range_hist = (min_time  ,
+                                     n_bins     = ntimebins ,
+                                     range_hist = (min_time,
                                                    max_time),
                                      title      = hist_title,
                                      x_label    = 'Time (s)',
-                                     y_range    = (0,6000),
-                                     norm       = normed)
+                                     y_range    = (0, 6000) ,
+                                     norm       = normed    )
 
     n, _     = np.histogram(times, bins=ntimebins,
                             range = (min_time, max_time))
@@ -749,6 +749,6 @@ def map_builder(config):
     print("Map successfully computed and saved in : {0}".format(config.file_out_map))
     if monitoring:
         par_selection_to_plot_vs_time(evol_table = final_map.t_evol,
-                                      file_name  = monitoring              )
+                                      file_name  = monitoring      )
         print("Control histograms saved in            : {0}".format(monitoring.
                     replace(monitoring.split('/', -1)[-1], '')))

@@ -84,15 +84,18 @@ def compute_and_save_hist_as_pdf(values     : np.array           ,
     norm: bool
         If True, histogram will be normalized.
     """
-    fig = plt.figure();
-    plt.hist(values, bins = n_bins,
-             range = range_hist, density = norm,
-             histtype='step', linewidth=2);
-    plt.ylabel('Entries');
-    plt.xlabel(x_label);
-    plt.title(title);
-    plt.ylim(y_range);
-    plt.grid(True, alpha=0.5, color='k', linestyle=':');
+    fig = plt.figure()
+    plt.hist(values                ,
+             bins      = n_bins    ,
+             range     = range_hist,
+             density   = norm      ,
+             histtype  = 'step'    ,
+             linewidth = 2         );
+    plt.ylabel('Entries')
+    plt.xlabel(x_label)
+    plt.title(title)
+    plt.ylim(y_range)
+    plt.grid(True, alpha=0.5, color='k', linestyle=':')
     fig.savefig(out_file.format(title).replace(" ", ""), bbox_inches='tight')
 
     return
@@ -127,21 +130,22 @@ def plot_and_save_evolution_figure(time        : np.array   ,
     fig = plt.figure()
     plt.errorbar(time, param, param_u, fmt='.')
     plt.xlabel('Date')
-    plt.ylabel('{0} ({1})'.format(param_name, units));
+    plt.ylabel('{0} ({1})'.format(param_name, units))
     plt.title('{0}'.format(param_name))
     mean = np.mean(param)
     std  = np.std(param)
     plt.ylim(param.min()-std*n_sigmas_lim,
              param.max()+std*n_sigmas_lim)
     plt.grid(True, alpha=0.5, color='k', linestyle=':')
-    ax = plt.gca()
+    ax   = plt.gca()
     xfmt = md.DateFormatter('%d-%m %H:%M')
     ax.xaxis.set_major_formatter(xfmt)
     plt.xticks( rotation=25 )
-    plt.text(0.03,0.9,
+    plt.text(0.03, 0.9,
              'Mean= {0} \n Std= {1}'.format(np.round(mean,4), np.round(std,4)),
-             fontsize=10, transform=ax.transAxes,
-             bbox={'facecolor': 'white', 'alpha': 1, 'pad': 5})
+             fontsize  = 10,
+             transform = ax.transAxes,
+             bbox      = {'facecolor': 'white', 'alpha': 1, 'pad': 5})
     fig.savefig(file_name.format(param_name), bbox_inches='tight')
 
     return

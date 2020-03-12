@@ -192,9 +192,9 @@ def test_exception_s1(folder_test_dst, test_dst_file, output_maps_tmdir):
     conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
     map_file_out    = os.path.join(output_maps_tmdir, 'test_out_map_s1.h5'  )
     monitoring_path = None
-    min_eff_test = 0.
-    max_eff_test = 0.8
-    run_number   = 7517
+    min_eff_test    = 0.
+    max_eff_test    = 0.8
+    run_number      = 7517
     conf.update(dict(folder          = folder_test_dst,
                      file_in         = test_dst_file  ,
                      file_out_map    = map_file_out   ,
@@ -214,9 +214,9 @@ def test_exception_s2(folder_test_dst, test_dst_file, output_maps_tmdir):
     conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
     map_file_out    = os.path.join(output_maps_tmdir, 'test_out_map_s2.h5'  )
     monitoring_path = None
-    min_eff_test = 0.
-    max_eff_test = 0.9
-    run_number   = 7517
+    min_eff_test    = 0.
+    max_eff_test    = 0.9
+    run_number      = 7517
     conf.update(dict(folder          = folder_test_dst ,
                      file_in         = test_dst_file   ,
                      file_out_map    = map_file_out    ,
@@ -236,8 +236,8 @@ def test_exception_rate(folder_test_dst, test_dst_file, output_maps_tmdir):
     conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
     map_file_out    = os.path.join(output_maps_tmdir, 'test_out_map_rate.h5'  )
     monitoring_path = None
-    n_dev_rate = 0.5
-    run_number   = 7517
+    n_dev_rate      = 0.5
+    run_number      = 7517
     conf.update(dict(folder          = folder_test_dst,
                      file_in         = test_dst_file  ,
                      file_out_map    = map_file_out   ,
@@ -257,8 +257,8 @@ def test_exception_Zdst(folder_test_dst, test_dst_file, output_maps_tmdir):
     conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
     map_file_out    = os.path.join(output_maps_tmdir, 'test_out_map_Z.h5'  )
     monitoring_path = None
-    nsigmas_Zdst = 0.5
-    run_number   = 7517
+    nsigmas_Zdst    = 0.5
+    run_number      = 7517
     conf.update(dict(folder          = folder_test_dst,
                      file_in         = test_dst_file  ,
                      file_out_map    = map_file_out   ,
