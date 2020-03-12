@@ -291,3 +291,27 @@ def test_exception_bandsel(folder_test_dst, test_dst_file, output_maps_tmdir):
     assert_raises(AbortingMapCreation,
                   map_builder        ,
                   conf.as_namespace  )
+
+
+def test_monitoring_plots_are_created(folder_test_dst, test_dst_file, output_maps_tmdir):
+    """
+    This test checks that monitoring plots are created if a
+    folder to store them is provided.
+    """
+    conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    map_file_out    = os.path.join(output_maps_tmdir, 'test_out_map.h5'  )
+    monitoring_path = output_maps_tmdir
+    default_n_bins  = 15
+    run_number      = 7517
+    conf.update(dict(folder          = folder_test_dst,
+                     file_in         = test_dst_file  ,
+                     file_out_map    = map_file_out   ,
+                     monitoring_path = monitoring_path,
+                     default_n_bins  = default_n_bins ,
+                     run_number      = run_number     ))
+    emaps = read_maps(map_file_out)
+    pars = emaps.t_evol.columns[1:-7:2].tolist()
+    pars = pars + emaps.t_evol.columns[-3:].tolist()
+    for par in pars:
+        plot_fname = output_maps_tmdir + 'Run{0}_{1}_plot.pdf'.format(run_number, par)
+        assert os.path.exists(output_maps_tmdir)
