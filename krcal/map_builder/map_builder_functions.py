@@ -750,5 +750,4 @@ def map_builder(config):
     if monitoring:
         par_selection_to_plot_vs_time(evol_table = final_map.t_evol,
                                       file_name  = monitoring      )
-        print("Control histograms saved in            : {0}".format(monitoring.
-                    replace(monitoring.split('/', -1)[-1], '')))
+        print("Control plots saved in folder          : {0}".format(config.monitoring_path))
