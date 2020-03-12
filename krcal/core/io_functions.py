@@ -55,7 +55,7 @@ def compute_and_save_hist_as_pd(values     : np.array           ,
 
 
 
-def compute_and_save_hist_as_pdf(values     : np.array           ,
+def compute_and_save_hist_as_pdf(values     : np.ndarray          ,
                                  out_file   : str                ,
                                  n_bins     : int                ,
                                  range_hist : Tuple[float, float],
@@ -67,7 +67,7 @@ def compute_and_save_hist_as_pdf(values     : np.array           ,
     Computes 1d-histogram and saves it as a pdf image.
     Parameters
     ----------
-    values : np.array
+    values : np.ndarray
         Array with values to be plotted.
     out_file: string
         File where histogram will be saved.
@@ -101,10 +101,10 @@ def compute_and_save_hist_as_pdf(values     : np.array           ,
     return
 
 
-def plot_and_save_evolution_figure(time        : np.array   ,
+def plot_and_save_evolution_figure(time        : np.ndarray  ,
                                    param_name  : str        ,
-                                   param       : np.array   ,
-                                   param_u     : np.array   ,
+                                   param       : np.ndarray  ,
+                                   param_u     : np.ndarray  ,
                                    units       : str        ,
                                    file_name   : str        ,
                                    n_sigmas_lim: int     = 1):
@@ -112,13 +112,13 @@ def plot_and_save_evolution_figure(time        : np.array   ,
     Plot and save evolution of a given parameter vs time.
     Parameters
     ----------
-    time : np.array
+    time : np.ndarray
         Array with the centers of each time interval (X-values).
     param_name : string
         Name of the parameter to plot.
-    param : np.array
+    param : np.ndarray
         Array with the magnitude to plot (Y-values).
-    param_u : np.array
+    param_u : np.ndarray
         Array with uncertainty values.
     units : string
         Units to be shown in x-label.
