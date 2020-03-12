@@ -179,8 +179,8 @@ def selection_nS_mask_and_checking(dst        : pd.DataFrame                ,
 
     message  = "Selection efficiency of "
     message += column.value
-    message += "==1 ({0}) out of range ".format(np.round(eff, 3))
-    message += "({0} - {1}).".format(interval[0], interval[1])
+    message += f"==1 ({eff:.3f}) out of range "
+    message += f"({interval[0]} - {interval[1]})."
     check_if_values_in_interval(values          = np.array(eff),
                                 low_lim         = interval[0]  ,
                                 up_lim          = interval[1]  ,
@@ -215,7 +215,7 @@ def check_Z_dst(Z_vect   : np.array     ,
     diff_sig   = diff / np.sqrt(err_N**2+ref_hist.err_bin_entries**2)
 
     message    = "Z distribution very different to reference one. "
-    message   += "At least 1 point out of {0} sigmas region. ".format(n_sigmas)
+    message   += f"At least 1 point out of {n_sigmas} sigmas region. "
     check_if_values_in_interval(values          = diff_sig ,
                                 low_lim         = -n_sigmas,
                                 up_lim          = n_sigmas ,
@@ -275,8 +275,8 @@ def check_rate_and_hist(times      : np.array           ,
     dev      = np.std(n, ddof = 1)
     rel_dev  = dev / mean * 100
 
-    message  = "Relative deviation ({0}) greater ".format(rel_dev)
-    message += "than the allowed one ({0}).".format(n_dev)
+    message  = f"Relative deviation ({rel_dev}) greater "
+    message += f"than the allowed one ({n_dev})."
     check_if_values_in_interval(values          = np.array(rel_dev),
                                 low_lim         = 0                ,
                                 up_lim          = n_dev            ,
@@ -348,8 +348,8 @@ def band_selector_and_check(dst       : pd.DataFrame,
                                                            nsigma  = nsigma_sel)
 
     effsel   = dst[sel_krband].event.nunique()/dst[input_mask].event.nunique()
-    message  = "Band selection efficiency {0} ".format(np.round(effsel, 3))
-    message += "out of range: ({0} - {1}).".format(eff_min, eff_max)
+    message  = f"Band selection efficiency {effsel:.3f} "
+    message += f"out of range: ({eff_min} - {eff_max})."
     check_if_values_in_interval(values          = np.array(effsel),
                                 low_lim         = eff_min         ,
                                 up_lim          = eff_max         ,
@@ -563,8 +563,8 @@ def add_krevol(maps         : ASectorMap,
 
     e0par       = np.array([pars['e0'].mean(), pars['e0'].var()**0.5])
     ltpar       = np.array([pars['lt'].mean(), pars['lt'].var()**0.5])
-    print("    Mean core E0: {0:.1f}+-{1:.1f} pes".format(*e0par))
-    print("    Mean core Lt: {0:.1f}+-{1:.1f} mus".format(*ltpar))
+    print(f"    Mean core E0: {e0par[0]:.1f}+-{e0par[1]:.1f} pes")
+    print(f"    Mean core Lt: {ltpar[0]:.1f}+-{ltpar[1]:.1f} mus")
 
 
     maps.t_evol = pars_ec
@@ -643,7 +643,7 @@ def apply_cuts(dst              : pd.DataFrame       ,
                                            monitoring = monitoring    ,
                                            **ns1_histo_params         )
     nS1   = dst[mask1].event.nunique()
-    print("    1 S1 cut efficiency within the expectations ({0:2.2f}%)".format(nS1/n0*100))
+    print(f"    1 S1 cut efficiency within the expectations ({nS1/n0*100:2.2f}%)")
     mask2 = selection_nS_mask_and_checking(dst = dst                  ,
                                            column = S2_signal         ,
                                            interval = nS2_eff_interval,
@@ -651,7 +651,7 @@ def apply_cuts(dst              : pd.DataFrame       ,
                                            input_mask = mask1         ,
                                            **ns2_histo_params         )
     nS2   = dst[mask2].event.nunique()
-    print("    1 S2 cut efficiency within the expectations ({0:2.2f}%)".format(nS2/nS1*100))
+    print(f"    1 S2 cut efficiency within the expectations ({nS2/nS1*100:2.2f}%)")
     check_Z_dst(Z_vect   = dst[mask2].Z,
                 ref_hist = ref_Z_histo ,
                 n_sigmas = nsigmas_Zdst)
@@ -661,7 +661,7 @@ def apply_cuts(dst              : pd.DataFrame       ,
                                     input_mask = mask2       ,
                                     **band_sel_params        )
     nZb   = dst[mask3].event.nunique()
-    print("    Z band cut efficiency within the expectations ({0:2.2f}%)".format(nZb/nS2*100))
+    print(f"    Z band cut efficiency within the expectations ({nZb/nS2*100:2.2f}%)")
 
     masks = masks_container(s1   = mask1,
                             s2   = mask2,
@@ -672,9 +672,9 @@ def map_builder(config):
 
     print("Map builder starting...")
     print("Reading input files:")
-    print("    Input dst folder   : {}".format(config.folder))
-    print("    Input boostrap map : {}".format(config.file_bootstrap_map))
-    print("    Input histogram map: {}".format(config.ref_Z_histogram['ref_histo_file']))
+    print(f"    Input dst folder   : {config.folder}")
+    print(f"    Input boostrap map : {config.file_bootstrap_map}")
+    print(f"    Input histogram map: {config.ref_Z_histogram['ref_histo_file']}")
 
 
     dst, bootstrapmap, ref_histos  = load_data(input_path         = config.folder            ,
@@ -685,7 +685,7 @@ def map_builder(config):
 
     monitoring = config.monitoring_path
     if monitoring:
-        monitoring = monitoring + 'Run{0}_{{0}}_plot.pdf'.format(config.run_number)
+        monitoring = monitoring + f'Run{config.run_number}_{{0}}_plot.pdf'
 
     print("Checking the dst and appling 1S1, 1S2 and z-band selections:")
 
@@ -721,7 +721,7 @@ def map_builder(config):
 
     nev_after = dst_passed_cut.event.nunique()
     ratio     = nev_after/nev_before*100
-    print("    Number of events passing the cuts: {0} ({1:2.2f}%)".format(nev_after, ratio))
+    print(f"    Number of events passing the cuts: {nev_after} ({ratio:2.2f}%)")
 
 
     print("Map computation:")
@@ -729,7 +729,7 @@ def map_builder(config):
                                       thr_events_for_map_bins = config.thr_evts_for_sel_map_bins,
                                       n_bins                  = config.default_n_bins           )
 
-    print("    Number of bins: {0}x{0}".format(number_of_bins))
+    print(f"    Number of bins: {number_of_bins}x{number_of_bins}")
 
     final_map      = compute_map(dst        = dst_passed_cut   ,
                                  run_number = config.run_number,
@@ -746,8 +746,8 @@ def map_builder(config):
 
     write_complete_maps(asm      = final_map          ,
                         filename = config.file_out_map)
-    print("Map successfully computed and saved in : {0}".format(config.file_out_map))
+    print(f"Map successfully computed and saved in : {config.file_out_map}")
     if monitoring:
         par_selection_to_plot_vs_time(evol_table = final_map.t_evol,
                                       file_name  = monitoring      )
-        print("Control plots saved in folder          : {0}".format(config.monitoring_path))
+        print(f"Control plots saved in folder          : {config.monitoring_path}")
