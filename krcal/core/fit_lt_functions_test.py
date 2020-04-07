@@ -8,7 +8,8 @@ from pytest                import mark
 from pytest                import approx
 from pytest                import warns
 
-from invisible_cities.core import fit_functions as fitf
+from invisible_cities.core               import fit_functions as fitf
+from invisible_cities.core.testing_utils import float_arrays
 
 from . testing_utils       import energy_lt_experiment
 from . testing_utils       import energy_lt_experiments
@@ -150,3 +151,38 @@ def test_pars_from_fcs_warns_for_invalid_fits(caplog):
 
     with warns(UserWarning, match="fit did not succeed, returning NaN"):
         pars_from_fcs([fitcol])
+
+
+def test_fit_lt_unbined_uses_correct_zrange():
+    """
+    This tests checks that fit_lifetime_unbined
+    function uses z_range to fit properly.
+    """
+    Nevt  = 1e5
+    e0    = 12800
+    lt    = 10000
+    std   = 0.05 * e0
+    max_z = 500
+    z, es = energy_lt_experiment(Nevt, e0, lt, std, zmax=max_z)
+
+    # we add now random values out of the z_range,
+    # so they shouldn't affect the fit
+    add_z  = np.linspace(550, 1000, 1000)
+    add_es = add_z
+    z_new  = np.append(z , add_z )
+    es_new = np.append(es, add_es)
+
+    z_range = (0, max_z)
+    nbins_z = 50
+
+    _, _, pars     = fit_lifetime_unbined(z    , es    , nbins_z, z_range);
+    _, _, pars_new = fit_lifetime_unbined(z_new, es_new, nbins_z, z_range);
+    lt , e0  = pars.par
+    ltu, e0u = pars.err
+    lt_new , e0_new  = pars_new.par
+    ltu_new, e0u_new = pars_new.err
+
+    assert lt  == lt_new
+    assert ltu == ltu_new
+    assert e0  == e0_new
+    assert e0u == e0u_new
