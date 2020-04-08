@@ -21,6 +21,7 @@ from numpy           .linalg                 import LinAlgError
 
 from invisible_cities.core   .fit_functions  import fit
 from invisible_cities.core   .fit_functions  import expo
+from invisible_cities.core   .core_functions import in_range
 
 from . fit_functions    import expo_seed
 from . fit_functions    import chi2f
@@ -237,7 +238,8 @@ def fit_lifetime_unbined(z       : np.array,
     err   = NN  * np.ones(2)
     try:
         el = - np.log(e)
-        cc, cov = np.polyfit(z, el, deg=1, full = False, w = None, cov = True )
+        z_sel = in_range(z, *range_z)
+        cc, cov = np.polyfit(z[z_sel], el[z_sel], deg=1, full=False, w=None, cov=True)
         a, b = cc[0], cc[1]
 
         lt   = 1/a
