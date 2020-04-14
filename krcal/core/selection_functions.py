@@ -17,21 +17,21 @@ Last revised: Feb, 2019
 import numpy  as np
 import pandas as pd
 
-from typing      import List
-from typing      import Tuple
-from typing      import  Dict
-from pandas      import DataFrame
+from typing  import List
+from typing  import Tuple
+from typing  import Dict
+from pandas  import DataFrame
 
-from   invisible_cities.core .core_functions  import in_range
-from   invisible_cities.icaro. hst_functions  import shift_to_bin_centers
+from  invisible_cities.core.core_functions  import in_range
+from  invisible_cities.core.core_functions  import shift_to_bin_centers
 
-from . fit_lt_functions     import fit_lifetime_unbined
-from . fit_functions        import fit_slices_1d_gauss
-from . kr_types             import Number
-from . kr_types             import Range
-from . kr_types             import HistoPar2
-from . kr_types             import ProfilePar
-from . kr_types             import FitPar
+from . fit_lt_functions import fit_lifetime_unbined
+from . fit_functions    import fit_slices_1d_gauss
+from . kr_types         import Number
+from . kr_types         import Range
+from . kr_types         import HistoPar2
+from . kr_types         import ProfilePar
+from . kr_types         import FitPar
 
 import logging
 log = logging.getLogger(__name__)

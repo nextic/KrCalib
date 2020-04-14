@@ -10,9 +10,9 @@ from numpy.testing import assert_raises
 from invisible_cities.io  .dst_io          import load_dst
 from invisible_cities.core.testing_utils   import assert_dataframes_close
 from invisible_cities.core.configure       import configure
-from invisible_cities.reco.corrections_new import read_maps
-from invisible_cities.reco.corrections_new import ASectorMap
-from invisible_cities.reco.corrections_new import maps_coefficient_getter
+from invisible_cities.reco.corrections     import read_maps
+from invisible_cities.reco.corrections     import ASectorMap
+from invisible_cities.reco.corrections     import maps_coefficient_getter
 
 from . map_builder_functions import map_builder
 from . checking_functions    import AbortingMapCreation

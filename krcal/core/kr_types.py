@@ -13,9 +13,11 @@ from dataclasses import dataclass
 from pandas import DataFrame, Series
 
 from invisible_cities.types.ic_types      import AutoNameEnumBase
-from invisible_cities.evm  .ic_containers import Measurement
 from invisible_cities.evm  .ic_containers import FitFunction
 
+from collections import namedtuple
+
+Measurement = namedtuple('Measurement', 'value uncertainty')
 
 Number = TypeVar('Number', None, int, float)
 Str   = TypeVar('Str', None, str)

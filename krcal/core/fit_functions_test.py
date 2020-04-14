@@ -19,7 +19,7 @@ from   hypothesis.strategies                import builds
 import invisible_cities.database.load_db    as     DB
 
 from invisible_cities.core                  import  fit_functions as fitf
-from invisible_cities.evm.ic_containers     import Measurement
+
 from invisible_cities.core.testing_utils    import float_arrays
 from invisible_cities.core.testing_utils    import random_length_float_arrays
 
@@ -34,7 +34,7 @@ from . fit_functions                        import fit_profile_1d_expo
 from . fit_functions                        import fit_slices_2d_gauss
 from . fit_functions                        import fit_slices_2d_expo
 
-
+from . kr_types                             import Measurement
 sensible_floats          = floats(-1e4, +1e4)
 fractions                = floats(   0,    1)
 sensible_arrays_variable = random_length_float_arrays(1, 10, min_value=-1e4, max_value=1e4)

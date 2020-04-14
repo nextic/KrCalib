@@ -37,9 +37,9 @@ from . checking_functions                  import get_core
 
 from invisible_cities.core.core_functions  import in_range
 from invisible_cities.io  .dst_io          import load_dsts
-from invisible_cities.reco.corrections_new import ASectorMap
-from invisible_cities.reco.corrections_new import read_maps
-from invisible_cities.reco.corrections_new import norm_strategy
+from invisible_cities.reco.corrections     import ASectorMap
+from invisible_cities.reco.corrections     import read_maps
+from invisible_cities.reco.corrections     import norm_strategy
 
 
 @dataclass

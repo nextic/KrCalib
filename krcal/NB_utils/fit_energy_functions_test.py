@@ -8,7 +8,7 @@ from hypothesis            import given
 from hypothesis            import settings
 from hypothesis.strategies import floats
 
-from invisible_cities.evm.ic_containers import Measurement
+from .. core. kr_types                  import Measurement
 from .. core. stat_functions            import mean_and_std
 from .. core. testing_utils             import gaussian_experiments
 from .  fit_energy_functions            import gaussian_parameters

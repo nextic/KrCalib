@@ -1,10 +1,10 @@
 import numpy as np
 
-from invisible_cities.reco.corrections_new import ASectorMap
-from invisible_cities.reco.corrections_new import maps_coefficient_getter
-from invisible_cities.reco.corrections_new import correct_geometry_
-from invisible_cities.reco.corrections_new import norm_strategy
-from invisible_cities.reco.corrections_new import get_normalization_factor
+from invisible_cities.reco.corrections import ASectorMap
+from invisible_cities.reco.corrections import maps_coefficient_getter
+from invisible_cities.reco.corrections import correct_geometry_
+from invisible_cities.reco.corrections import norm_strategy
+from invisible_cities.reco.corrections import get_normalization_factor
 
 
 def e0_xy_correction(map        : ASectorMap                         ,
