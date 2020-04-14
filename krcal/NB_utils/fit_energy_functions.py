@@ -15,13 +15,11 @@ from typing      import List
 from typing      import Tuple
 from typing      import Iterable
 
-
-from   invisible_cities.core.core_functions import in_range
-import invisible_cities.core.fit_functions  as     fitf
-from   invisible_cities.evm .ic_containers  import Measurement
-from invisible_cities.core  .stat_functions import poisson_sigma
-from invisible_cities.icaro . hst_functions import shift_to_bin_centers
-from invisible_cities.types .ic_types       import NN
+from   invisible_cities.core .core_functions import in_range
+from   invisible_cities.core .stat_functions import poisson_sigma
+from   invisible_cities.core .core_functions import shift_to_bin_centers
+from   invisible_cities.types.ic_types       import NN
+import invisible_cities.core.fit_functions   as     fitf
 
 from .. core. fit_functions  import chi2
 from .. core. stat_functions import mean_and_std
@@ -32,6 +30,7 @@ from .. core. kr_types       import HistoPar
 from .. core. kr_types       import FitCollection
 from .. core. kr_types       import Number
 from .. core. kr_types       import Range
+from .. core. kr_types       import Measurement
 
 from scipy.optimize          import OptimizeWarning
 

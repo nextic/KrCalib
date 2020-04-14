@@ -18,7 +18,7 @@ from typing  import Tuple
 from typing  import Iterable
 
 from numpy           .linalg                 import LinAlgError
-from invisible_cities.evm    .ic_containers  import Measurement
+
 from invisible_cities.core   .fit_functions  import fit
 from invisible_cities.core   .fit_functions  import expo
 
@@ -33,6 +33,7 @@ from . kr_types import HistoPar2
 from . kr_types import FitCollection
 from . kr_types import FitCollection2
 from . kr_types import FitType
+from . kr_types import Measurement
 
 import logging
 log = logging.getLogger(__name__)

@@ -4,11 +4,10 @@ from . fit_functions        import compute_drift_v
 from . fit_functions        import quick_gauss_fit
 from . kr_types             import ASectorMap
 from . kr_types             import masks_container
+from . core_functions       import resolution
 
-
-from invisible_cities.reco .corrections_new import apply_all_correction
-from invisible_cities.reco .corrections_new import norm_strategy
-from invisible_cities.icaro.  hst_functions import resolution
+from invisible_cities.reco .corrections     import apply_all_correction
+from invisible_cities.reco .corrections     import norm_strategy
 
 from typing import List
 from typing import Tuple

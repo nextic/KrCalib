@@ -3,7 +3,8 @@ import numpy as np
 import logging
 from   typing      import Iterable
 from   numpy       import pi
-from   invisible_cities.evm.ic_containers  import Measurement
+
+from . kr_types import Measurement
 from . kr_types import Number
 
 NN = np.nan

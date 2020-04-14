@@ -7,7 +7,7 @@ from pytest import fixture
 from pytest import mark
 from pytest import approx
 
-from invisible_cities.reco.corrections_new  import read_maps
+from invisible_cities.reco.corrections      import read_maps
 from                 .kr_types              import FitMapValue
 from                 .map_functions         import add_mapinfo
 from                 .map_functions         import amap_max
