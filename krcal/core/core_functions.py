@@ -47,3 +47,23 @@ def divide_np_arrays(num : np.array, denom : np.array) -> np.array:
     ratio = np.zeros(len(denom))
     np.divide(num, denom, out=ratio, where=ok)
     return ratio
+
+
+def resolution(values, errors = None, E_from=41.5, E_to=2458):
+    """
+    Compute resolution at E_from and resolution at E_to
+    with uncertainty propagation.
+    """
+    if errors is None:
+        errors = np.zeros_like(values)
+
+    amp  ,   mu,   sigma, *_ = values
+    u_amp, u_mu, u_sigma, *_ = errors
+
+    r   = 235. * sigma/mu
+    u_r = r * (u_mu**2/mu**2 + u_sigma**2/sigma**2)**0.5
+
+    scale = (E_from/E_to)**0.5
+    return Measurement(r        , u_r        ), \
+           Measurement(r * scale, u_r * scale)
+
