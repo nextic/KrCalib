@@ -8,8 +8,7 @@ from typing          import Tuple
 from typing          import Optional
 from pandas          import DataFrame
 
-from   invisible_cities.evm .ic_containers     import Measurement
-from   invisible_cities.core.system_of_units_c import units
+import invisible_cities.core.system_of_units as units
 
 from ..core. stat_functions       import mean_and_std
 from ..core. core_functions       import divide_np_arrays
@@ -20,7 +19,7 @@ from ..core. kr_types             import FitPar
 from ..core. kr_types             import S1D
 from ..core. kr_types             import S2D
 from ..core. kr_types             import Array
-
+from ..core. kr_types             import Measurement
 
 
 
