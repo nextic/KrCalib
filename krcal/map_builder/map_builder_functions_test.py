@@ -52,6 +52,7 @@ def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
     map_params_new = copy.copy(config.as_namespace.map_params)
     map_params_new['nmin']          = 100
     map_params_new['nStimeprofile'] = 1200
+    map_params_new['z_range']       = (0, 10000)
     config.update(dict(folder         = folder_test_dst,
                        file_in        = test_dst_file  ,
                        file_out_map   = map_file_out   ,
@@ -166,7 +167,8 @@ def test_correct_map_with_unsorted_dst(folder_test_dst  ,
     run_number     = 7517
     config = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
     map_params_new = config.as_namespace.map_params
-    map_params_new['nmin'] = 100
+    map_params_new['nmin']    = 100
+    map_params_new['z_range'] = (0, 10000)
     config.update(dict(folder         = output_maps_tmdir,
                        file_in        = tmp_unsorted_dst ,
                        file_out_map   = map_file_unsort  ,
