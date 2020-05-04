@@ -44,10 +44,10 @@ def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
     """
     Run map creation script and check if an ASectormap is the output.
     """
-    map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map.h5')
-    histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo.h5')
-    default_n_bins = 15
-    run_number     = 7517
+    map_file_out    = os.path.join(output_maps_tmdir, 'test_out_map.h5')
+    monitoring_path = None
+    default_n_bins  = 15
+    run_number      = 7517
     config = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
     map_params_new = copy.copy(config.as_namespace.map_params)
     map_params_new['nmin']          = 100
@@ -149,7 +149,7 @@ def test_correct_map_with_unsorted_dst(folder_test_dst  ,
     """
     map_file_sort   = os.path.join(output_maps_tmdir, 'test_out_map.h5')
     map_file_unsort = os.path.join(output_maps_tmdir, 'test_out_unsort.h5')
-    histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo.h5')
+    monitoring_path = None
 
     dst = load_dst(folder_test_dst+test_dst_file, 'DST', 'Events')
     if "index" in dst:del dst["index"]
@@ -190,18 +190,18 @@ def test_exception_s1(folder_test_dst, test_dst_file, output_maps_tmdir):
     This test checks if exception raises when ns1=1 efficiency is out of range.
     """
     conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
-    map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_s1.h5'  )
-    histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_s1.h5')
-    min_eff_test = 0.
-    max_eff_test = 0.8
-    run_number   = 7517
-    conf.update(dict(folder         = folder_test_dst,
-                     file_in        = test_dst_file  ,
-                     file_out_map   = map_file_out   ,
-                     file_out_hists = histo_file_out ,
-                     nS1_eff_min    = min_eff_test   ,
-                     nS1_eff_max    = max_eff_test   ,
-                     run_number     = run_number     ))
+    map_file_out    = os.path.join(output_maps_tmdir, 'test_out_map_s1.h5'  )
+    monitoring_path = None
+    min_eff_test    = 0.
+    max_eff_test    = 0.8
+    run_number      = 7517
+    conf.update(dict(folder          = folder_test_dst,
+                     file_in         = test_dst_file  ,
+                     file_out_map    = map_file_out   ,
+                     monitoring_path = monitoring_path,
+                     nS1_eff_min     = min_eff_test   ,
+                     nS1_eff_max     = max_eff_test   ,
+                     run_number      = run_number     ))
 
     assert_raises(AbortingMapCreation,
                   map_builder        ,
@@ -212,18 +212,18 @@ def test_exception_s2(folder_test_dst, test_dst_file, output_maps_tmdir):
     This test checks if exception raises when nS2=1 efficiency is out of range.
     """
     conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
-    map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_s2.h5'  )
-    histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_s2.h5')
-    min_eff_test = 0.
-    max_eff_test = 0.9
-    run_number   = 7517
-    conf.update(dict(folder         = folder_test_dst,
-                     file_in        = test_dst_file  ,
-                     file_out_map   = map_file_out   ,
-                     file_out_hists = histo_file_out ,
-                     nS2_eff_min    = min_eff_test   ,
-                     nS2_eff_max    = max_eff_test   ,
-                     run_number     = run_number     ))
+    map_file_out    = os.path.join(output_maps_tmdir, 'test_out_map_s2.h5'  )
+    monitoring_path = None
+    min_eff_test    = 0.
+    max_eff_test    = 0.9
+    run_number      = 7517
+    conf.update(dict(folder          = folder_test_dst ,
+                     file_in         = test_dst_file   ,
+                     file_out_map    = map_file_out    ,
+                     monitoring_path = monitoring_path ,
+                     nS2_eff_min     = min_eff_test    ,
+                     nS2_eff_max     = max_eff_test    ,
+                     run_number      = run_number      ))
 
     assert_raises(AbortingMapCreation,
                   map_builder        ,
@@ -234,16 +234,16 @@ def test_exception_rate(folder_test_dst, test_dst_file, output_maps_tmdir):
     This test checks if exception raises when rate distribution is not flat enough.
     """
     conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
-    map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_rate.h5'  )
-    histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_rate.h5')
-    n_dev_rate = 0.5
-    run_number   = 7517
-    conf.update(dict(folder         = folder_test_dst,
-                     file_in        = test_dst_file  ,
-                     file_out_map   = map_file_out   ,
-                     file_out_hists = histo_file_out ,
-                     n_dev_rate     = n_dev_rate     ,
-                     run_number     = run_number     ))
+    map_file_out    = os.path.join(output_maps_tmdir, 'test_out_map_rate.h5'  )
+    monitoring_path = None
+    n_dev_rate      = 0.5
+    run_number      = 7517
+    conf.update(dict(folder          = folder_test_dst,
+                     file_in         = test_dst_file  ,
+                     file_out_map    = map_file_out   ,
+                     monitoring_path = monitoring_path,
+                     n_dev_rate      = n_dev_rate     ,
+                     run_number      = run_number     ))
 
     assert_raises(AbortingMapCreation,
                   map_builder        ,
@@ -255,16 +255,16 @@ def test_exception_Zdst(folder_test_dst, test_dst_file, output_maps_tmdir):
     similar enough to the reference one.
     """
     conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
-    map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_Z.h5'  )
-    histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_Z.h5')
-    nsigmas_Zdst = 0.5
-    run_number   = 7517
-    conf.update(dict(folder         = folder_test_dst,
-                     file_in        = test_dst_file  ,
-                     file_out_map   = map_file_out   ,
-                     file_out_hists = histo_file_out ,
-                     nsigmas_Zdst   = nsigmas_Zdst   ,
-                     run_number     = run_number     ))
+    map_file_out    = os.path.join(output_maps_tmdir, 'test_out_map_Z.h5'  )
+    monitoring_path = None
+    nsigmas_Zdst    = 0.5
+    run_number      = 7517
+    conf.update(dict(folder          = folder_test_dst,
+                     file_in         = test_dst_file  ,
+                     file_out_map    = map_file_out   ,
+                     monitoring_path = monitoring_path,
+                     nsigmas_Zdst    = nsigmas_Zdst   ,
+                     run_number      = run_number     ))
 
     assert_raises(AbortingMapCreation,
                   map_builder        ,
@@ -276,18 +276,42 @@ def test_exception_bandsel(folder_test_dst, test_dst_file, output_maps_tmdir):
     out of a given range.
     """
     conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
-    map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_bandsel.h5'  )
-    histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_bandsel.h5')
+    map_file_out    = os.path.join(output_maps_tmdir, 'test_out_map_bandsel.h5'  )
+    monitoring_path = None
     band_sel_params_new = copy.copy(conf.as_namespace.band_sel_params)
     band_sel_params_new['eff_min'] = 0.
     band_sel_params_new['eff_max'] = 0.89
     run_number = 7517
-    conf.update(dict(folder         = folder_test_dst,
-                     file_in        = test_dst_file  ,
-                     file_out_map   = map_file_out   ,
-                     file_out_hists = histo_file_out ,
+    conf.update(dict(folder          = folder_test_dst    ,
+                     file_in         = test_dst_file      ,
+                     file_out_map    = map_file_out       ,
+                     monitoring_path = monitoring_path    ,
                      band_sel_params = band_sel_params_new,
-                     run_number     = run_number     ))
+                     run_number      = run_number         ))
     assert_raises(AbortingMapCreation,
                   map_builder        ,
                   conf.as_namespace  )
+
+
+def test_monitoring_plots_are_created(folder_test_dst, test_dst_file, output_maps_tmdir):
+    """
+    This test checks that monitoring plots are created if a
+    folder to store them is provided.
+    """
+    conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    map_file_out    = os.path.join(output_maps_tmdir, 'test_out_map.h5'  )
+    monitoring_path = output_maps_tmdir
+    default_n_bins  = 15
+    run_number      = 7517
+    conf.update(dict(folder          = folder_test_dst,
+                     file_in         = test_dst_file  ,
+                     file_out_map    = map_file_out   ,
+                     monitoring_path = monitoring_path,
+                     default_n_bins  = default_n_bins ,
+                     run_number      = run_number     ))
+    emaps = read_maps(map_file_out)
+    pars = emaps.t_evol.columns[1:-7:2].tolist()
+    pars = pars + emaps.t_evol.columns[-3:].tolist()
+    for par in pars:
+        plot_fname = output_maps_tmdir + 'Run{0}_{1}_plot.pdf'.format(run_number, par)
+        assert os.path.exists(output_maps_tmdir)

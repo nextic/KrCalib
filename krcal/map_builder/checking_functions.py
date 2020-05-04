@@ -52,9 +52,9 @@ def check_failed_fits(maps      : ASectorMap,
     map_values_in_core = maps.lt.values[inner_core_mask]
     numFailed = np.count_nonzero(np.isnan(map_values_in_core))
     if numFailed > maxFailed:
-        message = "Number of failed fits ({0}) ".format(numFailed)
-        message += "exceeds max. allowed ({0}).".format(maxFailed)
+        message = f"Number of failed fits ({numFailed}) "
+        message += f"exceeds max. allowed ({maxFailed})."
         raise AbortingMapCreation(message)
     else:
-        print("    Number of failing fits: {0}".format(numFailed))
+        print(f"    Number of failing fits: {numFailed}")
         return
