@@ -563,6 +563,37 @@ def add_krevol(maps         : ASectorMap,
 
     return
 
+def check_drift_v_computation(drift_v      : np.ndarray ,
+                              dv_maxFailed : float = 0.5,
+                              **kwargs                  ) -> None:
+    """
+    Checks if drift velocity computation has failed in too many temporal
+    bins. If that is the case, map computation will abort.
+
+    Parameters
+    ---------
+    drift_v: np.ndarray
+        Array of drift velocities per time bin
+    dv_maxFailed: float
+        Threshold to consider too many failing fits.
+        (0.5 means that map creation will abort if more than 50% of fits fail)
+
+    Returns
+    ---------
+    Nothing
+    """
+
+    n_failing_dv_fits = sum(np.isnan(drift_v))
+    n_temp_bins       = len(drift_v)
+    fail_fits_ratio   = n_failing_dv_fits/n_temp_bins
+    message           = f'Drift_v fit failed in more than {dv_maxFailed*100}% of time bins.'
+    message          += f'({n_failing_dv_fits}/{n_temp_bins})'
+
+    check_if_values_in_interval(values          = np.array(fail_fits_ratio),
+                                low_lim         = 0.                       ,
+                                up_lim          = dv_maxFailed             ,
+                                raising_message = message                  )
+
 def compute_map(dst          : pd.DataFrame,
                 run_number   : int,
                 XYbins       : Tuple[int, int],
@@ -734,6 +765,9 @@ def map_builder(config):
                XYbins     = (number_of_bins  ,
                              number_of_bins) ,
                **config.map_params)
+
+    check_drift_v_computation(final_map.t_evol.dv,
+                              **config.map_params)
 
     write_complete_maps(asm      = final_map          ,
                         filename = config.file_out_map)

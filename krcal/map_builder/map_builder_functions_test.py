@@ -66,9 +66,9 @@ def test_scrip_runs_and_produces_correct_outputs(folder_test_dst  ,
 
     old_maps = read_maps(test_map_file)
     assert_dataframes_close(maps.e0 , old_maps.e0 , rtol=1e-5)
-    assert_dataframes_close(maps.e0u, old_maps.e0u, rtol=1e-5)
+    assert_dataframes_close(maps.e0u, old_maps.e0u, rtol=1e-1)
     assert_dataframes_close(maps.lt , old_maps.lt , rtol=1e-5)
-    assert_dataframes_close(maps.ltu, old_maps.ltu, rtol=1e-5)
+    assert_dataframes_close(maps.ltu, old_maps.ltu, rtol=1e-1)
 
 @mark.dependency(depends="test_scrip_runs_and_produces_correct_outputs")
 def test_time_evol_table_correct_elements(output_maps_tmdir):
@@ -287,6 +287,28 @@ def test_exception_bandsel(folder_test_dst, test_dst_file, output_maps_tmdir):
                      file_out_map   = map_file_out   ,
                      file_out_hists = histo_file_out ,
                      band_sel_params = band_sel_params_new,
+                     run_number     = run_number     ))
+    assert_raises(AbortingMapCreation,
+                  map_builder        ,
+                  conf.as_namespace  )
+
+def test_exception_drift_v(folder_test_dst, test_dst_file, output_maps_tmdir):
+    """
+    This test checks that exception raises if drift_v fit
+    fails in too many temporal bins.
+    """
+    conf = configure('maps $ICARO/krcal/map_builder/config_LBphys.conf'.split())
+    map_file_out   = os.path.join(output_maps_tmdir, 'test_out_map_driftv.h5'  )
+    histo_file_out = os.path.join(output_maps_tmdir, 'test_out_histo_driftv.h5')
+    map_params_new = copy.copy(conf.as_namespace.map_params)
+    map_params_new['dv_maxFailed'] = 0.01
+    map_params_new['nStimeprofile'] = 100
+    run_number = 7517
+    conf.update(dict(folder         = folder_test_dst,
+                     file_in        = test_dst_file  ,
+                     file_out_map   = map_file_out   ,
+                     file_out_hists = histo_file_out ,
+                     map_params     = map_params_new ,
                      run_number     = run_number     ))
     assert_raises(AbortingMapCreation,
                   map_builder        ,

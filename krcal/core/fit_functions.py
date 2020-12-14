@@ -371,10 +371,13 @@ def compute_drift_v(zdata    : np.array,
 
     if seed is None: seed = np.max(y), np.mean(zrange), 0.5, np.min(y)
 
-    f = fitf.fit(sigmoid, x, y, seed, sigma=poisson_sigma(y), fit_range=zrange)
-
     z_cathode = DB.DetectorGeo(detector).ZMAX[0]
-    dv        = z_cathode/f.values[1]
-    dvu       = dv / f.values[1] * f.errors[1]
+    try:
+        f = fitf.fit(sigmoid, x, y, seed, sigma=poisson_sigma(y), fit_range=zrange)
+        dv  = z_cathode/f.values[1]
+        dvu = dv / f.values[1] * f.errors[1]
+    except RuntimeError:
+        print("WARNING: Sigmoid fit for dv computation fails. NaN value will be set in its place.")
+        dv, dvu = np.nan, np.nan
 
     return dv, dvu

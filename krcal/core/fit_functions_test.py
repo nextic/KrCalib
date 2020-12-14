@@ -340,3 +340,9 @@ def test_compute_drift_v_when_moving_edge():
     dv_th   = DB.DetectorGeo('new').ZMAX[0]/edge
 
     assert dv_th == approx(dv, abs=5*dvu)
+
+def test_sigmoid_failing_fit_return_nan():
+    dst     = np.random.rand(1000)
+    dv_vect = compute_drift_v(dst)
+    nans    = np.array([np.nan, np.nan])
+    assert dv_vect, nans
